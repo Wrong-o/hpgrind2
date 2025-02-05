@@ -2,6 +2,33 @@
 @tailwind components;
 @tailwind utilities;
 
+@font-face {
+  font-family: 'Funnel Sans';
+  src: url('/fonts/FunnelSans-Regular.woff2') format('woff2'),
+       url('/fonts/FunnelSans-Regular.woff') format('woff');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Funnel Sans';
+  src: url('/fonts/FunnelSans-Medium.woff2') format('woff2'),
+       url('/fonts/FunnelSans-Medium.woff') format('woff');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Funnel Sans';
+  src: url('/fonts/FunnelSans-Bold.woff2') format('woff2'),
+       url('/fonts/FunnelSans-Bold.woff') format('woff');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
 .animation-delay-1000 {
   animation-delay: 1000ms;
 }
@@ -20,4 +47,10 @@
 
 .stroke-dashed {
   stroke-dasharray: 5,5;
+}
+
+@layer base {
+  html {
+    font-family: 'Funnel Sans', system-ui, sans-serif;
+  }
 } 

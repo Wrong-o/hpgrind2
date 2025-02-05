@@ -1,9 +1,27 @@
 import React from 'react'
 
-export const Hearts = () => {
+const equations = [
+  'x²',
+  '∑',
+  '∫',
+  'π',
+  '√',
+  '±',
+  '÷',
+  '∞',
+  'θ',
+  'Δ',
+  'μ',
+  'σ',
+  '%',
+  '≈',
+  'XYZ'
+]
+
+export const FloatingEquations = () => {
   return (
     <>
-      {[...Array(15)].map((_, i) => {
+      {equations.map((equation, i) => {
         const leftPosition = Math.floor(Math.random() * 100)
         return (
           <div
@@ -11,12 +29,13 @@ export const Hearts = () => {
             style={{ left: `${leftPosition}%` }}
             className={`
               absolute animate-float
-              text-blue-500/30
+              text-blue-500/20 font-bold
               ${getRandomDelay()}
               ${getRandomSize()}
+              select-none
             `}
           >
-            ❤️
+            {equation}
           </div>
         )
       })}
@@ -36,6 +55,6 @@ const getRandomDelay = () => {
 }
 
 const getRandomSize = () => {
-  const sizes = ['text-xl', 'text-2xl', 'text-3xl', 'text-4xl']
+  const sizes = ['text-2xl', 'text-3xl', 'text-4xl', 'text-5xl']
   return sizes[Math.floor(Math.random() * sizes.length)]
 } 

@@ -6,6 +6,9 @@ export default {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ['Funnel Sans', 'system-ui', 'sans-serif'],
+      },
       animation: {
         'float': 'float 15s linear infinite',
         'bounce': 'bounce 1s infinite',
