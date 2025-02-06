@@ -27,12 +27,11 @@ def generate_power_rule_question() -> QuizQuestion:
         
         if operation == '*':
             correct = a + b
-            question = f"What is the exponent when simplifying: {base}^{a} * {base}^{b}?"
-            latex_operation = "\\cdot"
+            question = f"What is the exponent when simplifying: {base}^{{{a}}} \\cdot {base}^{{{b}}}"
         else:
             correct = a - b
-            question = f"What is the exponent when simplifying: {base}^{a} / {base}^{b}?"
-            latex_operation = "\\div"
+            # Format division as LaTeX fraction without escaping
+            question = f"What is the exponent when simplifying: \\frac{{{base}^{{{a}}}}}{{{base}^{{{b}}}}}"
         
         # Generate wrong answers that are plausible mistakes
         wrong_answers = set()
@@ -54,14 +53,15 @@ def generate_power_rule_question() -> QuizQuestion:
         random.shuffle(all_answers)
         
         return QuizQuestion(
-            question=f"What is the exponent when simplifying: {base}^{{{a}}} {latex_operation} {base}^{{{b}}}?",
+            question=question,
             options=[str(x) for x in all_answers],
             correct_answer=str(correct),
             equation_parts={
                 "base": base,
                 "exponent1": a,
                 "exponent2": b,
-                "operation": operation
+                "operation": operation,
+                "latex": question  # Add the raw LaTeX
             }
         )
     except Exception as e:

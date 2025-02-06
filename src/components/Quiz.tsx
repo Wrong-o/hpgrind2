@@ -22,18 +22,17 @@ interface QuizProps {
 
 const formatQuestion = (question: string, equationParts: any): JSX.Element => {
   // Convert power rule questions to LaTeX
-  if (question.includes('^')) {
-    const parts = question.match(/What is the exponent when simplifying: (.+)\?/)
-    if (parts) {
-      const equation = parts[1]
-        .replace(/\*/g, ' \\cdot ')  // Replace * with proper multiplication dot
-        .replace(/\^(\{[^}]+\}|\d+)/g, '^$1')  // Keep existing LaTeX exponents
-      return (
-        <div>
-          What is the exponent when simplifying: <Latex>{equation}</Latex>?
+  if (question.includes('^') || question.includes('\\frac')) {
+    return (
+      <div className="space-y-6 text-center">
+        <div className="text-2xl">Vad blir exponenten när du förenklar:</div>
+        <div className="text-4xl flex justify-center py-4">
+          <Latex>
+            {question.replace('What is the exponent when simplifying: ', '')}
+          </Latex>
         </div>
-      )
-    }
+      </div>
+    )
   }
   
   // Convert Pythagorean theorem questions to visual
@@ -55,7 +54,7 @@ const formatQuestion = (question: string, equationParts: any): JSX.Element => {
       <div>
         <Triangle {...triangleProps} />
         <div className="text-center mt-4">
-          Find the {missing_side === 'c' ? 'hypotenuse' : `side ${missing_side}`}
+          Hur lång är den okända sidan?
         </div>
       </div>
     )
@@ -92,7 +91,7 @@ export const Quiz: React.FC<QuizProps> = ({ onComplete }) => {
       try {
         const questionsList = []
         for (let i = 0; i < 10; i++) {
-          const response = await fetch('http://localhost:8000/api/question', {
+          const response = await fetch(`${import.meta.env.VITE_API_URL}/api/question`, {
             method: 'GET',
             headers: {
               'Accept': 'application/json',
@@ -102,8 +101,7 @@ export const Quiz: React.FC<QuizProps> = ({ onComplete }) => {
           })
           
           if (!response.ok) {
-            const errorData = await response.json()
-            throw new Error(errorData.message || `HTTP error! status: ${response.status}`)
+            throw new Error(`HTTP error! status: ${response.status}`)
           }
           const question = await response.json()
           questionsList.push(question)

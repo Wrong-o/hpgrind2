@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { useAuth } from '../contexts/AuthContext'
 
 interface LoginPageProps {
   onClose: () => void
@@ -8,11 +9,52 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onClose }) => {
   const [isLogin, setIsLogin] = useState(true)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
+  const { login } = useAuth()
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // Add authentication logic here
-    console.log('Submitting:', { email, password, isLogin })
+    setError('')
+
+    try {
+      const endpoint = isLogin ? '/api/token' : '/api/register'
+      const response = await fetch(`${import.meta.env.VITE_API_URL}${endpoint}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      })
+
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.detail || 'Something went wrong')
+      }
+
+      const data = await response.json()
+      
+      if (isLogin) {
+        login(data.access_token)
+        onClose()
+      } else {
+        // After registration, automatically log in
+        const loginResponse = await fetch(`${import.meta.env.VITE_API_URL}/api/token`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ email, password }),
+        })
+        
+        if (loginResponse.ok) {
+          const loginData = await loginResponse.json()
+          login(loginData.access_token)
+          onClose()
+        }
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred')
+    }
   }
 
   return (
