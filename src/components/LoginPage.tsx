@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { useAuth } from '../contexts/AuthContext'
+import { WelcomePopup } from './WelcomePopup'
 
 interface LoginPageProps {
   onClose: () => void
@@ -10,6 +11,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onClose }) => {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
+  const [showWelcome, setShowWelcome] = useState(false)
   const { login } = useAuth()
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -17,44 +19,77 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onClose }) => {
     setError('')
 
     try {
-      const endpoint = isLogin ? '/api/token' : '/api/register'
-      const response = await fetch(`${import.meta.env.VITE_API_URL}${endpoint}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
-      })
-
-      if (!response.ok) {
-        const data = await response.json()
-        throw new Error(data.detail || 'Something went wrong')
-      }
-
-      const data = await response.json()
-      
       if (isLogin) {
+        // Use FormData for token endpoint
+        const formData = new URLSearchParams()
+        formData.append('username', email)
+        formData.append('password', password)
+        formData.append('grant_type', 'password')
+
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/token`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Accept': 'application/json',
+          },
+          credentials: 'include',
+          body: formData,
+        })
+
+        if (!response.ok) {
+          const data = await response.json()
+          throw new Error(data.detail || 'Something went wrong')
+        }
+
+        const data = await response.json()
         login(data.access_token)
         onClose()
       } else {
-        // After registration, automatically log in
-        const loginResponse = await fetch(`${import.meta.env.VITE_API_URL}/api/token`, {
+        // Registration endpoint
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/register`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
+            'Accept': 'application/json',
           },
+          credentials: 'include',
           body: JSON.stringify({ email, password }),
         })
-        
+
+        if (!response.ok) {
+          const data = await response.json()
+          throw new Error(data.detail || 'Something went wrong')
+        }
+
+        // After successful registration, log in automatically
+        const formData = new URLSearchParams()
+        formData.append('username', email)
+        formData.append('password', password)
+        formData.append('grant_type', 'password')
+
+        const loginResponse = await fetch(`${import.meta.env.VITE_API_URL}/api/token`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Accept': 'application/json',
+          },
+          credentials: 'include',
+          body: formData,
+        })
+
         if (loginResponse.ok) {
           const loginData = await loginResponse.json()
           login(loginData.access_token)
-          onClose()
+          setShowWelcome(true)
         }
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred')
     }
+  }
+
+  if (showWelcome) {
+    return <WelcomePopup onStart={onClose} />
   }
 
   return (

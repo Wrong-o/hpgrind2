@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 from models.database_models import Category, UserCategoryProgress, Question
 from typing import List, Tuple
-from backend.services.spaced_repetition import SpacedRepetitionSystem
+from services.spaced_repetition import SpacedRepetitionSystem
 
 class RecommendationEngine:
     def __init__(self, db: Session, user_id: int):

@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
-from sqlalchemy import func
-from models.database_models import UserCategoryProgress, QuestionAttempt, Category
+from sqlalchemy import func, case
+from models.database_models import UserCategoryProgress, QuestionAttempt, Category, Question
 from typing import List, Dict
 from datetime import datetime, timedelta
 
@@ -55,4 +55,37 @@ class UserStats:
     def get_categories_started(self) -> int:
         return self.db.query(UserCategoryProgress).filter(
             UserCategoryProgress.user_id == self.user_id
-        ).count() 
+        ).count()
+
+    def get_category_stats(self):
+        # Get all categories first
+        categories = self.db.query(Category).all()
+        
+        # Get attempts per category with accuracy
+        stats = (
+            self.db.query(
+                Category.id,
+                Category.name,
+                func.count(QuestionAttempt.id).label('total_attempts'),
+                func.sum(case((QuestionAttempt.is_correct, 1), else_=0)).label('correct_attempts')
+            )
+            .join(Question, Question.category_id == Category.id)
+            .outerjoin(QuestionAttempt, 
+                      (QuestionAttempt.question_id == Question.id) & 
+                      (QuestionAttempt.user_id == self.user_id))
+            .group_by(Category.id, Category.name)
+            .all()
+        )
+
+        return [
+            {
+                'category_id': stat.id,
+                'category_name': stat.name,
+                'total_attempts': stat.total_attempts or 0,
+                'correct_attempts': stat.correct_attempts or 0,
+                'accuracy': round((stat.correct_attempts / stat.total_attempts * 100) 
+                                if stat.total_attempts and stat.correct_attempts 
+                                else 0, 1)
+            }
+            for stat in stats
+        ] 

@@ -6,11 +6,28 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./sql_app.db")
+# Get environment
+ENV = os.getenv("ENV", "development")
 
-engine = create_engine(SQLALCHEMY_DATABASE_URL)
+# Choose connection string based on environment
+if ENV == "production":
+    DATABASE_URL = os.getenv("PROD_DATABASE_URL")
+    connect_args = {"sslmode": "require"}
+else:
+    DATABASE_URL = os.getenv("DATABASE_URL")
+    connect_args = {}
+
+engine = create_engine(
+    DATABASE_URL,
+    echo=ENV == "development",  # Only echo in development
+    pool_size=5,
+    max_overflow=10,
+    pool_timeout=30,
+    pool_recycle=1800,
+    connect_args=connect_args
+)
+
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
 Base = declarative_base()
 
 def get_db():

@@ -8,11 +8,66 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-class QuizQuestion(BaseModel):
-    question: str
-    options: List[str]
-    correct_answer: str
-    equation_parts: Dict[str, Union[str, int, None]]  # Added None as possible type
+class QuizQuestion:
+    def __init__(self, question: str, options: List[str], correct_answer: str, 
+                 equation_parts: Dict = None, subcategory: str = "", 
+                 difficulty: int = 1, explanation: str = ""):
+        self.question = question
+        self.options = options
+        self.correct_answer = correct_answer
+        self.equation_parts = equation_parts or {}
+        self.subcategory = subcategory
+        self.difficulty = difficulty  # 1-5 scale
+        self.explanation = explanation
+
+XYZ_QUESTIONS = [
+    {
+        "question": "Vilket svarsalternativ motsvarar uttrycket x² - 6x + 5?",
+        "options": ["(x+5)(x-1)", "(x-1)(x-5)", "(x-2)(x-3)", "(x+3)(x-2)"],
+        "correct_answer": "(x-2)(x-3)",
+        "subcategory": "Kvadreringsformler",
+        "difficulty": 2,
+        "explanation": "För att faktorisera x² - 6x + 5, leta efter två tal som:\n"
+                      "1. Har summan -6 (koefficienten för x)\n"
+                      "2. Har produkten 5 (den konstanta termen)\n"
+                      "Talen är -2 och -3, därför blir faktoriseringen (x-2)(x-3)"
+    },
+    {
+        "question": "x + y = 10 Medelvärdet av Y och 0 är lika med 5. Vilket värde har x?",
+        "options": ["0", "5", "-5", "10"],
+        "correct_answer": "0",
+        "subcategory": "Medelvärde",
+        "difficulty": 3,
+        "explanation": "1. Medelvärdet av Y och 0 är 5, alltså: (Y + 0)/2 = 5\n"
+                      "2. Lös ut Y: Y = 10\n"
+                      "3. Från första ekvationen: x + 10 = 10\n"
+                      "4. Därför är x = 0"
+    },
+    {
+        "question": "a och b är positiva tal. Vilket svarsalternativ är lösnignen till ekvationen ax + bx = 1?",
+        "options": ["x = a+b", "x = 1/ab", "x = 1- (a+b)", "x = 1/(a+b)"],
+        "correct_answer": "x = 1/(a+b)",
+        "subcategory": "Ekvationer"
+    },
+    {
+        "question": "Vilket svarsalternativ är lika med 18 procent av 2/5?",
+        "options": ["9/250", "1/45", "9/125", "4/45"],
+        "correct_answer": "9/125",
+        "subcategory": "Procent"
+    },
+    {
+        "question": "Ritva har sex bollar som hon fördelar slumpmässigt i tre tomma lådor. Hur stor är sannolikheten att exakt en låda innehåller ett udda antal bollar när Ritva är klar?",
+        "options": ["1/3", "2/3", "0", "1"],
+        "correct_answer": "0",
+        "subcategory": "Sannolikhet"
+    },
+    {
+        "question": "Vad blir x1/y1/x2/y2 om x1= 2x2 och y1= 2y2?",
+        "options": ["x1/y1", "1", "2", "2x/y2"],
+        "correct_answer": "1",
+        "subcategory": "Förenklingar"
+    }
+]
 
 def generate_power_rule_question() -> QuizQuestion:
     try:
@@ -132,12 +187,24 @@ def generate_pythagoras_question() -> QuizQuestion:
         logger.error(f"Error in pythagoras question: {str(e)}")
         raise
 
+def generate_xyz_question() -> QuizQuestion:
+    question_data = random.choice(XYZ_QUESTIONS)
+    return QuizQuestion(
+        question=question_data["question"],
+        options=question_data["options"],
+        correct_answer=question_data["correct_answer"],
+        subcategory=question_data["subcategory"],
+        difficulty=question_data["difficulty"],
+        explanation=question_data["explanation"]
+    )
+
 def generate_math_question() -> QuizQuestion:
     # Randomly choose which type of question to generate
     question_type = random.choice([
         'basic_math',
         'power_rules',
-        'pythagoras'
+        'pythagoras',
+        'xyz'
     ])
     
     try:
@@ -146,8 +213,10 @@ def generate_math_question() -> QuizQuestion:
             return generate_basic_math_question()
         elif question_type == 'power_rules':
             return generate_power_rule_question()
-        else:  # pythagoras
+        elif question_type == 'pythagoras':
             return generate_pythagoras_question()
+        else:  # xyz
+            return generate_xyz_question()
     except Exception as e:
         logger.error(f"Error generating {question_type} question: {str(e)}")
         # Fallback to basic math question if others fail
@@ -195,4 +264,7 @@ def generate_basic_math_question() -> QuizQuestion:
         )
     except Exception as e:
         logger.error(f"Error in basic math question: {str(e)}")
-        raise 
+        raise
+
+def generate_quiz_questions(count: int = 12) -> List[QuizQuestion]:
+    return [generate_math_question() for _ in range(count)] 

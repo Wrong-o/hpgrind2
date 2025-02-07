@@ -1,11 +1,8 @@
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, Float, ForeignKey, Enum
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, backref
 from sqlalchemy.sql import func
 from database import Base
-from passlib.context import CryptContext
-import enum
-
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+import bcrypt
 
 class DBUser(Base):
     __tablename__ = "users"
@@ -24,10 +21,17 @@ class DBUser(Base):
 
     @staticmethod
     def hash_password(password: str) -> str:
-        return pwd_context.hash(password)
+        # Generate a salt and hash the password
+        salt = bcrypt.gensalt()
+        hashed = bcrypt.hashpw(password.encode('utf-8'), salt)
+        return hashed.decode('utf-8')
 
-    def verify_password(self, password: str) -> bool:
-        return pwd_context.verify(password, self.hashed_password)
+    def verify_password(self, plain_password: str) -> bool:
+        # Verify the password
+        return bcrypt.checkpw(
+            plain_password.encode('utf-8'),
+            self.hashed_password.encode('utf-8')
+        )
 
 class Category(Base):
     __tablename__ = "categories"
@@ -37,9 +41,13 @@ class Category(Base):
     description = Column(String)
     parent_id = Column(Integer, ForeignKey("categories.id"), nullable=True)
     
-    # Relationships
-    subcategories = relationship("Category", 
-                               backref=relationship("Category", remote_side=[id]))
+    # Simplified self-referential relationship
+    children = relationship(
+        "Category",
+        backref=backref("parent", remote_side=[id]),
+        cascade="all, delete-orphan"
+    )
+    
     questions = relationship("Question", back_populates="category")
     user_progress = relationship("UserCategoryProgress", back_populates="category")
     achievements = relationship("Achievement", back_populates="category")
@@ -63,7 +71,9 @@ class QuestionAttempt(Base):
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"))
     question_id = Column(Integer, ForeignKey("questions.id"))
+    subcategory = Column(String)
     is_correct = Column(Boolean)
+    is_skipped = Column(Boolean, default=False)
     time_taken = Column(Integer)  # in seconds
     attempted_at = Column(DateTime(timezone=True), server_default=func.now())
     
@@ -77,11 +87,9 @@ class UserCategoryProgress(Base):
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"))
     category_id = Column(Integer, ForeignKey("categories.id"))
-    accuracy = Column(Float, default=0.0)  # 0-100%
-    avg_time = Column(Float)  # average time in seconds
-    total_attempts = Column(Integer, default=0)
-    last_attempt = Column(DateTime(timezone=True))
-    progress_score = Column(Float, default=0.0)  # Calculated score based on accuracy and time
+    progress_score = Column(Float, default=0.0)
+    accuracy = Column(Float, default=0.0)
+    avg_time = Column(Float, default=0.0)
     
     # Relationships
     user = relationship("DBUser", back_populates="category_progress")
