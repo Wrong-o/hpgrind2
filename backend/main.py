@@ -15,10 +15,24 @@ from services.recommendation_service import RecommendationEngine
 import auth
 from seed_data import seed_database  # Add this import
 from pydantic import BaseModel
+from sqlalchemy import inspect
 
-# Create tables and seed data
-Base.metadata.create_all(bind=engine)
-seed_database()  # Add this line
+def create_tables_if_not_exist():
+    """Create tables only if they don't exist"""
+    inspector = inspect(engine)
+    existing_tables = inspector.get_table_names()
+    
+    if not existing_tables:
+        print("No tables found. Creating database schema...")
+        Base.metadata.create_all(bind=engine)
+        print("Database schema created")
+        # Seed database with initial data
+        seed_database()
+    else:
+        print(f"Found existing tables: {existing_tables}")
+
+# Call this instead of the drop/create
+create_tables_if_not_exist()
 
 app = FastAPI()
 
@@ -61,6 +75,11 @@ async def options_question():
 
 @app.get("/api/health")
 async def health_check():
+    """
+    Health check endpoint to verify API is running.
+    Returns:
+        dict: {"status": "healthy"}
+    """
     return {"status": "healthy"}
 
 @app.get("/api/goals")
@@ -99,18 +118,35 @@ async def register(user: UserCreate, db: Session = Depends(get_db)):
 
 @app.post("/api/token")
 async def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
-    try:
-        user = authenticate_user(db, form_data.username, form_data.password)
-        if not user:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Incorrect username or password"
-            )
-        access_token = auth.create_access_token(data={"sub": user.email})
-        return {"access_token": access_token, "token_type": "bearer"}
-    except Exception as e:
-        print(f"Login error: {str(e)}")  # Add logging
-        raise
+    """
+    Login endpoint to authenticate user and get token.
+    
+    Args:
+        form_data (OAuth2PasswordRequestForm): Contains:
+            - username (str): User's email
+            - password (str): User's password
+        db (Session): Database session
+    
+    Returns:
+        dict: Token information containing:
+            - access_token (str): JWT token
+            - token_type (str): Always "bearer"
+    
+    Raises:
+        HTTPException: 401 if credentials invalid
+    """
+    user = authenticate_user(db, form_data.username, form_data.password)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    access_token_expires = timedelta(minutes=auth.ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = auth.create_access_token(
+        data={"sub": user.email}, expires_delta=access_token_expires
+    )
+    return {"access_token": access_token, "token_type": "bearer"}
 
 # Protected route example
 @app.get("/api/me", response_model=User)
@@ -147,6 +183,20 @@ async def get_category_stats(
 
 @app.get("/api/xyz/stats")
 async def get_xyz_stats(current_user: User = Depends(auth.get_current_user), db: Session = Depends(get_db)):
+    """
+    Get XYZ question statistics for the current user.
+    
+    Args:
+        current_user (User): Authenticated user from token
+        db (Session): Database session
+    
+    Returns:
+        list: List of stats for each subcategory containing:
+            - subcategory (str): Name of subcategory
+            - correct_percentage (float): Percentage of correct answers
+            - average_time (float): Average time per question
+            - total_questions (int): Total questions attempted
+    """
     attempts = db.query(QuestionAttempt).filter(
         QuestionAttempt.user_id == current_user.id,
         QuestionAttempt.subcategory.like('XYZ%')  # Only XYZ questions
@@ -186,28 +236,148 @@ class AttemptCreate(BaseModel):
     is_skipped: bool
     time_taken: int
 
+@app.options("/api/attempts")
+async def options_attempts():
+    return {"message": "OK"}
+
 @app.post("/api/attempts")
 async def save_attempt(
-    attempt: AttemptCreate,  # Change from dict to AttemptCreate
+    attempt: AttemptCreate,
     current_user: User = Depends(auth.get_current_user),
     db: Session = Depends(get_db)
 ):
+    """
+    Save a question attempt for a user.
+    """
     try:
+        print("\n=== Attempt Save Debug ===")
+        print("1. Request Data:")
+        print(f"  - Attempt data: {attempt.dict()}")
+        print(f"  - Current user ID: {current_user.id}")
+        print(f"  - Current user email: {current_user.email}")
+        
+        print("\n2. Database Session Check:")
+        print(f"  - Session is active: {db.is_active}")
+        
+        print("\n3. Creating QuestionAttempt:")
         new_attempt = QuestionAttempt(
             user_id=current_user.id,
-            question_id=attempt.question_id,  # Use dot notation instead of dict access
+            question_id=attempt.question_id,
             subcategory=attempt.subcategory,
             is_correct=attempt.is_correct,
             is_skipped=attempt.is_skipped,
             time_taken=attempt.time_taken
         )
-        db.add(new_attempt)
-        db.commit()
+        
+        print("  - New attempt object created:")
+        print(f"    * user_id: {new_attempt.user_id}")
+        print(f"    * question_id: {new_attempt.question_id}")
+        print(f"    * subcategory: {new_attempt.subcategory}")
+        print(f"    * is_correct: {new_attempt.is_correct}")
+        print(f"    * is_skipped: {new_attempt.is_skipped}")
+        print(f"    * time_taken: {new_attempt.time_taken}")
+        
+        print("\n4. Adding to Database:")
+        try:
+            print("  - Adding to session...")
+            db.add(new_attempt)
+            print("  - Added successfully")
+            
+            print("  - Session state after add:")
+            print(f"    * Object in session: {new_attempt in db}")
+            print(f"    * Session has changes: {db.dirty or db.new}")
+            
+            print("  - Committing transaction...")
+            db.commit()
+            print("  - Committed successfully")
+            
+            print("\n5. Verifying Save:")
+            saved_attempt = db.query(QuestionAttempt).filter(
+                QuestionAttempt.id == new_attempt.id
+            ).first()
+            print(f"  - Found in database: {saved_attempt is not None}")
+            if saved_attempt:
+                print("  - Saved data:")
+                print(f"    * ID: {saved_attempt.id}")
+                print(f"    * User ID: {saved_attempt.user_id}")
+                print(f"    * Question ID: {saved_attempt.question_id}")
+                print(f"    * Subcategory: {saved_attempt.subcategory}")
+                print(f"    * Is Correct: {saved_attempt.is_correct}")
+                print(f"    * Is Skipped: {saved_attempt.is_skipped}")
+                print(f"    * Time Taken: {saved_attempt.time_taken}")
+            
+        except Exception as commit_error:
+            print("\n!!! Database Error !!!")
+            print(f"  - Error type: {type(commit_error)}")
+            print(f"  - Error message: {str(commit_error)}")
+            print(f"  - Session state: {db.is_active}")
+            print("  - Rolling back transaction...")
+            db.rollback()
+            print("  - Rollback complete")
+            raise
+            
+        print("\n=== Save Completed Successfully ===")
         return {"status": "success"}
+        
     except Exception as e:
-        db.rollback()
-        print(f"Error saving attempt: {str(e)}")  # Add debug logging
+        print("\n!!! General Error !!!")
+        print(f"  - Error type: {type(e)}")
+        print(f"  - Error message: {str(e)}")
+        print("  - Full error details:")
+        import traceback
+        print(traceback.format_exc())
+        print("\n  - Request data:")
+        print(f"    * Attempt: {attempt.dict() if attempt else 'None'}")
+        print(f"    * User: {vars(current_user) if current_user else 'None'}")
+        print(f"    * DB Session active: {db.is_active if db else 'None'}")
+        
+        if db and db.is_active:
+            print("  - Rolling back transaction...")
+            db.rollback()
+            print("  - Rollback complete")
+            
         raise HTTPException(
             status_code=500,
             detail=f"Failed to save attempt: {str(e)}"
         )
+
+# Add auth debugging endpoint
+@app.get("/api/auth/debug")
+async def debug_auth(current_user: User = Depends(auth.get_current_user)):
+    """
+    Debug endpoint to verify authentication and token validity.
+    
+    Args:
+        current_user (User): Authenticated user from token
+    
+    Returns:
+        dict: User information containing:
+            - user_id (int): User's ID
+            - email (str): User's email
+            - is_authenticated (bool): Always true if endpoint reached
+    """
+    return {
+        "user_id": current_user.id,
+        "email": current_user.email,
+        "is_authenticated": True
+    }
+
+@app.post("/api/auth/refresh")
+async def refresh_token(current_user: User = Depends(auth.get_current_user)):
+    """
+    Refresh the user's authentication token.
+    
+    Args:
+        current_user (User): Authenticated user from current token
+    
+    Returns:
+        dict: New token information containing:
+            - access_token (str): New JWT token
+            - token_type (str): Always "bearer"
+    """
+    access_token_expires = timedelta(minutes=auth.ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = auth.create_access_token(
+        data={"sub": current_user.email},  # Changed from username to email
+        expires_delta=access_token_expires
+    )
+    return {"access_token": access_token, "token_type": "bearer"}

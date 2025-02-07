@@ -1,24 +1,27 @@
 import random
-from typing import List, Dict, Union
+from typing import List, Dict, Union, TypedDict, Optional, Any
 from pydantic import BaseModel
 import math
 import logging
+from question_generators import (
+    xyz_generator,
+    nog_generator,
+    pro_generator,
+    dtk_generator
+)
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-class QuizQuestion:
-    def __init__(self, question: str, options: List[str], correct_answer: str, 
-                 equation_parts: Dict = None, subcategory: str = "", 
-                 difficulty: int = 1, explanation: str = ""):
-        self.question = question
-        self.options = options
-        self.correct_answer = correct_answer
-        self.equation_parts = equation_parts or {}
-        self.subcategory = subcategory
-        self.difficulty = difficulty  # 1-5 scale
-        self.explanation = explanation
+class QuizQuestion(TypedDict):
+    question: str
+    options: List[str]
+    correct_answer: str
+    equation_parts: Optional[dict]
+    subcategory: str
+    difficulty: float
+    explanation: str
 
 XYZ_QUESTIONS = [
     {
@@ -117,7 +120,13 @@ def generate_power_rule_question() -> QuizQuestion:
                 "exponent2": b,
                 "operation": operation,
                 "latex": question  # Add the raw LaTeX
-            }
+            },
+            subcategory="XYZ - Potensekvationer",
+            difficulty=2.0,
+            explanation="För att faktorisera x² - 6x + 5, leta efter två tal som:\n"
+                      "1. Har summan -6 (koefficienten för x)\n"
+                      "2. Har produkten 5 (den konstanta termen)\n"
+                      "Talen är -2 och -3, därför blir faktoriseringen (x-2)(x-3)"
         )
     except Exception as e:
         logger.error(f"Error in power rule question: {str(e)}")
@@ -181,7 +190,10 @@ def generate_pythagoras_question() -> QuizQuestion:
             question=question,
             options=[str(x) for x in all_answers],
             correct_answer=str(correct),
-            equation_parts=equation_parts
+            equation_parts=equation_parts,
+            subcategory="XYZ - Rotekvationer",
+            difficulty=3.0,
+            explanation="För att lösa Pythagoras sats, använd formeln c² = a² + b², där c är hypotenusen, a och b är kateterna i en rätvinklig triangel."
         )
     except Exception as e:
         logger.error(f"Error in pythagoras question: {str(e)}")
@@ -199,72 +211,112 @@ def generate_xyz_question() -> QuizQuestion:
     )
 
 def generate_math_question() -> QuizQuestion:
-    # Randomly choose which type of question to generate
-    question_type = random.choice([
-        'basic_math',
-        'power_rules',
-        'pythagoras',
-        'xyz'
-    ])
+    """Generate a math question with subcategory."""
+    # Example subcategories from our seed data
+    subcategories = [
+        "XYZ - Andragradsekvationer",
+        "XYZ - Exponentialekvationer",
+        "XYZ - Logaritmekvationer",
+        "XYZ - Potensekvationer",
+        "XYZ - Rotekvationer",
+        "XYZ - Ekvationssystem",
+        "XYZ - Olikheter",
+        "XYZ - Absolutbelopp",
+        "XYZ - Algebraiska uttryck",
+        "XYZ - Rationella uttryck"
+    ]
+    
+    # Pick a random subcategory
+    chosen_subcategory = random.choice(subcategories)
     
     try:
-        logger.info(f"Generating {question_type} question")
-        if question_type == 'basic_math':
-            return generate_basic_math_question()
-        elif question_type == 'power_rules':
-            return generate_power_rule_question()
-        elif question_type == 'pythagoras':
-            return generate_pythagoras_question()
-        else:  # xyz
-            return generate_xyz_question()
-    except Exception as e:
-        logger.error(f"Error generating {question_type} question: {str(e)}")
-        # Fallback to basic math question if others fail
-        return generate_basic_math_question()
-
-def generate_basic_math_question() -> QuizQuestion:
-    try:
-        operations = ['+', '-', '*']
-        operation = random.choice(operations)
+        # Randomly choose which type of question to generate
+        question_type = random.choice(["basic_math", "pythagoras", "xyz"])
         
+        if question_type == "basic_math":
+            return generate_basic_math_question(chosen_subcategory)
+        elif question_type == "pythagoras":
+            return generate_pythagoras_question()
+        else:
+            return generate_xyz_question()
+            
+    except Exception as e:
+        logger.error(f"Error generating question: {str(e)}")
+        # Fallback to basic math if other types fail
+        return generate_basic_math_question(chosen_subcategory)
+
+def generate_basic_math_question(subcategory: str) -> QuizQuestion:
+    """Generate a basic math question."""
+    try:
+        num1 = random.randint(1, 20)
+        num2 = random.randint(1, 20)
+        operation = random.choice(['+', '-', '*', '/'])
+        
+        if operation == '/':
+            # Ensure division results in whole number
+            num1 = num2 * random.randint(1, 10)
+            
+        # Calculate correct answer
         if operation == '+':
-            num1 = random.randint(1, 100)
-            num2 = random.randint(1, 100)
             correct = num1 + num2
         elif operation == '-':
-            num1 = random.randint(1, 100)
-            num2 = random.randint(1, num1)
             correct = num1 - num2
-        else:
-            num1 = random.randint(1, 12)
-            num2 = random.randint(1, 12)
+        elif operation == '*':
             correct = num1 * num2
-
-        wrong_answers = set()
-        while len(wrong_answers) < 3:
-            if operation == '*':
-                wrong = correct + random.randint(-5, 5)
-            else:
-                wrong = correct + random.randint(-10, 10)
-            if wrong != correct and wrong > 0:
-                wrong_answers.add(wrong)
-
-        all_answers = list(wrong_answers) + [correct]
-        random.shuffle(all_answers)
+        else:
+            correct = num1 // num2
+            
+        # Generate wrong options
+        wrong_options = []
+        while len(wrong_options) < 3:
+            wrong = correct + random.randint(-5, 5)
+            if wrong != correct and wrong not in wrong_options:
+                wrong_options.append(wrong)
+                
+        # Combine and shuffle options
+        options = [str(correct)] + [str(x) for x in wrong_options]
+        random.shuffle(options)
         
         return QuizQuestion(
-            question=f"What is {num1} {operation} {num2}?",
-            options=[str(x) for x in all_answers],
+            question=f"Vad är {num1} {operation} {num2}?",
+            options=options,
             correct_answer=str(correct),
             equation_parts={
                 "num1": num1,
                 "num2": num2,
                 "operation": operation
-            }
+            },
+            subcategory=subcategory,
+            difficulty=3.0,
+            explanation=f"För att lösa {num1} {operation} {num2}, ..."
         )
     except Exception as e:
         logger.error(f"Error in basic math question: {str(e)}")
         raise
 
 def generate_quiz_questions(count: int = 12) -> List[QuizQuestion]:
-    return [generate_math_question() for _ in range(count)] 
+    return [generate_math_question() for _ in range(count)]
+
+def generate_question() -> Dict[str, Any]:
+    """
+    Generate a question of any type.
+    """
+    # Choose provdel
+    provdel = random.choice(["XYZ", "NOG", "PRO", "DTK"])
+    
+    try:
+        if provdel == "XYZ":
+            delmoment = ["Rotekvationer", "Olikheter"]  # Example delmoment
+            return xyz_generator.generate_xyz_question(delmoment)
+        elif provdel == "NOG":
+            delmoment = ["Grafer", "Tabeller"]
+            return nog_generator.generate_nog_question(delmoment)
+        elif provdel == "PRO":
+            delmoment = ["Problemlösning", "Logik"]
+            return pro_generator.generate_pro_question(delmoment)
+        else:  # DTK
+            delmoment = ["Diagram", "Kartor"]
+            return dtk_generator.generate_dtk_question(delmoment)
+    except Exception as e:
+        logger.error(f"Error generating {provdel} question: {str(e)}")
+        raise 

@@ -1,8 +1,14 @@
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, Float, ForeignKey, Enum
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, Float, ForeignKey, Enum, Table
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy.sql import func
 from database import Base
 import bcrypt
+
+# Many-to-many relationship table for questions and delmoment
+question_delmoment = Table('question_delmoment', Base.metadata,
+    Column('question_id', Integer, ForeignKey('questions.id')),
+    Column('delmoment_id', Integer, ForeignKey('delmoment.id'))
+)
 
 class DBUser(Base):
     __tablename__ = "users"
@@ -56,21 +62,23 @@ class Question(Base):
     __tablename__ = "questions"
 
     id = Column(Integer, primary_key=True, index=True)
+    question_type = Column(String)  # "math", "text", etc.
+    amne = Column(String)  # "Kvalitativ" or "Kvantitativ"
+    provdel = Column(String)  # "XYZ", "NOG", "PRO", "DTK"
+    difficulty = Column(Float)
+    expected_time = Column(Integer)
     category_id = Column(Integer, ForeignKey("categories.id"))
-    question_type = Column(String)  # e.g., 'math', 'power_rule', etc.
-    difficulty = Column(Float)  # 1-10 scale
-    expected_time = Column(Integer)  # in seconds
     
     # Relationships
     category = relationship("Category", back_populates="questions")
-    attempts = relationship("QuestionAttempt", back_populates="question")
+    delmoment = relationship("Delmoment", secondary=question_delmoment, back_populates="questions")
 
 class QuestionAttempt(Base):
     __tablename__ = "question_attempts"
 
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"))
-    question_id = Column(Integer, ForeignKey("questions.id"))
+    question_id = Column(Integer)  # No foreign key since questions are generated
     subcategory = Column(String)
     is_correct = Column(Boolean)
     is_skipped = Column(Boolean, default=False)
@@ -79,7 +87,6 @@ class QuestionAttempt(Base):
     
     # Relationships
     user = relationship("DBUser", back_populates="question_attempts")
-    question = relationship("Question", back_populates="attempts")
 
 class UserCategoryProgress(Base):
     __tablename__ = "user_category_progress"
@@ -120,4 +127,14 @@ class UserAchievement(Base):
     
     # Relationships
     user = relationship("DBUser", back_populates="achievements")
-    achievement = relationship("Achievement", back_populates="user_achievements") 
+    achievement = relationship("Achievement", back_populates="user_achievements")
+
+class Delmoment(Base):
+    __tablename__ = "delmoment"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, unique=True)
+    description = Column(String)
+    
+    # Relationships
+    questions = relationship("Question", secondary=question_delmoment, back_populates="delmoment") 

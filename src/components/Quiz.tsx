@@ -94,7 +94,7 @@ export const Quiz: React.FC<QuizProps> = ({ onComplete }) => {
   const [showCalculator, setShowCalculator] = useState(false)
   const { isMuted, toggleMute } = useSound()
   const [startTime, setStartTime] = useState<Date | null>(null)
-  const { token } = useAuth()
+  const { token, refreshToken } = useAuth()
 
   const correctSound = new Audio('/sounds/correct.mp3')
   const wrongSound = new Audio('/sounds/wrong.mp3')
@@ -144,6 +144,16 @@ export const Quiz: React.FC<QuizProps> = ({ onComplete }) => {
     setStartTime(new Date())
   }, [currentQuestion])
 
+  const handleTokenError = async () => {
+    try {
+      await refreshToken()  // Implement this in your AuthContext
+      return true
+    } catch (error) {
+      console.error('Failed to refresh token:', error)
+      return false
+    }
+  }
+
   const handleAnswer = async (answer: string) => {
     const isCorrect = answer === questions[currentQuestion].correct_answer
     setLastAnsweredCorrectly(isCorrect)
@@ -160,21 +170,35 @@ export const Quiz: React.FC<QuizProps> = ({ onComplete }) => {
     // Only try to save if user is logged in
     if (token) {
       const timeTaken = startTime ? Math.round((new Date().getTime() - startTime.getTime()) / 1000) : 0
+      
       try {
-        await fetch(`${import.meta.env.VITE_API_URL}/api/attempts`, {  // Note: changed to /attempts
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/attempts`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`,
+            'Accept': 'application/json',
           },
+          credentials: 'include',
           body: JSON.stringify({
             question_id: questions[currentQuestion].id,
-            subcategory: questions[currentQuestion].subcategory,
+            subcategory: questions[currentQuestion].subcategory || 'XYZ - Okategoriserad',
             is_correct: isCorrect,
             is_skipped: false,
             time_taken: timeTaken,
           })
         })
+
+        if (response.status === 401) {
+          // Token expired, try to refresh
+          const refreshed = await handleTokenError()
+          if (refreshed) {
+            // Retry the request with new token
+            // ... retry logic here
+          }
+        } else if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`)
+        }
       } catch (error) {
         console.error('Failed to save attempt:', error)
       }
@@ -186,20 +210,26 @@ export const Quiz: React.FC<QuizProps> = ({ onComplete }) => {
     if (token) {
       const timeTaken = startTime ? Math.round((new Date().getTime() - startTime.getTime()) / 1000) : 0
       try {
-        await fetch(`${import.meta.env.VITE_API_URL}/api/attempts`, {  // Note: changed to /attempts
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/attempts`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`,
+            'Accept': 'application/json',
           },
+          credentials: 'include',
           body: JSON.stringify({
             question_id: questions[currentQuestion].id,
-            subcategory: questions[currentQuestion].subcategory,
+            subcategory: questions[currentQuestion].subcategory || 'XYZ - Okategoriserad',
             is_correct: false,
             is_skipped: true,
             time_taken: timeTaken,
           })
         })
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`)
+        }
       } catch (error) {
         console.error('Failed to save skip:', error)
       }
