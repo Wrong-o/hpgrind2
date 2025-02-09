@@ -6,79 +6,45 @@ import { DrawingBoard } from './DrawingBoard'
 import { Calculator } from './Calculator'
 import { useSound } from '../contexts/SoundContext'
 import { useAuth } from '../contexts/AuthContext'
+import { LoadingScreen } from './LoadingScreen'
 
 interface Question {
-  question: string
-  options: string[]
-  correct_answer: string
-  equation_parts?: any
-  subcategory: string
+  id: string
+  subject: string
+  category: string
+  moment: string
   difficulty: number
+  question: string
+  answers: string[]
+  correct_answer: string
+  drawing: any[]
   explanation: string
-  id: number
 }
 
 interface QuizProps {
   onComplete: (score: number) => void
+  testType: 'XYZ' | 'NOG' | 'PRO' | 'DTK'
 }
 
-const formatQuestion = (question: string, equationParts: any): JSX.Element => {
-  // Convert power rule questions to LaTeX
-  if (question.includes('^') || question.includes('\\frac')) {
-    return (
-      <div className="space-y-6 text-center">
-        <div className="text-2xl">Vad blir exponenten när du förenklar:</div>
-        <div className="text-4xl flex justify-center py-4">
-          <Latex>
-            {question.replace('What is the exponent when simplifying: ', '')}
-          </Latex>
-        </div>
+const formatQuestion = (question: string): JSX.Element => {
+  // Split the text by $ to separate LaTeX and regular text
+  const parts = question.split(/(\$[^$]+\$)/)
+  return (
+    <div className="space-y-6 text-center">
+      <div className="text-2xl py-4">
+        {parts.map((part, index) => {
+          if (part.startsWith('$') && part.endsWith('$')) {
+            // Remove the $ symbols and render as LaTeX
+            return <Latex key={index} math={part.slice(1, -1)} />
+          }
+          return <span key={index}>{part}</span>
+        })}
       </div>
-    )
-  }
-  
-  // Convert Pythagorean theorem questions to visual
-  if (question.includes('triangle')) {
-    const { a, b, c, missing_side } = equationParts
-    console.log('Raw question data:', equationParts)
-    
-    // Create props object - keep null values as null
-    const triangleProps = {
-      a: a === null || a === undefined ? null : Number(a),
-      b: b === null || b === undefined ? null : Number(b),
-      c: c === null || c === undefined ? null : Number(c),
-      missingLabel: missing_side as 'a' | 'b' | 'c'
-    }
-    
-    console.log('Processed triangle props:', triangleProps)
-    
-    return (
-      <div>
-        <Triangle {...triangleProps} />
-        <div className="text-center mt-4">
-          Hur lång är den okända sidan?
-        </div>
-      </div>
-    )
-  }
-  
-  // Convert basic math questions to LaTeX
-  if (question.includes('+') || question.includes('-') || question.includes('*')) {
-    const parts = question.match(/What is (.+)\?/)
-    if (parts) {
-      const equation = parts[1].replace(/\*/g, '\\times ')
-      return (
-        <div>
-          What is <Latex>{equation}</Latex>?
-        </div>
-      )
-    }
-  }
-  
-  return <div>{question}</div>
+    </div>
+  )
 }
 
-export const Quiz: React.FC<QuizProps> = ({ onComplete }) => {
+export const Quiz: React.FC<QuizProps> = ({ onComplete, testType }) => {
   const [currentQuestion, setCurrentQuestion] = useState(0)
   const [questions, setQuestions] = useState<Question[]>([])
   const [score, setScore] = useState(0)
@@ -103,46 +69,37 @@ export const Quiz: React.FC<QuizProps> = ({ onComplete }) => {
   wrongSound.volume = isMuted ? 0 : 0.2
 
   useEffect(() => {
-    const fetchQuestions = async (count: number) => {
+    const fetchQuestions = async () => {
+      setLoading(true)
+      setError(null)
       try {
-        const questionsList = []
-        for (let i = 0; i < count; i++) {
-          const response = await fetch(`${import.meta.env.VITE_API_URL}/api/question`, {
-            method: 'GET',
-            headers: {
-              'Accept': 'application/json',
-              'Content-Type': 'application/json',
-            },
-            credentials: 'omit'
-          })
-          
-          if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`)
+        // Fetch 12 questions
+        const allQuestions: Question[] = []
+        for (let i = 0; i < 12; i++) {
+          const questionResponse = await fetch(`${import.meta.env.VITE_API_URL}/api/question?type=${testType}`)
+          if (!questionResponse.ok) {
+            throw new Error('Failed to fetch questions')
           }
-          const question = await response.json()
-          // Add an id if it doesn't exist
-          questionsList.push({
-            ...question,
-            id: question.id || i + 1  // Fallback to index+1 if no id
-          })
+          const questionData = await questionResponse.json()
+          allQuestions.push(questionData)
         }
-        setQuestions(questionsList)
-        setError(null)
-      } catch (error) {
-        console.error('Error fetching questions:', error)
+        setQuestions(allQuestions)
+      } catch (err) {
         setError('Failed to load questions. Please try again.')
-      } finally {
-        setLoading(false)
+        console.error('Error fetching questions:', err)
       }
+      setLoading(false)
     }
 
-    fetchQuestions(12)
-  }, [])
+    fetchQuestions()
+  }, [testType])
 
   // Set start time when question loads
   useEffect(() => {
-    setStartTime(new Date())
-  }, [currentQuestion])
+    if (questions.length > 0) {
+      setStartTime(new Date())
+    }
+  }, [currentQuestion, questions])
 
   const handleTokenError = async () => {
     try {
@@ -155,7 +112,10 @@ export const Quiz: React.FC<QuizProps> = ({ onComplete }) => {
   }
 
   const handleAnswer = async (answer: string) => {
-    const isCorrect = answer === questions[currentQuestion].correct_answer
+    // Remove any whitespace and normalize the strings for comparison
+    const normalizedAnswer = answer.trim()
+    const normalizedCorrectAnswer = questions[currentQuestion].correct_answer.trim()
+    const isCorrect = normalizedAnswer === normalizedCorrectAnswer
     setLastAnsweredCorrectly(isCorrect)
     setShowExplanation(true)
     setCanProceed(true)
@@ -182,7 +142,7 @@ export const Quiz: React.FC<QuizProps> = ({ onComplete }) => {
           credentials: 'include',
           body: JSON.stringify({
             question_id: questions[currentQuestion].id,
-            subcategory: questions[currentQuestion].subcategory || 'XYZ - Okategoriserad',
+            subcategory: questions[currentQuestion].category || 'XYZ - Okategoriserad',
             is_correct: isCorrect,
             is_skipped: false,
             time_taken: timeTaken,
@@ -220,7 +180,7 @@ export const Quiz: React.FC<QuizProps> = ({ onComplete }) => {
           credentials: 'include',
           body: JSON.stringify({
             question_id: questions[currentQuestion].id,
-            subcategory: questions[currentQuestion].subcategory || 'XYZ - Okategoriserad',
+            subcategory: questions[currentQuestion].category || 'XYZ - Okategoriserad',
             is_correct: false,
             is_skipped: true,
             time_taken: timeTaken,
@@ -253,7 +213,7 @@ export const Quiz: React.FC<QuizProps> = ({ onComplete }) => {
   }
 
   if (loading) {
-    return <div className="text-xl text-pink-600">Loading questions...</div>
+    return <LoadingScreen />
   }
 
   if (error || questions.length === 0) {
@@ -268,6 +228,11 @@ export const Quiz: React.FC<QuizProps> = ({ onComplete }) => {
         </button>
       </div>
     )
+  }
+
+  // Make sure we have questions before rendering the quiz interface
+  if (!questions[currentQuestion]) {
+    return <LoadingScreen />
   }
 
   return (
@@ -341,9 +306,9 @@ export const Quiz: React.FC<QuizProps> = ({ onComplete }) => {
       <div className="bg-white/40 backdrop-blur-sm p-8 rounded-2xl shadow-lg border border-teal-100">
         <div className="flex justify-between items-center mb-6">
           <div>
-            <h2 className="text-2xl font-bold text-blue-600">XYZ Test</h2>
+            <h2 className="text-2xl font-bold text-blue-600">{testType} Test</h2>
             <div className="text-sm text-teal-600">
-              {questions[currentQuestion].subcategory} • 
+              {questions[currentQuestion].moment} • 
               <span className="text-yellow-500 ml-2" title={`Svårighetsgrad ${questions[currentQuestion].difficulty}/5`}>
                 {getDifficultyStars(questions[currentQuestion].difficulty)}
               </span>
@@ -357,22 +322,23 @@ export const Quiz: React.FC<QuizProps> = ({ onComplete }) => {
           Score: {score}
         </div>
         <div className="bg-white/50 backdrop-blur-sm p-6 rounded-xl shadow-lg border border-white/50">
-          <h2 className="text-2xl text-pink-600 mb-4">
-            {formatQuestion(
-              questions[currentQuestion].question,
-              questions[currentQuestion].equation_parts
-            )}
-          </h2>
-          <div className="grid grid-cols-2 gap-4">
-            {questions[currentQuestion].options.map((option, index) => (
+          <div className="text-2xl text-pink-600 mb-8">
+            {formatQuestion(questions[currentQuestion]?.question || '')}
+          </div>
+          <div className="grid grid-cols-2 gap-6">
+            {questions[currentQuestion]?.answers.map((option, index) => (
               <button
                 key={index}
                 onClick={() => handleAnswer(option)}
-                className="px-4 py-2 bg-blue-500 text-white rounded-lg 
-                          hover:bg-blue-600 transition-colors"
+                className={`px-6 py-4 bg-blue-500 text-white rounded-lg 
+                          hover:bg-blue-600 transition-colors min-h-[80px]
+                          flex items-center justify-center
+                          ${showExplanation ? 'cursor-not-allowed opacity-75' : ''}`}
                 disabled={showExplanation}
               >
-                <Latex>{option}</Latex>
+                <div className="text-xl">
+                  <Latex math={option.slice(1, -1)} />
+                </div>
               </button>
             ))}
           </div>
@@ -388,16 +354,21 @@ export const Quiz: React.FC<QuizProps> = ({ onComplete }) => {
         </button>
 
         {showExplanation && (
-          <div className="mt-4">
-            <div className={`p-4 rounded-lg ${
+          <div className="mt-6">
+            <div className={`p-6 rounded-lg ${
               lastAnsweredCorrectly ? 'bg-green-100' : 'bg-red-100'
             }`}>
-              <h3 className="font-bold mb-2">
+              <h3 className="font-bold mb-4 text-xl">
                 {lastAnsweredCorrectly ? 'Bra jobbat!' : 'Nästan rätt!'}
               </h3>
-              <p className="whitespace-pre-line">
-                {questions[currentQuestion].explanation}
-              </p>
+              <div className="text-lg whitespace-pre-line">
+                {questions[currentQuestion].explanation.split(/(\$[^$]+\$)/).map((part, index) => {
+                  if (part.startsWith('$') && part.endsWith('$')) {
+                    return <Latex key={index} math={part.slice(1, -1)} />
+                  }
+                  return <span key={index}>{part}</span>
+                })}
+              </div>
             </div>
             
             {canProceed && (

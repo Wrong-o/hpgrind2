@@ -11,12 +11,14 @@ import { CategoryStats } from './components/CategoryStats'
 import { SoundProvider } from './contexts/SoundContext'
 
 function AppContent() {
-  const [currentView, setCurrentView] = useState<'landing' | 'menu' | 'quiz' | 'complete' | 'roadmap' | 'stats'>('landing')
+  const [currentView, setCurrentView] = useState<'landing' | 'menu' | 'quiz' | 'complete' | 'roadmap' | 'stats' | 'test-select'>('landing')
   const [finalScore, setFinalScore] = useState(0)
   const [showLogin, setShowLogin] = useState(false)
+  const [currentTestType, setCurrentTestType] = useState<'XYZ' | 'NOG' | 'PRO' | 'DTK'>('XYZ')
   const { isLoggedIn, logout } = useAuth()
 
-  const handleQuizStart = () => {
+  const handleQuizStart = (testType: 'XYZ' | 'NOG' | 'PRO' | 'DTK') => {
+    setCurrentTestType(testType)
     setCurrentView('quiz')
   }
 
@@ -114,8 +116,8 @@ function AppContent() {
             </h2>
             <div className="grid grid-cols-2 gap-4">
               <QuizButton 
-                text="XYZ Test" 
-                onClick={handleQuizStart}
+                text="Testa" 
+                onClick={() => setCurrentView('test-select')}
               />
               <QuizButton 
                 text={
@@ -147,14 +149,53 @@ function AppContent() {
           </div>
         </div>
       )}
+
+      {currentView === 'test-select' && (
+        <div className="relative w-full max-w-4xl px-4">
+          <div className="text-center z-10 bg-white/40 backdrop-blur-sm p-8 rounded-2xl 
+                        shadow-lg border border-teal-100 mt-16">
+            <button
+              onClick={() => setCurrentView('menu')}
+              className="absolute top-4 left-4 px-4 py-2 bg-blue-600 text-white 
+                       rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              Tillbaka
+            </button>
+            <h1 className="text-4xl font-bold text-blue-600 mb-4">
+              Välj Test
+            </h1>
+            <h2 className="text-xl text-teal-700 italic font-light mb-8">
+              Välj den typ av test du vill öva på
+            </h2>
+            <div className="grid grid-cols-2 gap-4">
+              <QuizButton 
+                text="XYZ Test" 
+                onClick={() => handleQuizStart('XYZ')}
+              />
+              <QuizButton 
+                text="NOG Test" 
+                onClick={() => handleQuizStart('NOG')}
+              />
+              <QuizButton 
+                text="PRO Test" 
+                onClick={() => handleQuizStart('PRO')}
+              />
+              <QuizButton 
+                text="DTK Test" 
+                onClick={() => handleQuizStart('DTK')}
+              />
+            </div>
+          </div>
+        </div>
+      )}
       
       {currentView === 'quiz' && (
-        <Quiz onComplete={handleQuizComplete} />
+        <Quiz onComplete={handleQuizComplete} testType={currentTestType} />
       )}
 
       {currentView === 'complete' && (
         <div className="text-center z-10 bg-white/40 backdrop-blur-sm p-8 rounded-2xl shadow-lg border border-teal-100">
-          <h2 className="text-2xl font-bold text-blue-600 mb-4">XYZ Test Klar!</h2>
+          <h2 className="text-2xl font-bold text-blue-600 mb-4">{currentTestType} Test Klar!</h2>
           <p className="text-xl text-teal-700 mb-6">Ditt resultat: {finalScore}/12</p>
           <div className="space-x-4">
             <button
@@ -164,7 +205,7 @@ function AppContent() {
               Till Menyn
             </button>
             <button
-              onClick={handleQuizStart}
+              onClick={() => handleQuizStart(currentTestType)}
               className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
             >
               Försök Igen

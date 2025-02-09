@@ -1,8 +1,14 @@
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, Float, ForeignKey, Enum, Table
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, SmallInteger, Float, ForeignKey, Enum, Table
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy.sql import func
+from sqlalchemy.dialects.postgresql import UUID
 from database import Base
-import bcrypt
+from passlib.context import CryptContext
+import uuid
+from datetime import datetime
+
+# Password hashing configuration
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # Many-to-many relationship table for questions and delmoment
 question_delmoment = Table('question_delmoment', Base.metadata,
@@ -11,33 +17,51 @@ question_delmoment = Table('question_delmoment', Base.metadata,
 )
 
 class DBUser(Base):
-    __tablename__ = "users"
+    __tablename__ = "user_table"
 
-    id = Column(Integer, primary_key=True, index=True)
-    email = Column(String, unique=True, index=True)
-    hashed_password = Column(String)
-    is_active = Column(Boolean, default=True)
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
-    
+    id = Column(Integer, primary_key=True)
+    email = Column(String(100), nullable=False, unique=True)
+    password = Column(String(100), nullable=False)
+
     # Relationships
-    category_progress = relationship("UserCategoryProgress", back_populates="user")
     question_attempts = relationship("QuestionAttempt", back_populates="user")
+    history = relationship("UserHistory", back_populates="user")
+    premium = relationship("Premium", back_populates="user", uselist=False)
+    category_progress = relationship("UserCategoryProgress", back_populates="user")
     achievements = relationship("UserAchievement", back_populates="user")
+    gear = relationship("UserGear", back_populates="user")
 
     @staticmethod
     def hash_password(password: str) -> str:
-        # Generate a salt and hash the password
-        salt = bcrypt.gensalt()
-        hashed = bcrypt.hashpw(password.encode('utf-8'), salt)
-        return hashed.decode('utf-8')
+        return pwd_context.hash(password)
 
     def verify_password(self, plain_password: str) -> bool:
-        # Verify the password
-        return bcrypt.checkpw(
-            plain_password.encode('utf-8'),
-            self.hashed_password.encode('utf-8')
-        )
+        return pwd_context.verify(plain_password, self.password)
+
+class UserHistory(Base):
+    __tablename__ = "user_history"
+
+    id = Column(Integer, primary_key=True)
+    timestamp = Column(DateTime(timezone=True), server_default=func.now())
+    user_id = Column(Integer, ForeignKey("user_table.id"), nullable=False)
+    subject = Column(String(100), nullable=False)
+    category = Column(String(100), nullable=False)
+    moment = Column(String(100), nullable=False)
+    difficulty = Column(SmallInteger, nullable=False)
+    skipped = Column(Boolean, default=False)
+    time = Column(SmallInteger, nullable=False)  # Time in seconds
+
+    # Relationships
+    user = relationship("DBUser", back_populates="history")
+
+class Premium(Base):
+    __tablename__ = "premium"
+
+    user_id = Column(Integer, ForeignKey("user_table.id"), primary_key=True)
+    tier = Column(SmallInteger, nullable=False)
+
+    # Relationships
+    user = relationship("DBUser", back_populates="premium")
 
 class Category(Base):
     __tablename__ = "categories"
@@ -45,15 +69,10 @@ class Category(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, unique=True, index=True)
     description = Column(String)
-    parent_id = Column(Integer, ForeignKey("categories.id"), nullable=True)
+    parent_id = Column(Integer, ForeignKey("categories.id"))
     
-    # Simplified self-referential relationship
-    children = relationship(
-        "Category",
-        backref=backref("parent", remote_side=[id]),
-        cascade="all, delete-orphan"
-    )
-    
+    parent = relationship("Category", remote_side=[id], back_populates="subcategories")
+    subcategories = relationship("Category", back_populates="parent")
     questions = relationship("Question", back_populates="category")
     user_progress = relationship("UserCategoryProgress", back_populates="category")
     achievements = relationship("Achievement", back_populates="category")
@@ -72,62 +91,77 @@ class Question(Base):
     # Relationships
     category = relationship("Category", back_populates="questions")
     delmoment = relationship("Delmoment", secondary=question_delmoment, back_populates="questions")
+    attempts = relationship("QuestionAttempt", back_populates="question")
 
 class QuestionAttempt(Base):
     __tablename__ = "question_attempts"
 
-    id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"))
-    question_id = Column(Integer)  # No foreign key since questions are generated
-    subcategory = Column(String)
-    is_correct = Column(Boolean)
-    is_skipped = Column(Boolean, default=False)
-    time_taken = Column(Integer)  # in seconds
-    attempted_at = Column(DateTime(timezone=True), server_default=func.now())
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey("user_table.id"), nullable=False)
+    question_id = Column(Integer, ForeignKey("questions.id"), nullable=False)
+    timestamp = Column(DateTime, default=datetime.utcnow)
+    correct = Column(Boolean, nullable=False)
+    time_taken = Column(Float)  # Time taken in seconds
     
-    # Relationships
     user = relationship("DBUser", back_populates="question_attempts")
+    question = relationship("Question", back_populates="attempts")
 
 class UserCategoryProgress(Base):
     __tablename__ = "user_category_progress"
 
-    id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"))
-    category_id = Column(Integer, ForeignKey("categories.id"))
-    progress_score = Column(Float, default=0.0)
-    accuracy = Column(Float, default=0.0)
-    avg_time = Column(Float, default=0.0)
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey("user_table.id"), nullable=False)
+    category_id = Column(Integer, ForeignKey("categories.id"), nullable=False)
+    progress = Column(Float, default=0.0)  # Progress as a percentage
+    last_updated = Column(DateTime, default=datetime.utcnow)
     
-    # Relationships
     user = relationship("DBUser", back_populates="category_progress")
     category = relationship("Category", back_populates="user_progress")
 
 class Achievement(Base):
     __tablename__ = "achievements"
 
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, unique=True)
-    description = Column(String)
-    icon = Column(String)  # Path/URL to achievement icon
-    requirement_type = Column(String)  # e.g., 'accuracy', 'speed', 'streak'
-    requirement_value = Column(Float)  # Target value to unlock
-    category_id = Column(Integer, ForeignKey("categories.id"), nullable=True)
+    id = Column(Integer, primary_key=True)
+    name = Column(String(100), nullable=False)
+    description = Column(String(100), nullable=False)
+    category_id = Column(Integer, ForeignKey("categories.id"))
     
-    # Relationships
     category = relationship("Category", back_populates="achievements")
-    user_achievements = relationship("UserAchievement", back_populates="achievement")
+    users = relationship("UserAchievement", back_populates="achievement")
 
 class UserAchievement(Base):
     __tablename__ = "user_achievements"
 
-    id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"))
-    achievement_id = Column(Integer, ForeignKey("achievements.id"))
-    unlocked_at = Column(DateTime(timezone=True), server_default=func.now())
-    
+    user_id = Column(Integer, ForeignKey("user_table.id"), primary_key=True)
+    achievement_id = Column(Integer, ForeignKey("achievements.id"), primary_key=True)
+    achieved = Column(Boolean, default=False)
+    timestamp = Column(DateTime(timezone=True), server_default=func.now())
+
     # Relationships
     user = relationship("DBUser", back_populates="achievements")
-    achievement = relationship("Achievement", back_populates="user_achievements")
+    achievement = relationship("Achievement", back_populates="users")
+
+class Gear(Base):
+    __tablename__ = "gear"
+
+    id = Column(Integer, primary_key=True)
+    name = Column(String(100), nullable=False)
+    type = Column(String(100), nullable=False)
+
+    # Relationships
+    users = relationship("UserGear", back_populates="gear")
+
+class UserGear(Base):
+    __tablename__ = "user_gear"
+
+    user_id = Column(Integer, ForeignKey("user_table.id"), primary_key=True)
+    gear_id = Column(Integer, ForeignKey("gear.id"), primary_key=True)
+    unlocked = Column(Boolean, default=False)
+    timestamp = Column(DateTime(timezone=True), server_default=func.now())
+
+    # Relationships
+    user = relationship("DBUser", back_populates="gear")
+    gear = relationship("Gear", back_populates="users")
 
 class Delmoment(Base):
     __tablename__ = "delmoment"

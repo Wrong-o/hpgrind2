@@ -6,12 +6,13 @@ from quiz_generator import generate_math_question, QuizQuestion
 from sqlalchemy.orm import Session
 from datetime import timedelta
 from typing import List
-from models.database_models import Base, DBUser, UserAchievement, QuestionAttempt
+from models.database_models import Base, DBUser, UserHistory, Achievement, UserAchievement
 from database import get_db, engine
-from services.user_service import create_user, authenticate_user
+from services.user_service import create_user, authenticate_user, save_user_history
 from models.pydantic_models import User, UserCreate, Token
 from services.stats_service import UserStats
 from services.recommendation_service import RecommendationEngine
+from question_generators import xyz_generator, nog_generator, pro_generator, dtk_generator
 import auth
 from seed_data import seed_database  # Add this import
 from pydantic import BaseModel
@@ -39,11 +40,12 @@ app = FastAPI()
 # Move CORS middleware to the top, before any routes
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=["http://localhost:5173"],  # Your frontend URL
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_methods=["*"],
     allow_headers=["*"],
     expose_headers=["*"],
+    max_age=3600,  # Cache preflight requests for 1 hour
 )
 
 # Add custom exception handler to maintain CORS headers on errors
@@ -55,6 +57,8 @@ async def global_exception_handler(request, exc):
         headers={
             "Access-Control-Allow-Origin": "http://localhost:5173",
             "Access-Control-Allow-Credentials": "true",
+            "Access-Control-Allow-Methods": "*",
+            "Access-Control-Allow-Headers": "*",
         },
     )
 
@@ -66,12 +70,23 @@ async def http_exception_handler(request, exc):
         headers={
             "Access-Control-Allow-Origin": "http://localhost:5173",
             "Access-Control-Allow-Credentials": "true",
+            "Access-Control-Allow-Methods": "*",
+            "Access-Control-Allow-Headers": "*",
         },
     )
 
-@app.options("/api/question")
-async def options_question():
-    return {"message": "OK"}
+# Add OPTIONS handlers for all routes that need CORS
+@app.options("/{path:path}")
+async def options_handler(path: str):
+    return JSONResponse(
+        content={"message": "OK"},
+        headers={
+            "Access-Control-Allow-Origin": "http://localhost:5173",
+            "Access-Control-Allow-Credentials": "true",
+            "Access-Control-Allow-Methods": "*",
+            "Access-Control-Allow-Headers": "*",
+        },
+    )
 
 @app.get("/api/health")
 async def health_check():
@@ -88,9 +103,34 @@ async def get_goals():
     return {"goals": []}
 
 @app.get("/api/question")
-async def get_question():
+async def get_question(type: str = 'XYZ'):
+    """
+    Get a question based on the test type.
+    
+    Args:
+        type (str): The type of test (XYZ, NOG, PRO, or DTK)
+        
+    Returns:
+        QuizQuestion: A question of the specified type
+    """
     try:
-        return generate_math_question()
+        if type == 'XYZ':
+            delmoment = ["Rotekvationer", "Olikheter"]
+            return xyz_generator.generate_xyz_question(delmoment)
+        elif type == 'NOG':
+            delmoment = ["Grafer", "Tabeller"]
+            return nog_generator.generate_nog_question(delmoment)
+        elif type == 'PRO':
+            delmoment = ["Problemlösning", "Logik"]
+            return pro_generator.generate_pro_question(delmoment)
+        elif type == 'DTK':
+            delmoment = ["Diagram", "Kartor"]
+            return dtk_generator.generate_dtk_question(delmoment)
+        else:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid test type: {type}. Must be one of: XYZ, NOG, PRO, DTK"
+            )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -167,74 +207,66 @@ async def get_recommendations(current_user: User = Depends(auth.get_current_user
     }
 
 @app.get("/api/user/achievements")
-async def get_achievements(current_user: User = Depends(auth.get_current_user), db: Session = Depends(get_db)):
+async def get_user_achievements(
+    current_user: User = Depends(auth.get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Get user's achievements"""
     achievements = db.query(UserAchievement).filter(
-        UserAchievement.user_id == current_user.id
+        UserAchievement.user_id == current_user.id,
+        UserAchievement.achieved == True
     ).all()
     return achievements
 
-@app.get("/api/user/category-stats")
-async def get_category_stats(
-    current_user: User = Depends(auth.get_current_user), 
+@app.get("/api/user/history")
+async def get_user_history(
+    current_user: User = Depends(auth.get_current_user),
     db: Session = Depends(get_db)
 ):
-    stats = UserStats(db, current_user.id)
-    return stats.get_category_stats()
-
-@app.get("/api/xyz/stats")
-async def get_xyz_stats(current_user: User = Depends(auth.get_current_user), db: Session = Depends(get_db)):
-    """
-    Get XYZ question statistics for the current user.
-    
-    Args:
-        current_user (User): Authenticated user from token
-        db (Session): Database session
-    
-    Returns:
-        list: List of stats for each subcategory containing:
-            - subcategory (str): Name of subcategory
-            - correct_percentage (float): Percentage of correct answers
-            - average_time (float): Average time per question
-            - total_questions (int): Total questions attempted
-    """
-    attempts = db.query(QuestionAttempt).filter(
-        QuestionAttempt.user_id == current_user.id,
-        QuestionAttempt.subcategory.like('XYZ%')  # Only XYZ questions
+    """Get user's question attempt history"""
+    history = db.query(UserHistory).filter(
+        UserHistory.user_id == current_user.id
     ).all()
+    return history
 
-    stats_by_subcategory = {}
+@app.get("/api/user/stats/{category}")
+async def get_category_stats(
+    category: str,
+    current_user: User = Depends(auth.get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Get user's stats for a specific category"""
+    history = db.query(UserHistory).filter(
+        UserHistory.user_id == current_user.id,
+        UserHistory.category == category
+    ).all()
     
-    for attempt in attempts:
-        if attempt.subcategory not in stats_by_subcategory:
-            stats_by_subcategory[attempt.subcategory] = {
-                'correct': 0,
-                'total_time': 0,
-                'total_questions': 0
-            }
-        
-        stats = stats_by_subcategory[attempt.subcategory]
-        stats['total_questions'] += 1
-        stats['total_time'] += attempt.time_taken
-        if attempt.is_correct:
-            stats['correct'] += 1
-
-    return [
-        {
-            'subcategory': subcat,
-            'correct_percentage': round((stats['correct'] / stats['total_questions']) * 100, 1),
-            'average_time': round(stats['total_time'] / stats['total_questions'], 1),
-            'total_questions': stats['total_questions']
+    if not history:
+        return {
+            "total_attempts": 0,
+            "average_time": 0,
+            "correct_percentage": 0,
+            "skipped_percentage": 0
         }
-        for subcat, stats in stats_by_subcategory.items()
-    ]
+    
+    total_attempts = len(history)
+    total_time = sum(h.time for h in history)
+    skipped_count = sum(1 for h in history if h.skipped)
+    
+    return {
+        "total_attempts": total_attempts,
+        "average_time": total_time / total_attempts if total_attempts > 0 else 0,
+        "skipped_percentage": (skipped_count / total_attempts * 100) if total_attempts > 0 else 0
+    }
 
 # Add this class for request validation
 class AttemptCreate(BaseModel):
-    question_id: int
-    subcategory: str
-    is_correct: bool
-    is_skipped: bool
-    time_taken: int
+    subject: str
+    category: str
+    moment: str
+    difficulty: int
+    skipped: bool
+    time: int
 
 @app.options("/api/attempts")
 async def options_attempts():
@@ -246,98 +278,22 @@ async def save_attempt(
     current_user: User = Depends(auth.get_current_user),
     db: Session = Depends(get_db)
 ):
-    """
-    Save a question attempt for a user.
-    """
+    """Save a question attempt in user history"""
     try:
-        print("\n=== Attempt Save Debug ===")
-        print("1. Request Data:")
-        print(f"  - Attempt data: {attempt.dict()}")
-        print(f"  - Current user ID: {current_user.id}")
-        print(f"  - Current user email: {current_user.email}")
-        
-        print("\n2. Database Session Check:")
-        print(f"  - Session is active: {db.is_active}")
-        
-        print("\n3. Creating QuestionAttempt:")
-        new_attempt = QuestionAttempt(
+        history = save_user_history(
+            db=db,
             user_id=current_user.id,
-            question_id=attempt.question_id,
-            subcategory=attempt.subcategory,
-            is_correct=attempt.is_correct,
-            is_skipped=attempt.is_skipped,
-            time_taken=attempt.time_taken
+            subject=attempt.subject,
+            category=attempt.category,
+            moment=attempt.moment,
+            difficulty=attempt.difficulty,
+            skipped=attempt.skipped,
+            time=attempt.time
         )
-        
-        print("  - New attempt object created:")
-        print(f"    * user_id: {new_attempt.user_id}")
-        print(f"    * question_id: {new_attempt.question_id}")
-        print(f"    * subcategory: {new_attempt.subcategory}")
-        print(f"    * is_correct: {new_attempt.is_correct}")
-        print(f"    * is_skipped: {new_attempt.is_skipped}")
-        print(f"    * time_taken: {new_attempt.time_taken}")
-        
-        print("\n4. Adding to Database:")
-        try:
-            print("  - Adding to session...")
-            db.add(new_attempt)
-            print("  - Added successfully")
-            
-            print("  - Session state after add:")
-            print(f"    * Object in session: {new_attempt in db}")
-            print(f"    * Session has changes: {db.dirty or db.new}")
-            
-            print("  - Committing transaction...")
-            db.commit()
-            print("  - Committed successfully")
-            
-            print("\n5. Verifying Save:")
-            saved_attempt = db.query(QuestionAttempt).filter(
-                QuestionAttempt.id == new_attempt.id
-            ).first()
-            print(f"  - Found in database: {saved_attempt is not None}")
-            if saved_attempt:
-                print("  - Saved data:")
-                print(f"    * ID: {saved_attempt.id}")
-                print(f"    * User ID: {saved_attempt.user_id}")
-                print(f"    * Question ID: {saved_attempt.question_id}")
-                print(f"    * Subcategory: {saved_attempt.subcategory}")
-                print(f"    * Is Correct: {saved_attempt.is_correct}")
-                print(f"    * Is Skipped: {saved_attempt.is_skipped}")
-                print(f"    * Time Taken: {saved_attempt.time_taken}")
-            
-        except Exception as commit_error:
-            print("\n!!! Database Error !!!")
-            print(f"  - Error type: {type(commit_error)}")
-            print(f"  - Error message: {str(commit_error)}")
-            print(f"  - Session state: {db.is_active}")
-            print("  - Rolling back transaction...")
-            db.rollback()
-            print("  - Rollback complete")
-            raise
-            
-        print("\n=== Save Completed Successfully ===")
-        return {"status": "success"}
-        
+        return {"status": "success", "history_id": history.id}
     except Exception as e:
-        print("\n!!! General Error !!!")
-        print(f"  - Error type: {type(e)}")
-        print(f"  - Error message: {str(e)}")
-        print("  - Full error details:")
-        import traceback
-        print(traceback.format_exc())
-        print("\n  - Request data:")
-        print(f"    * Attempt: {attempt.dict() if attempt else 'None'}")
-        print(f"    * User: {vars(current_user) if current_user else 'None'}")
-        print(f"    * DB Session active: {db.is_active if db else 'None'}")
-        
-        if db and db.is_active:
-            print("  - Rolling back transaction...")
-            db.rollback()
-            print("  - Rollback complete")
-            
         raise HTTPException(
-            status_code=500,
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to save attempt: {str(e)}"
         )
 
