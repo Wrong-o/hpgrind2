@@ -74,24 +74,73 @@ function AppContent() {
             HPGrind
           </h1>
           <p className="text-xl text-teal-800 mb-8 max-w-2xl mx-auto">
-            Din personliga högskoleprovscoach! Träna smartare med automatiserade uppgifter 
-            anpassade efter dina behov.
+            Ta med eget grindset. Resten har vi här. 
+          </p>
+          <p className="text-xl text-teal-800 mb-8 max-w-2xl mx-auto">
+            Du slipper allt det här:
           </p>
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-3xl mx-auto">
               <div className="bg-white/40 backdrop-blur-sm p-6 rounded-xl shadow-lg border border-teal-100">
-                <h3 className="text-xl font-bold text-blue-700 mb-2">Automatiserade Uppgifter</h3>
-                <p className="text-teal-700">Träna på exakt det du behöver, utan att slösa tid på att leta uppgifter</p>
+                <h3 className="text-xl font-bold text-blue-700 mb-2">Ta reda på vad du behöver kunna</h3>
+                <p className="text-teal-700">HPGrind är resultatet av mina år som privatlärare i högskoleprovet</p>
               </div>
               <div className="bg-white/40 backdrop-blur-sm p-6 rounded-xl shadow-lg border border-teal-100">
-                <h3 className="text-xl font-bold text-blue-700 mb-2">Direkt Hjälp</h3>
-                <p className="text-teal-700">Få stöd med tydliga bilder och förklarande text</p>
+                <h3 className="text-xl font-bold text-blue-700 mb-2">Hitta uppgifter som passar dig</h3>
+                <p className="text-teal-700">Svårt att hitta uppgifter som passar dig? HPGrinds AI genererar frågor för just din profil</p>
               </div>
               <div className="bg-white/40 backdrop-blur-sm p-6 rounded-xl shadow-lg border border-teal-100">
-                <h3 className="text-xl font-bold text-blue-700 mb-2">Snabba Test</h3>
-                <p className="text-teal-700">Korta övningar som passar in i din vardag</p>
+                <h3 className="text-xl font-bold text-blue-700 mb-2">Leta hjälp när du fastnar</h3>
+                <p className="text-teal-700">Få hjälp precis när du vill och på sättet du vill</p>
               </div>
             </div>
+            <div className="flex flex-col gap-2 w-60 sm:w-72 text-[10px] sm:text-xs z-50">
+              <div
+                className="error-alert cursor-default flex items-center justify-between w-full h-12 sm:h-14 rounded-lg bg-[#232531] px-[10px]"
+              >
+                <div className="flex gap-2">
+        <div className="text-[#d65563] bg-white/5 backdrop-blur-xl p-1 rounded-lg">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke-width="1.5"
+          stroke="currentColor"
+          className="w-6 h-6"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z"
+          ></path>
+        </svg>
+      </div>
+      <div>
+        <p className="text-white">Please try again</p>
+        <p className="text-gray-500">This is the description part</p>
+      </div>
+    </div>
+    <button
+      className="text-gray-600 hover:bg-white/10 p-1 rounded-md transition-colors ease-linear"
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke-width="1.5"
+        stroke="currentColor"
+        className="w-6 h-6"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          d="M6 18 18 6M6 6l12 12"
+        ></path>
+      </svg>
+    </button>
+  </div>
+</div>
+
             <button
               onClick={() => setCurrentView('menu')}
               className="px-8 py-4 bg-blue-600 text-white rounded-xl font-bold text-xl

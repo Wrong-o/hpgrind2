@@ -10,81 +10,31 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onClose }) => {
   const [isLogin, setIsLogin] = useState(true)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [error, setError] = useState('')
+  const [error, setError] = useState<string | null>(null)
   const [showWelcome, setShowWelcome] = useState(false)
-  const { login } = useAuth()
+  const { login, register } = useAuth()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setError('')
+    setError(null)
 
     try {
       if (isLogin) {
-        // Use FormData for token endpoint
-        const formData = new URLSearchParams()
-        formData.append('username', email)
-        formData.append('password', password)
-        formData.append('grant_type', 'password')
-
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/token`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'Accept': 'application/json',
-          },
-          credentials: 'include',
-          body: formData,
-        })
-
-        if (!response.ok) {
-          const data = await response.json()
-          throw new Error(data.detail || 'Something went wrong')
-        }
-
-        const data = await response.json()
-        login(data.access_token)
+        await login(email, password)
         onClose()
       } else {
-        // Registration endpoint
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/register`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-          },
-          credentials: 'include',
-          body: JSON.stringify({ email, password }),
-        })
-
-        if (!response.ok) {
-          const data = await response.json()
-          throw new Error(data.detail || 'Something went wrong')
-        }
-
-        // After successful registration, log in automatically
-        const formData = new URLSearchParams()
-        formData.append('username', email)
-        formData.append('password', password)
-        formData.append('grant_type', 'password')
-
-        const loginResponse = await fetch(`${import.meta.env.VITE_API_URL}/api/token`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'Accept': 'application/json',
-          },
-          credentials: 'include',
-          body: formData,
-        })
-
-        if (loginResponse.ok) {
-          const loginData = await loginResponse.json()
-          login(loginData.access_token)
-          setShowWelcome(true)
-        }
+        await register(email, password)
+        setShowWelcome(true)
       }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred')
+    } catch (err: any) {
+      // Handle different error types
+      if (err.message?.includes('already registered')) {
+        setError('Emailen har redan ett konto, försök att logga in istället')
+      } else if (err.message?.includes('minst')) {
+        setError(`Lösenordet är inte starkt nog: ${err.message}`)
+      } else {
+        setError('Något gick fel. Om det håller i sig, kontakta supporten')
+      }
     }
   }
 
@@ -93,49 +43,64 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onClose }) => {
   }
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-2xl p-8 max-w-md w-full mx-4 relative">
-        {/* Close button */}
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+      <div className="bg-white rounded-xl p-8 max-w-md w-full mx-4 relative">
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+          className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
         >
           ✕
         </button>
-
+        
         <h2 className="text-2xl font-bold text-blue-600 mb-6">
           {isLogin ? 'Logga in' : 'Skapa konto'}
         </h2>
 
+        {error && (
+          <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-lg">
+            {error}
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-              E-post
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Email
             </label>
             <input
               type="email"
-              id="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 
-                       focus:ring-blue-500 focus:border-blue-500 outline-none"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 
+                       focus:ring-blue-500 focus:border-blue-500"
               required
             />
           </div>
 
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
               Lösenord
             </label>
             <input
               type="password"
-              id="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 
-                       focus:ring-blue-500 focus:border-blue-500 outline-none"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 
+                       focus:ring-blue-500 focus:border-blue-500"
               required
             />
+            {isLogin && (
+              <p className="mt-1 text-sm text-gray-500">
+                Lösenordet måste innehålla:
+                <ul className="list-disc list-inside">
+                  <li>Minst 8 tecken</li>
+                  <li>Minst en stor bokstav</li>
+                  <li>Minst en liten bokstav</li>
+                  <li>Minst en siffra</li>
+                  <li>Minst ett specialtecken (!@#$%^&*(),.?":{}|&lt;&gt;)</li>
+                </ul>
+              </p>
+            )}
           </div>
 
           <button
@@ -147,16 +112,15 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onClose }) => {
           </button>
         </form>
 
-        <div className="mt-4 text-center">
-          <button
-            onClick={() => setIsLogin(!isLogin)}
-            className="text-blue-600 hover:underline"
-          >
-            {isLogin 
-              ? 'Har du inget konto? Skapa ett här' 
-              : 'Har du redan ett konto? Logga in här'}
-          </button>
-        </div>
+        <button
+          onClick={() => {
+            setIsLogin(!isLogin)
+            setError(null)
+          }}
+          className="mt-4 text-sm text-blue-600 hover:text-blue-800"
+        >
+          {isLogin ? 'Har du inget konto? Skapa ett här' : 'Har du redan ett konto? Logga in här'}
+        </button>
       </div>
     </div>
   )
