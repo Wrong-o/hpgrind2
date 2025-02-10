@@ -130,6 +130,7 @@ export const Quiz: React.FC<QuizProps> = ({ onComplete, testType }) => {
     // Only try to save if user is logged in
     if (token) {
       const timeTaken = startTime ? Math.round((new Date().getTime() - startTime.getTime()) / 1000) : 0
+      const currentQ = questions[currentQuestion]
       
       try {
         const response = await fetch(`${import.meta.env.VITE_API_URL}/api/attempts`, {
@@ -141,11 +142,13 @@ export const Quiz: React.FC<QuizProps> = ({ onComplete, testType }) => {
           },
           credentials: 'include',
           body: JSON.stringify({
-            question_id: questions[currentQuestion].id,
-            subcategory: questions[currentQuestion].category || 'XYZ - Okategoriserad',
-            is_correct: isCorrect,
-            is_skipped: false,
-            time_taken: timeTaken,
+            subject: currentQ.subject,
+            category: currentQ.category,
+            moment: currentQ.moment,
+            difficulty: currentQ.difficulty,
+            skipped: false,
+            time: timeTaken,
+            is_correct: isCorrect
           })
         })
 
@@ -169,6 +172,8 @@ export const Quiz: React.FC<QuizProps> = ({ onComplete, testType }) => {
     // Only try to save if user is logged in
     if (token) {
       const timeTaken = startTime ? Math.round((new Date().getTime() - startTime.getTime()) / 1000) : 0
+      const currentQ = questions[currentQuestion]
+
       try {
         const response = await fetch(`${import.meta.env.VITE_API_URL}/api/attempts`, {
           method: 'POST',
@@ -179,11 +184,13 @@ export const Quiz: React.FC<QuizProps> = ({ onComplete, testType }) => {
           },
           credentials: 'include',
           body: JSON.stringify({
-            question_id: questions[currentQuestion].id,
-            subcategory: questions[currentQuestion].category || 'XYZ - Okategoriserad',
-            is_correct: false,
-            is_skipped: true,
-            time_taken: timeTaken,
+            subject: currentQ.subject,
+            category: currentQ.category,
+            moment: currentQ.moment,
+            difficulty: currentQ.difficulty,
+            skipped: true,
+            time: timeTaken,
+            is_correct: false
           })
         })
 
