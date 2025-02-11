@@ -10,21 +10,29 @@ export default {
         sans: ['Funnel Sans', 'system-ui', 'sans-serif'],
       },
       animation: {
-        'float': 'float 15s linear infinite',
+        'float': 'float 3s ease-out forwards',
+        'drop': 'drop 0.5s ease-in forwards',
         'bounce': 'bounce 1s infinite',
       },
       keyframes: {
         float: {
           '0%': { 
-            transform: 'translateY(100vh) rotate(0deg)',
-            opacity: '0',
+            transform: 'translateY(120%)',
+            opacity: '0'
           },
-          '10%': {
-            opacity: '1',
+          '20%': {
+            opacity: '1'
           },
           '100%': { 
-            transform: 'translateY(-100vh) rotate(360deg)',
-            opacity: '0',
+            transform: 'translateY(0%)',
+          },
+        },
+        drop: {
+          '0%': { 
+            transform: 'translateY(0%)',
+          },
+          '100%': { 
+            transform: 'translateY(120%)',
           },
         }
       },
@@ -32,7 +40,6 @@ export default {
         '1000': '1000ms',
         '2000': '2000ms',
         '3000': '3000ms',
-        '4000': '4000ms',
       }
     },
   },
