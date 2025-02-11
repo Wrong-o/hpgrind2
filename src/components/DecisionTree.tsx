@@ -315,10 +315,306 @@ const initialTree: TreeNode = {
                   title: 'Vinkelsumma',
                   description: 'Beräkna vinkelsumman i en triangel',
                   children: []
+                },
+                {
+                  id: 'trianglar-area',
+                  title: 'Area',
+                  description: 'Beräkna arean av en triangel',
+                  children: []
                 }
                 
               ]
+            },
+            {
+              id: 'cirklar',
+              title: 'Cirklar',
+              description: 'Beräkna omkrets och area av en cirkel',
+              children: [
+                {
+                  id: 'cirklar-omkrets',
+                  title: 'Omkrets',
+                  description: 'Beräkna omkretsen av en cirkel eller en cirkelbåge',
+                  children: [
+                    {
+                      id: 'cirklar-omkrets-cirkel',
+                      title: 'Cirkel',
+                      description: 'Beräkna omkretsen av en cirkel',
+                      children: []
+                    },
+                    {
+                      id: 'cirklar-omkrets-cirkelbåge',
+                      title: 'Cirkelbåge',
+                      description: 'Beräkna omkretsen av en cirkelbåge',
+                      children: []
+                    }
+
+                  ]
+                },
+                {
+                  id: 'cirklar-area',
+                  title: 'Area',
+                  description: 'Beräkna arean av en cirkel eller en cirkelbåge',
+                  children: [
+                    {
+                      id: 'cirklar-area-cirkel',
+                      title: 'Cirkel',
+                      description: 'Beräkna arean av en cirkel',
+                      children: []
+                    },
+                    {
+                      id: 'cirklar-area-cirkelbåge',
+                      title: 'Cirkelbåge',
+                      description: 'Beräkna arean av en cirkelbåge',
+                      children: []
+                    }
+
+                  ]
+                }
+              ]
+            },
+            {
+              id: 'vinklar',
+              title: 'Vinklar',
+              description: 'Använd vinklar för att hitta andra vinklar',
+              children: [
+                {
+                  id: 'vinklar-relationer',
+                  title: 'Relationer mellan vinklar',
+                  description: 'Använd relationer mellan vinklar för att hitta andra vinklar',
+                  children: []
+                },
+                {
+                  id: 'vinklar-raka-linjer',
+                  title: 'Antaganden om raka linjer',
+                  description: 'Använd antaganden om raka linjer för att hitta andra vinklar',
+                  children: [
+                    {
+                      id: 'vinklar-raka-linjer-180',
+                      title: '180 grader',
+                      description: 'Använd 180 grader för att hitta andra vinklar',
+                      children: []
+                    },
+                    {
+                      id: 'vinklar-raka-linjer-360',
+                      title: '360 grader',
+                      description: 'Använd 360 grader för att hitta andra vinklar',
+                      children: []
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              id: 'volym',
+              title: '3d former',
+              description: 'Beräkna volymen av en kropp',
+              children: [
+                {
+                  id: 'volym-klot',
+                  title: 'Klot',
+                  description: 'Beräkna volymen av en klot',
+                  children: []
+                },
+                {
+                  id: 'volym-pyramid',
+                  title: 'Pyramid',
+                  description: 'Beräkna volymen av en pyramid',
+                  children: []
+                },
+                {
+                  id: 'volym-cylinder',
+                  title: 'Cylinder',
+                  description: 'Beräkna volym, mantelarea och begränsningsarea av en cylinder',
+                  children: [
+                    {
+                      id: 'volym-cylinder-volym',
+                      title: 'Volym',
+                      description: 'Beräkna volymen av en cylinder',
+                      children: []
+                    },
+                    {
+                      id: 'volym-cylinder-mantelarea',
+                      title: 'Mantelarea',
+                      description: 'Beräkna mantelarean av en cylinder',
+                      children: []
+                    },
+                    {
+                      id: 'volym-cylinder-begränsningsarea',
+                      title: 'Begränsningsarea',
+                      description: 'Beräkna begränsningsarean av en cylinder',
+                      children: []
+                    }
+                  ]
+                },
+                {
+                  id: 'volym-kub',
+                  title: 'Kub',
+                  description: 'Beräkna volymen av en kub',
+                  children: []
+                }
+
+              ]
+            },
+            {
+              id: 'fyrkanter',
+              title: 'Fyrkanter',
+              description: 'Beräkna omkrets och area av olika fyrkanter',
+              children: [
+                {
+                  id: 'fyrkanter-rektangel',
+                  title: 'Rektangel',
+                  description: 'Beräkna omkrets och area av en rektangel',
+                  children: [
+                    {
+                      id: 'fyrkanter-rektangel-omkrets',
+                      title: 'Omkrets',
+                      description: 'Beräkna omkretsen av en rektangel',
+                      children: []
+                    },
+                    {
+                      id: 'fyrkanter-rektangel-area',
+                      title: 'Area',
+                      description: 'Beräkna arean av en rektangel',
+                      children: []
+                    }
+                  ]
+                },
+                {
+                  id: 'fyrkanter-kvadrat',
+                  title: 'Kvadrat',
+                  description: 'Beräkna omkrets och area av en kvadrat',
+                  children: [
+                    {
+                      id: 'fyrkanter-kvadrat-omkrets',
+                      title: 'Omkrets',
+                      description: 'Beräkna omkretsen av en kvadrat',
+                      children: []
+                    },
+                    {
+                      id: 'fyrkanter-kvadrat-area',
+                      title: 'Area',
+                      description: 'Beräkna arean av en kvadrat',
+                      children: []
+                    }
+                  ]
+                },
+                {
+                  id: 'fyrkanter-parallellogram',
+                  title: 'Parallellogram',
+                  description: 'Beräkna omkrets och area av en parallellogram',
+                  children: [
+                    {
+                      id: 'fyrkanter-parallellogram-omkrets',
+                      title: 'Omkrets',
+                      description: 'Beräkna omkretsen av en parallellogram',
+                      children: []
+                    },
+                    {
+                      id: 'fyrkanter-parallellogram-area',
+                      title: 'Area',
+                      description: 'Beräkna arean av en parallellogram',
+                      children: []
+                    }
+                  ]
+                },
+                {
+                  id: 'fyrkanter-parallelltrapets',
+                  title: 'Parallelltrapets',
+                  description: 'Beräkna omkrets och area av en parallelltrapets',
+                  children: [
+                    {
+                      id: 'fyrkanter-parallelltrapets-omkrets',
+                      title: 'Omkrets',
+                      description: 'Beräkna omkretsen av en parallelltrapets',
+                      children: []
+                    },
+                    {
+                      id: 'fyrkanter-parallelltrapets-area',
+                      title: 'Area',
+                      description: 'Beräkna arean av en parallelltrapets',
+                      children: []
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              id: 'potenser',
+              title: 'Potenser',
+              description: 'Beräkna potenser',
+              children: [
+                {
+                  id: 'potenser-rotenur',
+                  title: 'Roten ur',
+                  description: 'Beräkna roten ur',
+                  children: [
+                    {
+                      id: 'potenser-rotenur-upphöjt',
+                      title: 'Roten ur upphöjt',
+                      description: 'Beräkna roten ur upphöjt',
+                      children: []
+                    },
+                    {
+                      id: 'potenser-rotenur-gångerrotenur',
+                      title: 'Roten ur gånger roten ur',
+                      description: 'Beräkna roten ur gånger roten ur',
+                      children: []
+                    }
+                  ]
+                },
+                {
+                  id: 'potenser-upphöjt',
+                  title: 'Upphöjt',
+                  description: 'Beräkna upphöjt i kvadrat, kubik och negativt tal',
+                  children: [
+                    {
+                      id: 'potenser-upphöjt-kvadrat',
+                      title: 'Kvadrat',
+                      description: 'Beräkna kvadraten av ett tal',
+                      children: []
+                    },
+                    {
+                      id: 'potenser-upphöjt-kubik',
+                      title: 'Kubik',
+                      description: 'Beräkna kubiken av ett tal',
+                      children: []
+                    },
+                    {
+                      id: 'potenser-upphöjt-negativ',
+                      title: 'Negativ',
+                      description: 'Beräkna negativt tal',
+                      children: []
+                    }
+                  ]
+                },
+                {
+                  id: 'potenser-potenslagar',
+                  title: 'Potenslagar',
+                  description: 'Beräkna potenslagar',
+                  children: [
+                    {
+                      id: 'potenser-potenslagar-multiplikation',
+                      title: 'Multiplikation',
+                      description: 'Beräkna multiplikation',
+                      children: []
+                    },
+                    {
+                      id: 'potenser-potenslagar-division',
+                      title: 'Division',
+                      description: 'Beräkna division',
+                      children: []
+                    },
+                    {
+                      id: 'potenser-potenslagar-basbyte',
+                      title: 'Basbyte',
+                      description: 'Beräkna basbyte',
+                      children: []
+                    }
+                  ]
+                }
+              ]
             }
+            
             
           ]
         },
