@@ -23,16 +23,92 @@ interface DecisionTreeProps {
 
 const initialTree: TreeNode = {
   id: 'root',
-  title: 'Vad vill du öva på?',
-  description: 'Välj den väg som passar dig bäst',
+  title: 'Totala skills',
+  description: 'Klicka här för att hitta specifika skills att träna på',
   children: [
     {
       id: 'kvant',
       title: 'Kvantitativ del',
-      description: 'Träna på mattematiken',
+      description: 'Träna på matematiken',
       children: [
         {
-          id: 'xyz',
+          id: 'matematikbasic',
+          title: 'Grunderna',
+          description: 'Grunderna i matematiken som behövs för att kunna sätta igång',
+          children: [
+            {
+              id: 'matematikbasic-räknelagar',
+              title: 'Räkneregler',
+              description: 'Räknereglerna och ordningen för de olika räknesätten',
+              children: []
+            },
+            {
+              id: 'matematikbasic-fraktioner',
+              title: 'Fraktioner',
+              description: 'Fraktioner och hur de fungerar',
+              children: [
+                {
+                  id: 'matematikbasic-fraktioner-förlänga',
+                  title: 'Förlänga',
+                  description: 'Förlänga en fraktion',
+                  children: []
+                },
+                {
+                  id: 'matematikbasic-fraktioner-förkorta',
+                  title: 'Förkorta',
+                  description: 'Förkorta en fraktion',
+                  children: []
+                },
+                {
+                  id: 'matematikbasic-fraktioner-adda',
+                  title: 'Addera',
+                  description: 'Addera en fraktion',
+                  children: []
+                },
+                {
+                  id: 'matematikbasic-fraktioner-multiplicera',
+                  title: 'Multiplicera',
+                  description: 'Multiplicera en fraktion',
+                  children: []
+                }
+              ]
+            },
+            {
+              id: 'matematikbasic-ekvationslösning',
+              title: 'Ekvationslösning',
+              description: 'Grunderna i att lösa ekvationer',
+              children: [
+                {
+                  id: 'matematikbasic-ekvationslösning-division',
+                  title: 'Dela för att lösa ekvationer',
+                  description: 'Om en ekvation har ett gångertal i sig kan man dela båda sidor för att få fram x',
+                  children: []
+                },
+                {
+                  id: 'matematikbasic-ekvationslösning-multiplikation',
+                  title: 'Multiplicera för att lösa ekvationer',
+                  description: 'Om en ekvation har ett delat tal i sig kan man multiplicera båda sidor för att få fram x',
+                  children: []
+                },
+                {
+                  id: 'matematikbasic-ekvationslösning-addition',
+                  title: 'Addera för att lösa ekvationer',
+                  description: 'Om en ekvation har ett subtraherat tal i sig kan man addera båda sidor för att få fram x',
+                  children: []
+                },
+                {
+                  id: 'matematikbasic-ekvationslösning-subtraktion',
+                  title: 'Subtrahera för att lösa ekvationer',
+                  description: 'Om en ekvation har ett adderat tal i sig kan man subtrahera båda sidor för att få fram x',
+                  children: []
+                }
+              ]
+            }
+
+          ]
+        },
+        {
+          id: 'formelblad',
           title: 'Formelbladet',
           description: 'De olika komponenterna i formelbladet',
           children: [
@@ -616,25 +692,6 @@ const initialTree: TreeNode = {
             }
             
             
-          ]
-        },
-        {
-          id: 'nog',
-          title: 'NOG - Numerisk och grafisk problemlösning',
-          description: 'Grafer, tabeller och numeriska problem',
-          children: [
-            {
-              id: 'nog-graphs',
-              title: 'Grafanalys',
-              description: 'Tolka och analysera grafer',
-              children: []
-            },
-            {
-              id: 'nog-tables',
-              title: 'Tabellanalys',
-              description: 'Tolka och analysera tabeller',
-              children: []
-            }
           ]
         }
       ]

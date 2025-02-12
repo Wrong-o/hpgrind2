@@ -12,7 +12,7 @@ from services.user_service import create_user, authenticate_user, save_user_hist
 from models.pydantic_models import User, UserCreate, Token
 from services.stats_service import UserStats
 from services.recommendation_service import RecommendationEngine
-from question_generators import xyz_generator, nog_generator, pro_generator, dtk_generator
+from question_generators import xyz_generator, nog_generator, pro_generator, dtk_generator, matematikbasic_generator
 import auth
 from seed_data import seed_database  # Add this import
 from pydantic import BaseModel
@@ -108,7 +108,7 @@ async def get_question(type: str = 'XYZ'):
     Get a question based on the test type.
     
     Args:
-        type (str): The type of test (XYZ, NOG, PRO, or DTK)
+        type (str): The type of test (XYZ, NOG, PRO, DTK, or MATEMATIKBASIC)
         
     Returns:
         QuizQuestion: A question of the specified type
@@ -126,10 +126,23 @@ async def get_question(type: str = 'XYZ'):
         elif type == 'DTK':
             delmoment = ["Diagram", "Kartor"]
             return dtk_generator.generate_dtk_question(delmoment)
+        elif type == 'MATEMATIKBASIC':
+            delmoment = [
+                "matematikbasic-räknelagar",
+                "matematikbasic-fraktioner-förlänga",
+                "matematikbasic-fraktioner-förkorta",
+                "matematikbasic-fraktioner-adda",
+                "matematikbasic-fraktioner-multiplicera",
+                "matematikbasic-ekvationslösning-division",
+                "matematikbasic-ekvationslösning-multiplikation",
+                "matematikbasic-ekvationslösning-addition",
+                "matematikbasic-ekvationslösning-subtraktion"
+            ]
+            return matematikbasic_generator.generate_matematikbasic_question(delmoment)
         else:
             raise HTTPException(
                 status_code=400,
-                detail=f"Invalid test type: {type}. Must be one of: XYZ, NOG, PRO, DTK"
+                detail=f"Invalid test type: {type}. Must be one of: XYZ, NOG, PRO, DTK, MATEMATIKBASIC"
             )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

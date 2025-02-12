@@ -228,7 +228,7 @@ function AppContent() {
                 className={!isLoggedIn ? 'opacity-50 cursor-not-allowed' : ''}
               />
               <QuizButton 
-                text="Din väg" 
+                text="Din skillnivå" 
                 onClick={() => setCurrentView('decision-tree')}
               />
               <QuizButton 
