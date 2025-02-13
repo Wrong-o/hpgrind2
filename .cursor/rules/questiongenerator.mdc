@@ -16,8 +16,8 @@ Each question of type **XYZ** should include the following fields:
 
 | Field           | Type               | Description                                     |
 |----------------|--------------------|-------------------------------------------------|
-| subject        | string             | The subject related to the question.            |
-| category       | string             | The category under which the question falls.    |
+| subject        | string             | Kvantitativa                                    |
+| category       | string             | XYZ                                             |
 | moment        | string             | A specific moment related to the question.      |
 | difficulty     | int                | Difficulty level of the question.               |
 | question       | string (LaTeX)     | The question text formatted in LaTeX.           |
@@ -27,4 +27,33 @@ Each question of type **XYZ** should include the following fields:
 | explanation    | string (LaTeX)     | Explanation of the correct answer formatted in LaTeX. |
 
 This ensures consistency and clarity in the output of question generators.
+
+##Basics question generator
+[matematikbasic_generator.py](mdc:backend/question_generators/matematikbasic_generator.py)
+Each question of type **BASICS** should include the following fields
+
+| Field           | Type               | Description                                     |
+|----------------|--------------------|-------------------------------------------------|
+| subject        | string             | Kvantitativa                                   |
+| category       | string             | Grundläggande                                  |
+| moment        | string             | A specific moment related to the question.      |
+| difficulty     | int                | Difficulty level of the question.               |
+| question       | string (LaTeX)     | The question text formatted in LaTeX.           |
+| answers        | list of 4 strings (LaTeX) | Four possible answers formatted in LaTeX.  |
+| correct_answer | string (LaTeX)     | The correct answer formatted in LaTeX.          |
+| drawing        | list of lists      | A list containing lists of coordinates and shapes, default is empty. |
+| explanation    | string (LaTeX)     | Explanation of the correct answer formatted in LaTeX. |
+
+Basics have the following moments: 
+matematikbasic-räknelagar
+matematikbasic-fraktioner-förlänga
+matematikbasic-fraktioner-förkorta
+matematikbasic-fraktioner-addera
+matematikbasic-fraktioner-multiplicera
+matematikbasic-ekvationslösning-division
+matematikbasic-ekvationslösning-multiplikation
+matematikbasic-ekvationslösning-addition
+matematikbasic-ekvationslösning-subtraktion
+
+Each question should be different, eg random numbers but numbers that are doable without a calculator
 

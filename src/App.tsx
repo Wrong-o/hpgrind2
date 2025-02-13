@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { FloatingEquations } from './components/FloatingEquations'
 import { Hearts } from './components/Hearts'
 import { QuizButton } from './components/QuizButton'
@@ -115,7 +115,71 @@ function AppContent() {
   const [finalScore, setFinalScore] = useState(0)
   const [showLogin, setShowLogin] = useState(false)
   const [currentTestType, setCurrentTestType] = useState<'XYZ' | 'NOG' | 'PRO' | 'DTK'>('XYZ')
-  const { isLoggedIn, logout } = useAuth()
+  const [question1Answered, setQuestion1Answered] = useState(false)
+  const [question2Answered, setQuestion2Answered] = useState(false)
+  const { isLoggedIn, logout, token } = useAuth()
+  const [userAchievements, setUserAchievements] = useState<string[]>([])
+  const [nextRecommendedPath, setNextRecommendedPath] = useState<string>('matematikbasic')
+
+  // Fetch user achievements and determine next recommended path
+  useEffect(() => {
+    const fetchUserProgress = async () => {
+      if (!isLoggedIn || !token) return
+
+      try {
+        // Fetch achievements
+        const achievementsResponse = await fetch(`${import.meta.env.VITE_API_URL}/api/user/achievements`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Accept': 'application/json',
+          },
+          credentials: 'include',
+        })
+
+        if (achievementsResponse.ok) {
+          const achievements = await achievementsResponse.json()
+          const achievementNames = achievements.map((a: any) => a.achievement.name)
+          setUserAchievements(achievementNames)
+
+          // Determine next recommended path based on achievements
+          if (!achievementNames.includes('Välgrundad')) {
+            setNextRecommendedPath('matematikbasic')
+          } else if (!achievementNames.includes('Kalibrerad och klar')) {
+            setNextRecommendedPath('calibration')
+          } else if (!achievementNames.includes('Välformulerad')) {
+            setNextRecommendedPath('red-categories')
+          } else if (!achievementNames.includes('Formel-1 bladet')) {
+            setNextRecommendedPath('yellow-categories')
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching user progress:', error)
+      }
+    }
+
+    fetchUserProgress()
+  }, [isLoggedIn, token])
+
+  const handleRecommendedPath = () => {
+    if (!isLoggedIn) {
+      setShowLogin(true)
+      return
+    }
+
+    switch (nextRecommendedPath) {
+      case 'matematikbasic':
+      case 'red-categories':
+      case 'yellow-categories':
+        setCurrentView('decision-tree')
+        break
+      case 'calibration':
+        // Handle calibration view (you might need to add this view)
+        setCurrentView('test-select')
+        break
+      default:
+        setCurrentView('decision-tree')
+    }
+  }
 
   const handleQuizStart = (testType: 'XYZ' | 'NOG' | 'PRO' | 'DTK') => {
     setCurrentTestType(testType)
@@ -169,7 +233,7 @@ function AppContent() {
       </div>
       
       {currentView === 'landing' && (
-        <div className="text-center z-10 max-w-4xl px-8">
+        <div className="container mx-auto text-center z-10 max-w-4xl px-8">
           <div className="mb-8">
             <svg 
               className="w-64 h-auto mx-auto text-blue-600" 
@@ -182,13 +246,69 @@ function AppContent() {
             </svg>
           </div>
           <p className="text-xl text-teal-800 mb-8 max-w-2xl mx-auto">
-            Ta med eget grindset. Resten har vi här.
+            Högskoleprovsappen där resultat per tid nedlaggd är fokus.
           </p>
-          <p className="text-xl text-teal-800 mb-8 max-w-2xl mx-auto">
-            Du slipper allt det här:
-          </p>
+          <div className="bg-red-600/5 p-4 rounded-lg">
+            <div className="relative">
+              {/* Question 1 */}
+              <div className={`transition-opacity duration-300`}>
+                <h1 className="text-left font-bold">1. Vill du träna så effektivt som möjligt?</h1>
+                <h2 className="text-left flex justify-between items-center bg-gray-50 p-3 rounded-lg hover:bg-gray-100 cursor-pointer">
+                  <span>A  Nej, det är bättre att göra det jobbigt för sig</span>
+                  <input type="checkbox" className="w-5 h-5 accent-blue-600" />
+                </h2>
+                <h2 className="text-left flex justify-between items-center bg-gray-50 p-3 rounded-lg hover:bg-gray-100 cursor-pointer">
+                  <span>B  Det går inte att träna effektivt, jag är inte bra på matte</span>
+                  <input type="checkbox" className="w-5 h-5 accent-blue-600" />
+                </h2>
+                <h2 onClick={() => setQuestion1Answered(true)} className="text-left flex justify-between items-center font-bold bg-gray-50 p-3 rounded-lg hover:bg-gray-100 cursor-pointer">
+                  <span>C  Ja, självklart vill jag inte slösa min tid</span>
+                  <input type="checkbox" className="w-5 h-5 accent-blue-600" />
+                </h2>
+                <h2 className="text-left flex justify-between items-center bg-gray-50 p-3 rounded-lg hover:bg-gray-100 cursor-pointer">
+                  <span>D  Nej, jag gillar att bränna ut mig</span>
+                  <input type="checkbox" className="w-5 h-5 accent-blue-600" />
+                </h2>
+              </div>
+              {question1Answered && (
+                <div className="absolute top-0 left-0 w-full h-full bg-gray-200/80 rounded-lg flex items-center justify-center animate-fade-in">
+                  <p className="text-green-600 font-bold text-xl">HPGrind är byggt för att ta bort moment som tar tid</p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="bg-red-600/5 p-4 rounded-lg mt-4">
+            <div className="relative">
+              {/* Question 2 */}
+              <div className={`transition-opacity duration-300`}>
+                <h1 className="text-left font-bold">2. Vill du lägga tid på att leta uppgifter, lösningar och hjälp?</h1>
+                <h2 className="text-left flex justify-between items-center bg-gray-50 p-3 rounded-lg hover:bg-gray-100 cursor-pointer">
+                  <span>A Ja, jag älskar att leta efter saker online</span>
+                  <input type="radio" name="study-time" className="w-5 h-5 accent-blue-600" />
+                </h2>
+                <h2 className="text-left flex justify-between items-center bg-gray-50 p-3 rounded-lg hover:bg-gray-100 cursor-pointer">
+                  <span>B  Jag letar inte hjälp, jag ger upp direkt när jag fastnar</span>
+                  <input type="radio" name="study-time" className="w-5 h-5 accent-blue-600" />
+                </h2>
+                <h2 className="text-left flex justify-between items-center bg-gray-50 p-3 rounded-lg hover:bg-gray-100 cursor-pointer">
+                  <span>C  Ja, det ger mig paus från att räkna</span>
+                  <input type="radio" name="study-time" className="w-5 h-5 accent-blue-600" />
+                </h2>
+                <h2 onClick={() => setQuestion2Answered(true)} className="text-left flex justify-between items-center font-bold bg-gray-50 p-3 rounded-lg hover:bg-gray-100 cursor-pointer">
+                  <span>D  Nej, att ha allt på samma ställe sparar tid</span>
+                  <input type="radio" name="study-time" className="w-5 h-5 accent-blue-600" />
+                </h2>
+              </div>
+              {question2Answered && (
+                <div className="absolute top-0 left-0 w-full h-full bg-gray-200/80 rounded-lg flex flex-col items-center justify-center gap-4 animate-fade-in">
+                  <img src="/time_save.png" alt="Time saving illustration" className="w-32 h-32" />
+                  <p className="text-green-600 font-bold text-xl">HPGrind samlar allt du behöver på ett ställe</p>
+                </div>
+              )}
+            </div>
+          </div>
           <div className="space-y-6">
-            <FloatingCards />
             <button
               onClick={() => setCurrentView('menu')}
               className="px-8 py-4 bg-blue-600 text-white rounded-xl font-bold text-xl
@@ -211,6 +331,25 @@ function AppContent() {
             <h2 className="text-xl text-teal-700 italic font-light mb-8">
               Anpassa din träning
             </h2>
+
+            {/* Recommended Path Button */}
+            <div className="mb-8">
+              <button
+                onClick={handleRecommendedPath}
+                className="w-full px-6 py-4 bg-red-600 text-white rounded-xl 
+                         font-bold text-xl shadow-lg hover:bg-red-700 
+                         transform hover:scale-105 transition-all mb-8
+                         animate-pulse"
+              >
+                {!isLoggedIn ? 'Logga in för att börja →' : 
+                  nextRecommendedPath === 'matematikbasic' ? 'Börja med grunderna →' :
+                  nextRecommendedPath === 'calibration' ? 'Dags för kalibrering →' :
+                  nextRecommendedPath === 'red-categories' ? 'Förbättra dina svaga områden →' :
+                  nextRecommendedPath === 'yellow-categories' ? 'Finslipa dina kunskaper →' :
+                  'Rekommenderad väg →'}
+              </button>
+            </div>
+
             <div className="grid grid-cols-2 gap-4">
               <QuizButton 
                 text="Testa" 

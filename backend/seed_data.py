@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
-from models.database_models import Category, Question, DBUser, Delmoment
-from database import SessionLocal
+from models.database_models import Category, Question, DBUser, Delmoment, Achievement
+from database import SessionLocal, engine
 from auth import get_password_hash
 import random
 
@@ -82,8 +82,62 @@ def seed_database():
         db.commit()
         print("Database seeded successfully!")
         
+        # Check if achievements already exist
+        existing_achievements = db.query(Achievement).count()
+        if existing_achievements > 0:
+            print("Database already seeded with achievements")
+            return
+
+        # Create milestone achievements
+        milestones = [
+            {
+                "name": "Välgrundad",
+                "description": "Klara av grunderna i matematiken",
+            },
+            {
+                "name": "Kalibrerad och klar",
+                "description": "Genomför kalibreringsfasen",
+            },
+            {
+                "name": "Välformulerad",
+                "description": "Få minst gul nivå på alla moment i formelbladet",
+            },
+            {
+                "name": "Formel-1 bladet",
+                "description": "Få grön nivå på alla moment i formelbladet",
+            },
+            # Test-specific achievements
+            {
+                "name": "XYZåäö",
+                "description": "Klara 50 XYZ frågor",
+            },
+            {
+                "name": "NOGrann",
+                "description": "Klara 50 NOG frågor",
+            },
+            {
+                "name": "KVAlite och kvantitet",
+                "description": "Klara 50 KVA frågor",
+            },
+            {
+                "name": "DTKartmästare",
+                "description": "Klara 50 DTK frågor",
+            }
+        ]
+
+        # Add achievements to database
+        for milestone in milestones:
+            achievement = Achievement(
+                name=milestone["name"],
+                description=milestone["description"]
+            )
+            db.add(achievement)
+
+        db.commit()
+        print("Successfully seeded achievements")
+
     except Exception as e:
-        print(f"Error seeding database: {e}")
+        print(f"Error seeding database: {str(e)}")
         db.rollback()
     finally:
         db.close()

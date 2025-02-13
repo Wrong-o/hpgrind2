@@ -13,6 +13,7 @@ export default {
         'float': 'float 3s ease-out forwards',
         'drop': 'drop 0.5s ease-in forwards',
         'bounce': 'bounce 1s infinite',
+        'fade-in': 'fadeIn 0.3s ease-out forwards',
       },
       keyframes: {
         float: {
@@ -33,6 +34,16 @@ export default {
           },
           '100%': { 
             transform: 'translateY(120%)',
+          },
+        },
+        fadeIn: {
+          '0%': {
+            opacity: '0',
+            transform: 'scale(0.95)',
+          },
+          '100%': {
+            opacity: '1',
+            transform: 'scale(1)',
           },
         }
       },

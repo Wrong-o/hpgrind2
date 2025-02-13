@@ -2,6 +2,12 @@ from typing import List, Dict, Any
 import random
 import uuid
 
+def generate_random_fraction(max_numerator: int = 12, max_denominator: int = 12) -> tuple:
+    """Generate a random fraction with calculator-friendly numbers."""
+    numerator = random.randint(1, max_numerator)
+    denominator = random.randint(2, max_denominator)
+    return numerator, denominator
+
 def generate_matematikbasic_question(delmoment_list: List[str]) -> Dict[str, Any]:
     """
     Generate a basic math question based on the given delmoment.
@@ -16,40 +22,46 @@ def generate_matematikbasic_question(delmoment_list: List[str]) -> Dict[str, Any
         # Räkneregler
         "matematikbasic-räknelagar": [
             {
-                "subject": "Matematik",
-                "category": "Grunderna",
+                "subject": "Kvantitativa",
+                "category": "Grundläggande",
                 "moment": "matematikbasic-räknelagar",
                 "difficulty": 1,
-                "question": "Vilket av följande uttryck är lika med $3 \\cdot (4 + 2)$?",
-                "answers": [
-                    "$3 \\cdot 4 + 3 \\cdot 2$",
-                    "$3 + 4 \\cdot 2$",
-                    "$3 \\cdot 4 + 2$",
-                    "$3 + 4 + 2$"
-                ],
-                "correct_answer": "$3 \\cdot 4 + 3 \\cdot 2$",
-                "drawing": [],
-                "explanation": "Enligt den distributiva lagen kan man skriva om $3 \\cdot (4 + 2)$ som $3 \\cdot 4 + 3 \\cdot 2$"
+                "question": "Vilket av följande uttryck är lika med ${a} \\cdot ({b} + {c})$?",
+                "template_vars": lambda: {"a": random.randint(2, 6), "b": random.randint(2, 5), "c": random.randint(2, 4)},
+                "answer_generator": lambda vars: {
+                    "correct": f"${vars['a']} \\cdot {vars['b']} + {vars['a']} \\cdot {vars['c']}$",
+                    "wrong": [
+                        f"${vars['a']} + {vars['b']} \\cdot {vars['c']}$",
+                        f"${vars['a']} \\cdot {vars['b']} + {vars['c']}$",
+                        f"${vars['a']} + {vars['b']} + {vars['c']}$"
+                    ]
+                },
+                "explanation_template": "Enligt den distributiva lagen kan man skriva om ${a} \\cdot ({b} + {c})$ som ${a} \\cdot {b} + {a} \\cdot {c}$"
             }
         ],
         
         # Fraktioner - Förlänga
         "matematikbasic-fraktioner-förlänga": [
             {
-                "subject": "Matematik",
-                "category": "Grunderna",
+                "subject": "Kvantitativa",
+                "category": "Grundläggande",
                 "moment": "matematikbasic-fraktioner-förlänga",
                 "difficulty": 2,
-                "question": "Förläng bråket $\\frac{2}{3}$ så att nämnaren blir 12",
-                "answers": [
-                    "$\\frac{8}{12}$",
-                    "$\\frac{6}{12}$",
-                    "$\\frac{4}{12}$",
-                    "$\\frac{10}{12}$"
-                ],
-                "correct_answer": "$\\frac{8}{12}$",
-                "drawing": [],
-                "explanation": "För att förlänga $\\frac{2}{3}$ till en nämnare på 12, multiplicerar vi täljare och nämnare med 4 eftersom $3 \\cdot 4 = 12$. Därför blir det nya bråket $\\frac{2 \\cdot 4}{3 \\cdot 4} = \\frac{8}{12}$"
+                "question": "Förläng bråket $\\frac{{{a}}}{{{b}}}$ så att nämnaren blir {target_denominator}",
+                "template_vars": lambda: {
+                    "a": random.randint(1, 6),
+                    "b": random.randint(2, 6),
+                    "target_denominator": lambda a, b: b * random.randint(2, 4)
+                },
+                "answer_generator": lambda vars: {
+                    "correct": f"$\\frac{{{vars['a'] * (vars['target_denominator'] // vars['b'])}}}{{{vars['target_denominator']}}}$",
+                    "wrong": [
+                        f"$\\frac{{{vars['a'] * ((vars['target_denominator'] // vars['b']) - 1)}}}{{{vars['target_denominator']}}}$",
+                        f"$\\frac{{{vars['a'] * ((vars['target_denominator'] // vars['b']) + 1)}}}{{{vars['target_denominator']}}}$",
+                        f"$\\frac{{{vars['a']}}}{{{vars['target_denominator']}}}$"
+                    ]
+                },
+                "explanation_template": "För att förlänga $\\frac{{{a}}}{{{b}}}$ till en nämnare på {target_denominator}, multiplicerar vi täljare och nämnare med {multiplier} eftersom ${b} \\cdot {multiplier} = {target_denominator}$"
             }
         ],
 
@@ -205,20 +217,32 @@ def generate_matematikbasic_question(delmoment_list: List[str]) -> Dict[str, Any
         else:
             delmoment = random.choice(available_delmoments)
 
-    # Get questions for the chosen delmoment
-    questions = question_types[delmoment]
+    # Get question template for the chosen delmoment
+    question_template = random.choice(question_types[delmoment])
     
-    # Choose a random question from the available ones
-    question_data = random.choice(questions)
+    # Generate variables for the template
+    vars = question_template["template_vars"]()
+    if callable(vars.get("target_denominator")):
+        vars["target_denominator"] = vars["target_denominator"](vars["a"], vars["b"])
+    vars["multiplier"] = vars["target_denominator"] // vars["b"]
     
-    # Add unique ID
-    question_data["id"] = str(uuid.uuid4())
+    # Generate answers
+    answers = question_template["answer_generator"](vars)
+    all_answers = [answers["correct"]] + answers["wrong"]
+    random.shuffle(all_answers)
     
-    # Randomize the order of answers while keeping track of the correct one
-    answers = question_data["answers"].copy()
-    correct_answer = question_data["correct_answer"]
-    random.shuffle(answers)
-    question_data["answers"] = answers
-    question_data["correct_answer"] = correct_answer
+    # Create question data
+    question_data = {
+        "id": str(uuid.uuid4()),
+        "subject": question_template["subject"],
+        "category": question_template["category"],
+        "moment": question_template["moment"],
+        "difficulty": question_template["difficulty"],
+        "question": question_template["question"].format(**vars),
+        "answers": all_answers,
+        "correct_answer": answers["correct"],
+        "drawing": [],
+        "explanation": question_template["explanation_template"].format(**vars)
+    }
     
     return question_data 
