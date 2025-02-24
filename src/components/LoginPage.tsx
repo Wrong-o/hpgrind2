@@ -90,8 +90,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onClose }) => {
               required
             />
             {isLogin && (
-              <p className="mt-1 text-sm text-gray-500">
-                Lösenordet måste innehålla:
+
                 <ul className="list-disc list-inside">
                   <li>Minst 8 tecken</li>
                   <li>Minst en stor bokstav</li>
@@ -99,7 +98,6 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onClose }) => {
                   <li>Minst en siffra</li>
                   <li>Minst ett specialtecken (!@#$%^&*(),.?":{}|&lt;&gt;)</li>
                 </ul>
-              </p>
             )}
           </div>
 

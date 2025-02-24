@@ -10,6 +10,7 @@ import { CategoryStats } from './components/CategoryStats'
 import { SoundProvider } from './contexts/SoundContext'
 import { DecisionTree } from './components/DecisionTree'
 import { SecondChance } from './components/SecondChance'
+import { Header } from './components/Header'
 
 const FloatingCards: React.FC = () => {
   const items = [
@@ -61,6 +62,7 @@ const FloatingCards: React.FC = () => {
 
   return (
     <div className="relative h-[500px] max-w-2xl mx-auto overflow-hidden rounded-xl bg-gradient-to-b from-blue-500/10 to-teal-500/10 backdrop-blur-sm">
+      <Header />
       <div className="flex flex-col gap-4 max-w-2xl mx-auto p-4">
         {items.map((item, index) => (
           <div 
@@ -111,26 +113,30 @@ const FloatingCards: React.FC = () => {
 };
 
 function AppContent() {
-  const [currentView, setCurrentView] = useState<'landing' | 'menu' | 'quiz' | 'complete' | 'roadmap' | 'stats' | 'test-select' | 'decision-tree' | 'second-chance'>('landing')
-  const [finalScore, setFinalScore] = useState(0)
+  const { isLoggedIn } = useAuth()
   const [showLogin, setShowLogin] = useState(false)
-  const [currentTestType, setCurrentTestType] = useState<'XYZ' | 'NOG' | 'PRO' | 'DTK' | 'MATEMATIKBASIC'>('XYZ')
+  const [showStats, setShowStats] = useState(false)
+  const [showRoadMap, setShowRoadMap] = useState(false)
+  const [showDecisionTree, setShowDecisionTree] = useState(false)
+  const [showSecondChance, setShowSecondChance] = useState(false)
+  const [currentView, setCurrentView] = useState('landing')
+  const [currentTest, setCurrentTest] = useState<'XYZ' | 'NOG' | 'PRO' | 'DTK' | 'MATEMATIKBASIC' | null>(null)
+  const [finalScore, setFinalScore] = useState(0)
   const [question1Answered, setQuestion1Answered] = useState(false)
   const [question2Answered, setQuestion2Answered] = useState(false)
-  const { isLoggedIn, logout, token } = useAuth()
   const [userAchievements, setUserAchievements] = useState<string[]>([])
   const [nextRecommendedPath, setNextRecommendedPath] = useState<string>('matematikbasic')
 
   // Fetch user achievements and determine next recommended path
   useEffect(() => {
     const fetchUserProgress = async () => {
-      if (!isLoggedIn || !token) return
+      if (!isLoggedIn) return
 
       try {
         // Fetch achievements
         const achievementsResponse = await fetch(`${import.meta.env.VITE_API_URL}/api/user/achievements`, {
           headers: {
-            'Authorization': `Bearer ${token}`,
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
             'Accept': 'application/json',
           },
           credentials: 'include',
@@ -158,7 +164,7 @@ function AppContent() {
     }
 
     fetchUserProgress()
-  }, [isLoggedIn, token])
+  }, [isLoggedIn])
 
   const handleRecommendedPath = () => {
     if (!isLoggedIn) {
@@ -168,7 +174,7 @@ function AppContent() {
 
     switch (nextRecommendedPath) {
       case 'matematikbasic':
-        setCurrentTestType('MATEMATIKBASIC')
+        setCurrentTest('MATEMATIKBASIC')
         setCurrentView('quiz')
         break
       case 'calibration':
@@ -184,7 +190,7 @@ function AppContent() {
   }
 
   const handleQuizStart = (testType: 'XYZ' | 'NOG' | 'PRO' | 'DTK' | 'MATEMATIKBASIC') => {
-    setCurrentTestType(testType)
+    setCurrentTest(testType)
     setCurrentView('quiz')
   }
 
@@ -193,293 +199,60 @@ function AppContent() {
     setCurrentView('complete')
   }
 
-  const handleLogout = () => {
-    logout()
-    setCurrentView('landing')
-  }
-
   return (
-    <div className="bg-gradient-to-b from-blue-50 to-teal-100 min-h-screen flex flex-col items-center justify-center relative overflow-hidden">
-      <FloatingEquations />
-      
-      {showLogin && <LoginPage onClose={() => setShowLogin(false)} />}
-      
-      <div className="fixed top-0 right-0 p-4 flex gap-4 z-50">
-        {isLoggedIn ? (
-          <>
-            <button
-              onClick={() => setCurrentView('stats')}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg 
-                       hover:bg-blue-700 transition-colors"
-            >
-              Dina framsteg
-            </button>
-            <button
-              onClick={handleLogout}
-              className="px-4 py-2 bg-red-600 text-white rounded-lg 
-                       hover:bg-red-700 transition-colors"
-            >
-              Logga ut
-            </button>
-          </>
-        ) : (
-          <button
-            onClick={() => setShowLogin(true)}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg 
-                     hover:bg-blue-700 transition-colors flex items-center gap-2"
-          >
-            <LockIcon className="w-4 h-4" />
-            Logga in för att spara dina framsteg
-          </button>
+    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-teal-50">
+      <Header />
+      <main className="container mx-auto px-4 py-8">
+        {showLogin && <LoginPage onClose={() => setShowLogin(false)} />}
+        {showStats && <CategoryStats onBack={() => setShowStats(false)} />}
+        {showRoadMap && <RoadMap />}
+        {showDecisionTree && <DecisionTree onBack={() => setShowDecisionTree(false)} />}
+        {showSecondChance && <SecondChance onBack={() => setShowSecondChance(false)} />}
+        {!showLogin && !showStats && !showRoadMap && !showDecisionTree && !showSecondChance && (
+          <div className="bg-gradient-to-b from-blue-50 to-teal-100 min-h-screen flex flex-col items-center justify-center relative overflow-hidden">
+            <FloatingEquations />
+            <div className="container mx-auto text-center z-10 max-w-4xl px-8">
+              <FloatingCards />
+              <div className="mt-8 space-y-4">
+                {isLoggedIn ? (
+                  <>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <button
+                        onClick={() => setShowDecisionTree(true)}
+                        className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 
+                                transition-colors flex items-center justify-center gap-2"
+                      >
+                        Börja öva
+                      </button>
+                      <button
+                        onClick={() => setShowSecondChance(true)}
+                        className="bg-teal-600 text-white px-6 py-3 rounded-lg hover:bg-teal-700 
+                                transition-colors flex items-center justify-center gap-2"
+                      >
+                        Andra chansen
+                      </button>
+                    </div>
+                    <button
+                      onClick={() => setShowRoadMap(true)}
+                      className="text-blue-600 hover:text-blue-800 transition-colors"
+                    >
+                      Se din väg till målet
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    onClick={() => setShowLogin(true)}
+                    className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 
+                            transition-colors flex items-center justify-center gap-2"
+                  >
+                    Börja öva
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
         )}
-      </div>
-      
-      {currentView === 'landing' && (
-        <div className="container mx-auto text-center z-10 max-w-4xl px-8">
-          <div className="mb-8">
-            <svg 
-              className="w-64 h-auto mx-auto text-blue-600" 
-              viewBox="0 0 342.68 76.55"
-              fill="currentColor"
-            >
-              <path d="m159.65,1.14l-74.27,74.27h-30.9l28.89-28.89h-23.6l-28.89,28.89H0L74.27,1.14h30.9l-27.31,27.31h23.6L128.76,1.14h30.9Z"/>
-              <path d="m161.19,48.42l-26.99,26.99h-31.34L177.13,1.14h42.99c10.72,0,17.96.91,21.72,2.72,3.76,1.81,5.41,4.59,4.95,8.32-.47,3.74-3.02,7.93-7.67,12.57-7.07,7.07-16.13,12.79-27.17,17.14-11.04,4.35-22.14,6.53-33.3,6.53h-17.48Zm15.5-15.94h10.32c9.09,0,16.11-2.47,21.04-7.4,4.64-4.64,2.76-6.96-5.64-6.96h-11.36l-14.36,14.36Z"/>
-              <path d="m328.53,33.79l-41.62,41.62h-15.12c1.85-3.08,3.1-5.68,3.72-7.78-12.19,5.95-24.41,8.92-36.65,8.92-12.98,0-20.3-3.35-21.96-10.04-1.67-6.69,3.21-15.75,14.64-27.18,11.1-11.1,24.47-20.43,40.12-27.99,15.65-7.56,31.46-11.34,47.44-11.34,11.99,0,19.4,2.25,22.23,6.75,2.83,4.5,1.19,10.88-4.92,19.15l-32.11,2.18c6.25-7.73,5.52-11.59-2.2-11.59-10.13,0-22.3,7.11-36.52,21.33-8.6,8.6-12.64,14.26-12.14,17,.51,2.74,3.07,4.11,7.69,4.11,3.74,0,7.75-.83,12.05-2.5,4.3-1.67,7.92-3.95,10.87-6.86h-16.66l15.78-15.78h45.35Z"/>
-            </svg>
-          </div>
-          <p className="text-xl text-teal-800 mb-8 max-w-2xl mx-auto">
-            Högskoleprovsappen där resultat per tid nedlaggd är fokus.
-          </p>
-          <div className="bg-red-600/5 p-4 rounded-lg">
-            <div className="relative">
-              {/* Question 1 */}
-              <div className={`transition-opacity duration-300`}>
-                <h1 className="text-left font-bold">1. Vill du träna så effektivt som möjligt?</h1>
-                <h2 className="text-left flex justify-between items-center bg-gray-50 p-3 rounded-lg hover:bg-gray-100 cursor-pointer">
-                  <span>A  Nej, det är bättre att göra det jobbigt för sig</span>
-                  <input type="checkbox" className="w-5 h-5 accent-blue-600" />
-                </h2>
-                <h2 className="text-left flex justify-between items-center bg-gray-50 p-3 rounded-lg hover:bg-gray-100 cursor-pointer">
-                  <span>B  Det går inte att träna effektivt, jag är inte bra på matte</span>
-                  <input type="checkbox" className="w-5 h-5 accent-blue-600" />
-                </h2>
-                <h2 onClick={() => setQuestion1Answered(true)} className="text-left flex justify-between items-center font-bold bg-gray-50 p-3 rounded-lg hover:bg-gray-100 cursor-pointer">
-                  <span>C  Ja, självklart vill jag inte slösa min tid</span>
-                  <input type="checkbox" className="w-5 h-5 accent-blue-600" />
-                </h2>
-                <h2 className="text-left flex justify-between items-center bg-gray-50 p-3 rounded-lg hover:bg-gray-100 cursor-pointer">
-                  <span>D  Nej, jag gillar att bränna ut mig</span>
-                  <input type="checkbox" className="w-5 h-5 accent-blue-600" />
-                </h2>
-              </div>
-              {question1Answered && (
-                <div className="absolute top-0 left-0 w-full h-full bg-gray-200/80 rounded-lg flex items-center justify-center animate-fade-in">
-                  <p className="text-green-600 font-bold text-xl">HPGrind är byggt för att ta bort moment som tar tid</p>
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div className="bg-red-600/5 p-4 rounded-lg mt-4">
-            <div className="relative">
-              {/* Question 2 */}
-              <div className={`transition-opacity duration-300`}>
-                <h1 className="text-left font-bold">2. Vill du lägga tid på att leta uppgifter, lösningar och hjälp?</h1>
-                <h2 className="text-left flex justify-between items-center bg-gray-50 p-3 rounded-lg hover:bg-gray-100 cursor-pointer">
-                  <span>A Ja, jag älskar att leta efter saker online</span>
-                  <input type="radio" name="study-time" className="w-5 h-5 accent-blue-600" />
-                </h2>
-                <h2 className="text-left flex justify-between items-center bg-gray-50 p-3 rounded-lg hover:bg-gray-100 cursor-pointer">
-                  <span>B  Jag letar inte hjälp, jag ger upp direkt när jag fastnar</span>
-                  <input type="radio" name="study-time" className="w-5 h-5 accent-blue-600" />
-                </h2>
-                <h2 className="text-left flex justify-between items-center bg-gray-50 p-3 rounded-lg hover:bg-gray-100 cursor-pointer">
-                  <span>C  Ja, det ger mig paus från att räkna</span>
-                  <input type="radio" name="study-time" className="w-5 h-5 accent-blue-600" />
-                </h2>
-                <h2 onClick={() => setQuestion2Answered(true)} className="text-left flex justify-between items-center font-bold bg-gray-50 p-3 rounded-lg hover:bg-gray-100 cursor-pointer">
-                  <span>D  Nej, att ha allt på samma ställe sparar tid</span>
-                  <input type="radio" name="study-time" className="w-5 h-5 accent-blue-600" />
-                </h2>
-              </div>
-              {question2Answered && (
-                <div className="absolute top-0 left-0 w-full h-full bg-gray-200/80 rounded-lg flex flex-col items-center justify-center gap-4 animate-fade-in">
-                  <img src="/time_save.png" alt="Time saving illustration" className="w-32 h-32" />
-                  <p className="text-green-600 font-bold text-xl">HPGrind samlar allt du behöver på ett ställe</p>
-                </div>
-              )}
-            </div>
-          </div>
-          <div className="space-y-6">
-            <button
-              onClick={() => setCurrentView('menu')}
-              className="px-8 py-4 bg-blue-600 text-white rounded-xl font-bold text-xl
-                       shadow-lg hover:bg-blue-700 transform hover:scale-105 transition-all
-                       active:scale-95"
-            >
-              Testa gratis
-            </button>
-          </div>
-        </div>
-      )}
-
-      {currentView === 'menu' && (
-        <div className="relative w-full max-w-4xl px-4">
-          <div className="text-center z-10 bg-white/40 backdrop-blur-sm p-8 rounded-2xl 
-                        shadow-lg border border-teal-100 mt-16">
-            <h1 className="text-4xl font-bold text-blue-600 mb-4">
-              Välj Utmaning
-            </h1>
-            <h2 className="text-xl text-teal-700 italic font-light mb-8">
-              Anpassa din träning
-            </h2>
-
-            {/* Recommended Path Button */}
-            <div className="mb-8">
-              <button
-                onClick={handleRecommendedPath}
-                className="w-full px-6 py-4 bg-red-600 text-white rounded-xl 
-                         font-bold text-xl shadow-lg hover:bg-red-700 
-                         transform hover:scale-105 transition-all mb-8
-                         animate-pulse"
-              >
-                {!isLoggedIn ? 'Logga in för att börja →' : 
-                  nextRecommendedPath === 'matematikbasic' ? 'Börja med grunderna →' :
-                  nextRecommendedPath === 'calibration' ? 'Dags för kalibrering →' :
-                  nextRecommendedPath === 'red-categories' ? 'Förbättra dina svaga områden →' :
-                  nextRecommendedPath === 'yellow-categories' ? 'Finslipa dina kunskaper →' :
-                  'Rekommenderad väg →'}
-              </button>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <QuizButton 
-                text="Testa" 
-                onClick={() => setCurrentView('test-select')}
-              />
-              <QuizButton 
-                text={
-                  <div className="flex items-center gap-2 justify-center">
-                    Kategorier
-                    {!isLoggedIn && <LockIcon className="w-4 h-4" />}
-                  </div>
-                }
-                onClick={() => {}}
-                disabled={!isLoggedIn}
-                className={!isLoggedIn ? 'opacity-50 cursor-not-allowed' : ''}
-              />
-              <QuizButton 
-                text="Din skillnivå" 
-                onClick={() => setCurrentView('decision-tree')}
-              />
-              <QuizButton 
-                text={
-                  <div className="flex items-center gap-2 justify-center">
-                    Andra chansen
-                    {!isLoggedIn && <LockIcon className="w-4 h-4" />}
-                  </div>
-                }
-                onClick={() => isLoggedIn && setCurrentView('second-chance')}
-                disabled={!isLoggedIn}
-                className={!isLoggedIn ? 'opacity-50 cursor-not-allowed' : ''}
-              />
-            </div>
-          </div>
-        </div>
-      )}
-
-      {currentView === 'test-select' && (
-        <div className="relative w-full max-w-4xl px-4">
-          <div className="text-center z-10 bg-white/40 backdrop-blur-sm p-8 rounded-2xl 
-                        shadow-lg border border-teal-100 mt-16">
-            <button
-              onClick={() => setCurrentView('menu')}
-              className="absolute top-4 left-4 px-4 py-2 bg-blue-600 text-white 
-                       rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              Tillbaka
-            </button>
-            <h1 className="text-4xl font-bold text-blue-600 mb-4">
-              Välj Test
-            </h1>
-            <h2 className="text-xl text-teal-700 italic font-light mb-8">
-              Välj den typ av test du vill öva på
-            </h2>
-            <div className="grid grid-cols-2 gap-4">
-              <QuizButton 
-                text="XYZ Test" 
-                onClick={() => handleQuizStart('XYZ')}
-              />
-              <QuizButton 
-                text="NOG Test" 
-                onClick={() => handleQuizStart('NOG')}
-              />
-              <QuizButton 
-                text="PRO Test" 
-                onClick={() => handleQuizStart('PRO')}
-              />
-              <QuizButton 
-                text="DTK Test" 
-                onClick={() => handleQuizStart('DTK')}
-              />
-            </div>
-          </div>
-        </div>
-      )}
-      
-      {currentView === 'quiz' && (
-        <Quiz 
-          onComplete={handleQuizComplete} 
-          testType={currentTestType} 
-          onBack={() => setCurrentView(nextRecommendedPath === 'matematikbasic' ? 'menu' : 'test-select')}
-        />
-      )}
-
-      {currentView === 'complete' && (
-        <div className="text-center z-10 bg-white/40 backdrop-blur-sm p-8 rounded-2xl shadow-lg border border-teal-100">
-          <h2 className="text-2xl font-bold text-blue-600 mb-4">{currentTestType} Test Klar!</h2>
-          <p className="text-xl text-teal-700 mb-6">Ditt resultat: {finalScore}/12</p>
-          <div className="space-x-4">
-            <button
-              onClick={() => setCurrentView('menu')}
-              className="px-6 py-2 bg-white/50 rounded-lg hover:bg-white/70"
-            >
-              Till Menyn
-            </button>
-            <button
-              onClick={() => handleQuizStart(currentTestType)}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-            >
-              Försök Igen
-            </button>
-          </div>
-        </div>
-      )}
-
-      {currentView === 'roadmap' && (
-        <>
-          <button
-            onClick={() => setCurrentView('menu')}
-            className="fixed top-4 left-4 px-4 py-2 bg-blue-600 text-white 
-                     rounded-lg hover:bg-blue-700 transition-colors z-50"
-          >
-            Tillbaka
-          </button>
-          <RoadMap />
-        </>
-      )}
-
-      {currentView === 'stats' && (
-        <CategoryStats onBack={() => setCurrentView('menu')} />
-      )}
-
-      {currentView === 'decision-tree' && (
-        <DecisionTree onBack={() => setCurrentView('menu')} />
-      )}
-
-      {currentView === 'second-chance' && (
-        <SecondChance onBack={() => setCurrentView('menu')} />
-      )}
+      </main>
     </div>
   )
 }
