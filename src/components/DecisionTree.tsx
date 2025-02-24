@@ -60,7 +60,7 @@ const initialTree: TreeNode = {
                   children: []
                 },
                 {
-                  id: 'matematikbasic-fraktioner-adda',
+                  id: 'matematikbasic-fraktioner-addera',
                   title: 'Addera',
                   description: 'Addera en fraktion',
                   children: []

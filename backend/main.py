@@ -17,6 +17,13 @@ import auth
 from seed_data import seed_database  # Add this import
 from pydantic import BaseModel
 from sqlalchemy import inspect
+from question_generators.matematikbasic_generator import generate_matematikbasic_question
+from pydantic import ValidationError
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 def create_tables_if_not_exist():
     """Create tables only if they don't exist"""
@@ -87,6 +94,22 @@ async def options_handler(path: str):
             "Access-Control-Allow-Headers": "*",
         },
     )
+
+@app.on_event("startup")
+async def startup_event():
+    print("\n=== Server Starting ===")
+    print("Testing print statements")
+    print("If you see this, print works")
+    
+    import sys
+    print("\n=== Stdout Configuration ===")
+    print(f"Stdout is connected to: {sys.stdout}")
+    print(f"Stdout is buffered: {sys.stdout.line_buffering}")
+    
+    print("\n=== Current Environment ===")
+    import os
+    print(f"ENV: {os.getenv('ENV', 'not set')}")
+    print(f"PYTHONUNBUFFERED: {os.getenv('PYTHONUNBUFFERED', 'not set')}")
 
 @app.get("/api/health")
 async def health_check():
@@ -251,7 +274,7 @@ async def get_category_stats(
     """Get user's stats for a specific category"""
     history = db.query(UserHistory).filter(
         UserHistory.user_id == current_user.id,
-        UserHistory.category == category
+        UserHistory.moment == category  # Changed from category to moment to match the frontend
     ).all()
     
     if not history:
@@ -265,10 +288,20 @@ async def get_category_stats(
     total_attempts = len(history)
     total_time = sum(h.time for h in history)
     skipped_count = sum(1 for h in history if h.skipped)
+    non_skipped_attempts = total_attempts - skipped_count
+    
+    # Calculate correct percentage based on non-skipped attempts and is_correct field
+    correct_count = sum(1 for h in history if not h.skipped and h.is_correct)
+    correct_percentage = (correct_count / non_skipped_attempts * 100) if non_skipped_attempts > 0 else 0
+    
+    # Calculate average time for non-skipped attempts
+    non_skipped_times = [h.time for h in history if not h.skipped]
+    average_time = sum(non_skipped_times) / len(non_skipped_times) if non_skipped_times else 0
     
     return {
         "total_attempts": total_attempts,
-        "average_time": total_time / total_attempts if total_attempts > 0 else 0,
+        "average_time": average_time,
+        "correct_percentage": correct_percentage,
         "skipped_percentage": (skipped_count / total_attempts * 100) if total_attempts > 0 else 0
     }
 
@@ -280,6 +313,8 @@ class AttemptCreate(BaseModel):
     difficulty: int
     skipped: bool
     time: int
+    is_correct: bool
+    question_data: str  # Add this field to store the full question data
 
 @app.options("/api/attempts")
 async def options_attempts():
@@ -293,6 +328,12 @@ async def save_attempt(
 ):
     """Save a question attempt in user history"""
     try:
+        import sys
+        print("\n=== TESTING TESTING TESTING ===")
+        sys.stdout.flush()
+        print(f"Raw attempt data: {attempt}")
+        sys.stdout.flush()
+        
         history = save_user_history(
             db=db,
             user_id=current_user.id,
@@ -301,10 +342,34 @@ async def save_attempt(
             moment=attempt.moment,
             difficulty=attempt.difficulty,
             skipped=attempt.skipped,
-            time=attempt.time
+            time=attempt.time,
+            is_correct=attempt.is_correct,
+            question_data=attempt.question_data
         )
+        print("Attempt saved successfully.")
+        sys.stdout.flush()
         return {"status": "success", "history_id": history.id}
+    except ValidationError as e:
+        print("\n=== Validation Error ===")
+        sys.stdout.flush()
+        print("Error details:")
+        for error in e.errors():
+            print(f"Field: {error['loc'][0]}")
+            print(f"Type: {error['type']}")
+            print(f"Message: {error['msg']}")
+            print(f"Raw value: {error.get('ctx', {}).get('given')}")
+            print("---")
+            sys.stdout.flush()
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail={"errors": e.errors()}
+        )
     except Exception as e:
+        print("\n=== Error ===")
+        print(f"Error type: {type(e)}")
+        print(f"Error message: {str(e)}")
+        import traceback
+        print(f"Traceback:\n{traceback.format_exc()}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to save attempt: {str(e)}"
@@ -350,3 +415,24 @@ async def refresh_token(current_user: User = Depends(auth.get_current_user)):
         expires_delta=access_token_expires
     )
     return {"access_token": access_token, "token_type": "bearer"}
+
+@app.get("/api/user/history/incorrect")
+async def get_incorrect_questions(
+    current_user: User = Depends(auth.get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Get user's incorrectly answered questions"""
+    history = db.query(UserHistory).filter(
+        UserHistory.user_id == current_user.id,
+        UserHistory.is_correct == False,
+        UserHistory.skipped == False
+    ).order_by(UserHistory.timestamp.desc()).all()
+
+    # Get unique questions based on subject, category, moment, and difficulty
+    unique_questions = {}
+    for h in history:
+        key = f"{h.subject}-{h.category}-{h.moment}-{h.difficulty}"
+        if key not in unique_questions and h.question_data:  # Only include if we have the question data
+            unique_questions[key] = h.question_data
+
+    return list(unique_questions.values())

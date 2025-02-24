@@ -21,9 +21,16 @@ interface Question {
   explanation: string
 }
 
+interface QuestionTypeCount {
+  [key: string]: {
+    total: number
+    completed: number
+  }
+}
+
 interface QuizProps {
   onComplete: (score: number) => void
-  testType: 'XYZ' | 'NOG' | 'PRO' | 'DTK'
+  testType: 'XYZ' | 'NOG' | 'PRO' | 'DTK' | 'MATEMATIKBASIC'
   onBack: () => void
 }
 
@@ -45,6 +52,22 @@ const formatQuestion = (question: string): JSX.Element => {
   )
 }
 
+const getQuestionTypeLabel = (type: string): string => {
+  const labels: { [key: string]: string } = {
+    'räknelagar': 'Räknelagar',
+    'förlänga': 'Förlänga bråk',
+    'förkorta': 'Förkorta bråk',
+    'adda': 'Addera bråk',
+    'multiplicera': 'Multiplicera bråk',
+    'division': 'Division',
+    'multiplikation': 'Multiplikation',
+    'addition': 'Addition',
+    'subtraktion': 'Subtraktion'
+  }
+  const lastPart = type.split('-').pop() || ''
+  return labels[lastPart] || lastPart
+}
+
 export const Quiz: React.FC<QuizProps> = ({ onComplete, testType, onBack }) => {
   const [currentQuestion, setCurrentQuestion] = useState(0)
   const [questions, setQuestions] = useState<Question[]>([])
@@ -62,6 +85,17 @@ export const Quiz: React.FC<QuizProps> = ({ onComplete, testType, onBack }) => {
   const { isMuted, toggleMute } = useSound()
   const [startTime, setStartTime] = useState<Date | null>(null)
   const { token, refreshToken } = useAuth()
+  const [questionTypeCounts, setQuestionTypeCounts] = useState<QuestionTypeCount>({
+    'matematikbasic-räknelagar': { total: 0, completed: 0 },
+    'matematikbasic-fraktioner-förlänga': { total: 0, completed: 0 },
+    'matematikbasic-fraktioner-förkorta': { total: 0, completed: 0 },
+    'matematikbasic-fraktioner-adda': { total: 0, completed: 0 },
+    'matematikbasic-fraktioner-multiplicera': { total: 0, completed: 0 },
+    'matematikbasic-ekvationslösning-division': { total: 0, completed: 0 },
+    'matematikbasic-ekvationslösning-multiplikation': { total: 0, completed: 0 },
+    'matematikbasic-ekvationslösning-addition': { total: 0, completed: 0 },
+    'matematikbasic-ekvationslösning-subtraktion': { total: 0, completed: 0 }
+  })
 
   const correctSound = new Audio('/sounds/correct.mp3')
   const wrongSound = new Audio('/sounds/wrong.mp3')
@@ -101,6 +135,19 @@ export const Quiz: React.FC<QuizProps> = ({ onComplete, testType, onBack }) => {
       setStartTime(new Date())
     }
   }, [currentQuestion, questions])
+
+  // Update the counts when questions are loaded
+  useEffect(() => {
+    if (testType === 'MATEMATIKBASIC' && questions.length > 0) {
+      const counts: QuestionTypeCount = { ...questionTypeCounts }
+      questions.forEach(q => {
+        if (counts[q.moment]) {
+          counts[q.moment].total++
+        }
+      })
+      setQuestionTypeCounts(counts)
+    }
+  }, [questions, testType])
 
   const handleTokenError = async () => {
     try {
@@ -166,6 +213,17 @@ export const Quiz: React.FC<QuizProps> = ({ onComplete, testType, onBack }) => {
       } catch (error) {
         console.error('Failed to save attempt:', error)
       }
+    }
+
+    if (testType === 'MATEMATIKBASIC') {
+      const currentMoment = questions[currentQuestion].moment
+      setQuestionTypeCounts(prev => ({
+        ...prev,
+        [currentMoment]: {
+          ...prev[currentMoment],
+          completed: prev[currentMoment].completed + 1
+        }
+      }))
     }
   }
 
@@ -321,7 +379,14 @@ export const Quiz: React.FC<QuizProps> = ({ onComplete, testType, onBack }) => {
 
       {/* Calculator */}
       {showCalculator && (
-        <Calculator onClose={() => setShowCalculator(false)} />
+        <div 
+          className="fixed inset-0 flex items-center justify-center z-[70]" 
+          onClick={() => setShowCalculator(false)}
+        >
+          <div onClick={(e) => e.stopPropagation()}>
+            <Calculator onClose={() => setShowCalculator(false)} />
+          </div>
+        </div>
       )}
 
       <div className="bg-white/40 backdrop-blur-sm p-8 rounded-2xl shadow-lg border border-teal-100">
@@ -342,6 +407,40 @@ export const Quiz: React.FC<QuizProps> = ({ onComplete, testType, onBack }) => {
         <div className="mb-4 text-right text-pink-600">
           Score: {score}
         </div>
+
+        {/* Add question type progress for MATEMATIKBASIC */}
+        {testType === 'MATEMATIKBASIC' && (
+          <div className="mb-6">
+            <h3 className="text-lg font-semibold text-blue-600 mb-2">Framsteg per område:</h3>
+            <div className="grid grid-cols-2 gap-3">
+              {Object.entries(questionTypeCounts).map(([type, count]) => (
+                <div 
+                  key={type} 
+                  className={`flex justify-between items-center rounded-lg p-3 
+                    ${count.completed > 0 ? 'bg-blue-50' : 'bg-white/50'}`}
+                >
+                  <span className="text-sm font-medium text-gray-700">
+                    {getQuestionTypeLabel(type)}
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <div className="h-2 w-16 bg-gray-200 rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-blue-600 transition-all duration-300"
+                        style={{ 
+                          width: `${count.total > 0 ? (count.completed / count.total) * 100 : 0}%` 
+                        }}
+                      />
+                    </div>
+                    <span className="text-sm font-medium text-blue-600 min-w-[3ch] text-right">
+                      {count.completed}/{count.total}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div className="bg-white/50 backdrop-blur-sm p-6 rounded-xl shadow-lg border border-white/50">
           <div className="text-2xl text-pink-600 mb-8">
             {formatQuestion(questions[currentQuestion]?.question || '')}

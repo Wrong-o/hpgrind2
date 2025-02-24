@@ -15,13 +15,15 @@ if ENV == "production":
 else:
     DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/hpg")
 
-# Create engine with appropriate settings
+# Ensure URL is PostgreSQL
+if not DATABASE_URL.startswith('postgresql://'):
+    raise ValueError("DATABASE_URL must be a PostgreSQL connection string")
+
+# Create engine with PostgreSQL specific settings
 engine = create_engine(
     DATABASE_URL,
-    echo=ENV == "development",  # Only echo SQL in development
-    pool_size=5,  # Default connection pool size
-    max_overflow=10,  # Allow up to 10 connections beyond pool_size
-    pool_timeout=30,  # Timeout after 30 seconds waiting for a connection
+    echo=False,  # Disable SQL logging
+    pool_pre_ping=True,  # Enable connection health checks
     pool_recycle=1800,  # Recycle connections after 30 minutes
 )
 

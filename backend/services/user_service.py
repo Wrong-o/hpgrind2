@@ -49,7 +49,7 @@ def authenticate_user(db: Session, email: str, password: str):
         return False
     return user
 
-def save_user_history(db: Session, user_id: int, subject: str, category: str, moment: str, difficulty: int, skipped: bool, time: int):
+def save_user_history(db: Session, user_id: int, subject: str, category: str, moment: str, difficulty: int, skipped: bool, time: int, is_correct: bool, question_data: str):
     """Save user's question attempt history"""
     from models.database_models import UserHistory
     
@@ -60,7 +60,9 @@ def save_user_history(db: Session, user_id: int, subject: str, category: str, mo
         moment=moment,
         difficulty=difficulty,
         skipped=skipped,
-        time=time
+        time=time,
+        is_correct=is_correct,
+        question_data=question_data
     )
     
     try:
@@ -73,4 +75,4 @@ def save_user_history(db: Session, user_id: int, subject: str, category: str, mo
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to save history: {str(e)}"
-        ) 
+        )

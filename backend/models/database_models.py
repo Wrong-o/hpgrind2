@@ -50,6 +50,8 @@ class UserHistory(Base):
     difficulty = Column(SmallInteger, nullable=False)
     skipped = Column(Boolean, default=False)
     time = Column(SmallInteger, nullable=False)  # Time in seconds
+    is_correct = Column(Boolean, default=False)
+    question_data = Column(String, nullable=True)  # Store the full question data as JSON string
 
     # Relationships
     user = relationship("DBUser", back_populates="history")

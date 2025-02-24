@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react'
 import { FloatingEquations } from './components/FloatingEquations'
-import { Hearts } from './components/Hearts'
 import { QuizButton } from './components/QuizButton'
 import { Quiz } from './components/Quiz'
 import { LockIcon } from './components/LockIcon'
@@ -10,6 +9,7 @@ import { AuthProvider, useAuth } from './contexts/AuthContext'
 import { CategoryStats } from './components/CategoryStats'
 import { SoundProvider } from './contexts/SoundContext'
 import { DecisionTree } from './components/DecisionTree'
+import { SecondChance } from './components/SecondChance'
 
 const FloatingCards: React.FC = () => {
   const items = [
@@ -111,10 +111,10 @@ const FloatingCards: React.FC = () => {
 };
 
 function AppContent() {
-  const [currentView, setCurrentView] = useState<'landing' | 'menu' | 'quiz' | 'complete' | 'roadmap' | 'stats' | 'test-select' | 'decision-tree'>('landing')
+  const [currentView, setCurrentView] = useState<'landing' | 'menu' | 'quiz' | 'complete' | 'roadmap' | 'stats' | 'test-select' | 'decision-tree' | 'second-chance'>('landing')
   const [finalScore, setFinalScore] = useState(0)
   const [showLogin, setShowLogin] = useState(false)
-  const [currentTestType, setCurrentTestType] = useState<'XYZ' | 'NOG' | 'PRO' | 'DTK'>('XYZ')
+  const [currentTestType, setCurrentTestType] = useState<'XYZ' | 'NOG' | 'PRO' | 'DTK' | 'MATEMATIKBASIC'>('XYZ')
   const [question1Answered, setQuestion1Answered] = useState(false)
   const [question2Answered, setQuestion2Answered] = useState(false)
   const { isLoggedIn, logout, token } = useAuth()
@@ -168,20 +168,22 @@ function AppContent() {
 
     switch (nextRecommendedPath) {
       case 'matematikbasic':
+        setCurrentTestType('MATEMATIKBASIC')
+        setCurrentView('quiz')
+        break
+      case 'calibration':
+        setCurrentView('test-select')
+        break
       case 'red-categories':
       case 'yellow-categories':
         setCurrentView('decision-tree')
-        break
-      case 'calibration':
-        // Handle calibration view (you might need to add this view)
-        setCurrentView('test-select')
         break
       default:
         setCurrentView('decision-tree')
     }
   }
 
-  const handleQuizStart = (testType: 'XYZ' | 'NOG' | 'PRO' | 'DTK') => {
+  const handleQuizStart = (testType: 'XYZ' | 'NOG' | 'PRO' | 'DTK' | 'MATEMATIKBASIC') => {
     setCurrentTestType(testType)
     setCurrentView('quiz')
   }
@@ -373,11 +375,11 @@ function AppContent() {
               <QuizButton 
                 text={
                   <div className="flex items-center gap-2 justify-center">
-                    Sparade Frågor
+                    Andra chansen
                     {!isLoggedIn && <LockIcon className="w-4 h-4" />}
                   </div>
                 }
-                onClick={() => {}}
+                onClick={() => isLoggedIn && setCurrentView('second-chance')}
                 disabled={!isLoggedIn}
                 className={!isLoggedIn ? 'opacity-50 cursor-not-allowed' : ''}
               />
@@ -429,7 +431,7 @@ function AppContent() {
         <Quiz 
           onComplete={handleQuizComplete} 
           testType={currentTestType} 
-          onBack={() => setCurrentView('test-select')}
+          onBack={() => setCurrentView(nextRecommendedPath === 'matematikbasic' ? 'menu' : 'test-select')}
         />
       )}
 
@@ -473,6 +475,10 @@ function AppContent() {
 
       {currentView === 'decision-tree' && (
         <DecisionTree onBack={() => setCurrentView('menu')} />
+      )}
+
+      {currentView === 'second-chance' && (
+        <SecondChance onBack={() => setCurrentView('menu')} />
       )}
     </div>
   )
