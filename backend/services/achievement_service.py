@@ -3,6 +3,7 @@ from models.database_models import Achievement, UserAchievement, QuestionAttempt
 from datetime import datetime, timedelta
 from sqlalchemy import func
 
+
 class AchievementManager:
     def __init__(self, db: Session, user_id: int):
         self.db = db
@@ -52,9 +53,13 @@ class AchievementManager:
         current_streak = self._calculate_current_streak()
         for title, required_streak in streak_achievements.items():
             if current_streak >= required_streak:
-                self._award_achievement(f"Streak {title}", "streak", required_streak)
+                self._award_achievement(f"Streak {title}",
+                                        "streak", required_streak)
 
-    def _award_achievement(self, name: str, requirement_type: str, requirement_value: float):
+    def _award_achievement(self,
+                           name: str,
+                           requirement_type: str,
+                           requirement_value: float):
         achievement = self.db.query(Achievement).filter(
             Achievement.name == name
         ).first()
