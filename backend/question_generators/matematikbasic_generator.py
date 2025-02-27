@@ -7,11 +7,13 @@ import logging
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
+
 def generate_random_fraction(max_numerator: int = 12, max_denominator: int = 12) -> tuple:
     """Generate a random fraction with calculator-friendly numbers."""
     numerator = random.randint(1, max_numerator)
     denominator = random.randint(2, max_denominator)
     return numerator, denominator
+
 
 # Define question types outside the function
 QUESTION_TYPES = {
@@ -26,22 +28,32 @@ QUESTION_TYPES = {
             "template_vars": lambda: {
                 # Generate a random expression with 2-4 operations
                 "num_operations": random.randint(2, 4),
-                "nums": [random.randint(2, 12) for _ in range(5)],  # Generate 5 numbers to have enough
+                # Generate 5 numbers to have enough
+                "nums": [random.randint(2, 12) for _ in range(5)],
                 "expression": lambda vars: {
                     2: lambda n: [  # 2 operations
-                        f"({n[0]} + {n[1]}) \\cdot {n[2]}",  # Parentheses and multiplication
-                        f"{n[0]} \\cdot {n[1]} + {n[2]}",    # Multiplication and addition
-                        f"{n[0]} \\cdot ({n[1]} - {n[2]})",  # Multiplication and subtraction
+                        # Parentheses and multiplication
+                        f"({n[0]} + {n[1]}) \\cdot {n[2]}",
+                        # Multiplication and addition
+                        f"{n[0]} \\cdot {n[1]} + {n[2]}",
+                        # Multiplication and subtraction
+                        f"{n[0]} \\cdot ({n[1]} - {n[2]})",
                     ][random.randint(0, 2)],
                     3: lambda n: [  # 3 operations
-                        f"({n[0]} + {n[1]}) \\cdot {n[2]} - {n[3]}",  # Parentheses, multiplication, subtraction
-                        f"{n[0]} \\cdot {n[1]} + {n[2]} \\cdot {n[3]}", # Two multiplications and addition
-                        f"({n[0]} - {n[1]}) \\cdot ({n[2]} + {n[3]})",  # Two sets of parentheses
+                        # Parentheses, multiplication, subtraction
+                        f"({n[0]} + {n[1]}) \\cdot {n[2]} - {n[3]}",
+                        # Two multiplications and addition
+                        f"{n[0]} \\cdot {n[1]} + {n[2]} \\cdot {n[3]}",
+                        # Two sets of parentheses
+                        f"({n[0]} - {n[1]}) \\cdot ({n[2]} + {n[3]})",
                     ][random.randint(0, 2)],
                     4: lambda n: [  # 4 operations
-                        f"({n[0]} - {n[1]}) \\cdot ({n[2]} + {n[3]}) \\cdot {n[4]}", # Two sets of parentheses, multiplication
-                        f"({n[0]} - {n[1]}) \\cdot ({n[2]} + {n[3]}) \\div {n[4]}", # Two sets of parentheses, division
-                        f"({n[0]} - {n[1]}) \\cdot ({n[2]} + {n[3]}) \\cdot \\frac{{1}}{{{n[4]}}}", # Two sets of parentheses, division as fraction
+                        # Two sets of parentheses, multiplication
+                        f"({n[0]} - {n[1]}) \\cdot ({n[2]} + {n[3]}) \\cdot {n[4]}",
+                        # Two sets of parentheses, division
+                        f"({n[0]} - {n[1]}) \\cdot ({n[2]} + {n[3]}) \\div {n[4]}",
+                        # Two sets of parentheses, division as fraction
+                        f"({n[0]} - {n[1]}) \\cdot ({n[2]} + {n[3]}) \\cdot \\frac{{1}}{{{n[4]}}}",
                     ][random.randint(0, 2)]
                 }[vars["num_operations"]](vars["nums"]),
                 "result": lambda vars: eval(
@@ -60,7 +72,8 @@ QUESTION_TYPES = {
                     # Common mistakes from wrong order of operations
                     f"${int(vars['result']) + 1}$",  # Off by one
                     f"${int(vars['result']) - 1}$",  # Off by one
-                    f"${int(vars['result'] * 2)}$"   # Double the correct answer
+                    # Double the correct answer
+                    f"${int(vars['result'] * 2)}$"
                 ]
             },
             "explanation_template": lambda vars: (
@@ -72,7 +85,7 @@ QUESTION_TYPES = {
             )
         }
     ],
-    
+
     # Fraktioner - Förlänga
     "matematikbasic-fraktioner-förlänga": [
         {
@@ -107,8 +120,10 @@ QUESTION_TYPES = {
             "difficulty": 2,
             "question": "Förkorta bråket $\\frac{{{a}}}{{{b}}}$ så mycket som möjligt",
             "template_vars": lambda: {
-                "a": random.randint(2, 12) * 2,  # Even number for easy reduction
-                "b": lambda vars: vars['a'] * random.randint(2, 3),  # Ensure reducible fraction
+                # Even number for easy reduction
+                "a": random.randint(2, 12) * 2,
+                # Ensure reducible fraction
+                "b": lambda vars: vars['a'] * random.randint(2, 3),
                 "question": lambda vars: f"Förkorta bråket $\\frac{{{vars['a']}}}{{{vars['b']}}}$ så mycket som möjligt",
                 "correct": lambda vars: f"$\\frac{{{vars['a'] // 2}}}{{{vars['b'] // 2}}}$",
                 "wrong": lambda vars: [
@@ -184,7 +199,8 @@ QUESTION_TYPES = {
             "question": "Lös ekvationen ${a}x = {b}$",
             "template_vars": lambda: {
                 "a": random.randint(2, 6),
-                "b": lambda vars: vars['a'] * random.randint(2, 6)  # Ensure clean division
+                # Ensure clean division
+                "b": lambda vars: vars['a'] * random.randint(2, 6)
             },
             "answer_generator": lambda vars: {
                 "correct": f"$x = {vars['b'] // vars['a']}$",
@@ -256,7 +272,8 @@ QUESTION_TYPES = {
             "question": "Lös ekvationen $x + {a} = {b}$",
             "template_vars": lambda: {
                 "a": random.randint(2, 10),
-                "b": lambda vars: vars['a'] + random.randint(5, 15)  # Ensure positive result
+                # Ensure positive result
+                "b": lambda vars: vars['a'] + random.randint(5, 15)
             },
             "answer_generator": lambda vars: {
                 "correct": f"$x = {vars['b'] - vars['a']}$",
@@ -271,34 +288,38 @@ QUESTION_TYPES = {
     ]
 }
 
+
 def generate_matematikbasic_question(delmoment_list: List[str]) -> Dict[str, Any]:
     """
     Generate a basic math question based on the given delmoment.
     """
     try:
-        logger.debug(f"Starting question generation with delmoments: {delmoment_list}")
-        
+        logger.debug(
+            f"Starting question generation with delmoments: {delmoment_list}")
+
         # Choose a question type
         if not delmoment_list:
             delmoment = random.choice(list(QUESTION_TYPES.keys()))
         else:
-            available_delmoments = [d for d in delmoment_list if d in QUESTION_TYPES]
-            delmoment = random.choice(available_delmoments) if available_delmoments else random.choice(list(QUESTION_TYPES.keys()))
-        
+            available_delmoments = [
+                d for d in delmoment_list if d in QUESTION_TYPES]
+            delmoment = random.choice(available_delmoments) if available_delmoments else random.choice(
+                list(QUESTION_TYPES.keys()))
+
         logger.debug(f"Selected delmoment: {delmoment}")
-        
+
         # Get a random question template for the selected delmoment
         question_template = random.choice(QUESTION_TYPES[delmoment])
-        
+
         # Generate template variables
         template_vars = question_template["template_vars"]()
         vars = {}
-        
+
         # First pass: Process non-dependent variables
         for key, value in template_vars.items():
             if not callable(value):
                 vars[key] = value
-        
+
         # Second pass: Process dependent variables
         for key, value in template_vars.items():
             if callable(value):
@@ -323,17 +344,17 @@ def generate_matematikbasic_question(delmoment_list: List[str]) -> Dict[str, Any
                         vars[key] = value(vars)
                     except TypeError:
                         vars[key] = value
-        
+
         logger.debug(f"Generated variables: {vars}")
-        
+
         # Evaluate result if it's still a function
         if "result" in vars and callable(vars["result"]):
             vars["result"] = vars["result"](vars)
-        
+
         # Add derived variables needed for explanations
         if "target_denominator" in vars and "b" in vars:
             vars["multiplier"] = vars["target_denominator"] // vars["b"]
-        
+
         # Add arithmetic operation results needed for explanations
         if "a" in vars and "b" in vars:
             # Store arithmetic operations as strings to match template keys
@@ -354,7 +375,7 @@ def generate_matematikbasic_question(delmoment_list: List[str]) -> Dict[str, Any
                 div_result = str(vars["b"] // vars["a"])
                 vars["b/a"] = div_result
                 vars["b//a"] = div_result
-        
+
         if "c" in vars and "d" in vars:
             # Store multiplication in both formats
             mult_result = str(vars["c"] * vars["d"])
@@ -373,7 +394,7 @@ def generate_matematikbasic_question(delmoment_list: List[str]) -> Dict[str, Any
                 div_result = str(vars["d"] // vars["c"])
                 vars["d/c"] = div_result
                 vars["d//c"] = div_result
-                
+
         # Handle cross-pair multiplications if needed (e.g., a*c, b*d)
         if all(x in vars for x in ["a", "b", "c", "d"]):
             # Store a*c in both formats
@@ -384,35 +405,40 @@ def generate_matematikbasic_question(delmoment_list: List[str]) -> Dict[str, Any
             mult_result = str(vars["b"] * vars["d"])
             vars["b*d"] = mult_result
             vars["b·d"] = mult_result
-        
+
         # Generate question
         try:
             if isinstance(question_template["question"], str):
                 # For equation-based questions, we need to handle both LaTeX braces and the x variable
                 if "x" in question_template["question"]:
                     # First escape all LaTeX curly braces by doubling them
-                    temp_question = question_template["question"].replace("{", "{{").replace("}", "}}")
+                    temp_question = question_template["question"].replace(
+                        "{", "{{").replace("}", "}}")
                     # Then replace x with a literal x (we've already escaped the braces)
                     temp_question = temp_question.replace("x", "x")
                     # Now replace back single braces for our format variables
-                    formatted_vars = {k: v for k, v in vars.items() if k != "x"}
+                    formatted_vars = {k: v for k,
+                                      v in vars.items() if k != "x"}
                     for var_name in formatted_vars.keys():
-                        temp_question = temp_question.replace(f"{{{{{var_name}}}}}", f"{{{var_name}}}")
+                        temp_question = temp_question.replace(
+                            f"{{{{{var_name}}}}}", f"{{{var_name}}}")
                     # Format the string
                     question = temp_question.format(**formatted_vars)
                 else:
                     # For non-equation questions, just escape LaTeX braces
-                    temp_question = question_template["question"].replace("{", "{{").replace("}", "}}")
+                    temp_question = question_template["question"].replace(
+                        "{", "{{").replace("}", "}}")
                     # Replace back single braces for our format variables
                     for var_name in vars.keys():
-                        temp_question = temp_question.replace(f"{{{{{var_name}}}}}", f"{{{var_name}}}")
+                        temp_question = temp_question.replace(
+                            f"{{{{{var_name}}}}}", f"{{{var_name}}}")
                     question = temp_question.format(**vars)
             else:
                 question = f"${vars['expression']}$"
         except KeyError as e:
             logger.error(f"Missing variable in question template: {str(e)}")
             raise
-        
+
         # Get answers using the answer generator
         if "answer_generator" in question_template:
             answers = question_template["answer_generator"](vars)
@@ -431,40 +457,47 @@ def generate_matematikbasic_question(delmoment_list: List[str]) -> Dict[str, Any
                     f"${int(float(vars.get('result', 0))) - 1}$",
                     f"${int(float(vars.get('result', 0))) * 2}$"
                 ]
-        
+
         # Ensure we have exactly 3 wrong answers
         while len(wrong_answers) < 3:
             if "result" in vars:
-                base = float(vars['result']) if not callable(vars['result']) else float(vars['result'](vars))
+                base = float(vars['result']) if not callable(
+                    vars['result']) else float(vars['result'](vars))
                 wrong_answers.append(f"${int(base + random.randint(-5, 5))}$")
             else:
                 # Generate a reasonable wrong answer based on the variables
-                base_val = next((v for v in vars.values() if isinstance(v, (int, float))), 0)
-                wrong_answers.append(f"${int(base_val + random.randint(-5, 5))}$")
+                base_val = next(
+                    (v for v in vars.values() if isinstance(v, (int, float))), 0)
+                wrong_answers.append(
+                    f"${int(base_val + random.randint(-5, 5))}$")
         wrong_answers = wrong_answers[:3]  # Trim to exactly 3 wrong answers
-        
+
         # Generate explanation
         if "explanation_template" in question_template:
             if callable(question_template["explanation_template"]):
-                explanation_template = question_template["explanation_template"](vars)
+                explanation_template = question_template["explanation_template"](
+                    vars)
             else:
                 explanation_template = question_template["explanation_template"]
             # Escape LaTeX curly braces
-            explanation_template = explanation_template.replace("{", "{{").replace("}", "}}");
+            explanation_template = explanation_template.replace(
+                "{", "{{").replace("}", "}}")
             # Replace back single braces for our format variables
             for var_name in vars.keys():
-                explanation_template = explanation_template.replace(f"{{{{{var_name}}}}}", f"{{{var_name}}}")
+                explanation_template = explanation_template.replace(
+                    f"{{{{{var_name}}}}}", f"{{{var_name}}}")
             explanation = explanation_template.format(**vars)
         elif "explanation" in vars:
-            explanation = vars["explanation"] if not callable(vars["explanation"]) else vars["explanation"](vars)
+            explanation = vars["explanation"] if not callable(
+                vars["explanation"]) else vars["explanation"](vars)
         else:
             # Provide a default explanation based on the question type
             explanation = f"Lös uppgiften steg för steg. Det korrekta svaret är {correct_answer}."
-        
+
         # Shuffle answers
         all_answers = [correct_answer] + wrong_answers
         random.shuffle(all_answers)
-        
+
         # Create question data following the required format
         question_data = {
             "id": str(uuid.uuid4()),
@@ -478,12 +511,12 @@ def generate_matematikbasic_question(delmoment_list: List[str]) -> Dict[str, Any
             "drawing": [],
             "explanation": explanation
         }
-        
+
         logger.debug("Successfully created question data")
         return question_data
-        
+
     except Exception as e:
         logger.error(f"Error generating question: {str(e)}", exc_info=True)
         raise
 
-# ... rest of the code stays the same ... 
+# ... rest of the code stays the same ...

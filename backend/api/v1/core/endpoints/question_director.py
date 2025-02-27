@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import delete, insert, select, update
 from sqlalchemy.orm import Session, joinedload, selectinload
 from sqlalchemy.exc import IntegrityError
-from api.v1.core.services.kvantitativa.basics.operations_order import operations_order
+from api.v1.core.services.kvantitativ.basics.operations_order import operations_order
 
 router = APIRouter()
 
@@ -32,5 +32,6 @@ def get_question(moment: str, difficulty: int, db: Session = Depends(get_db)):
         drawing: list of lists - drawing if needed
         explanation: string (Latex) - the explanation
     """
-    question = operations_order(difficulty=difficulty)
-    return question
+    moment = moment
+    question_data = operations_order(difficulty=difficulty)
+    return question_data
