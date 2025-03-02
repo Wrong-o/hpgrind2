@@ -1,5 +1,5 @@
 import random as rd
-from api.v1.core.services.equation_generator import fraction_equation
+from api.v1.core.services.equation_generator import fraction_operations_order
 from api.v1.core.services.wrong_answer_generator import generate_math_choices
 
 
@@ -44,7 +44,7 @@ def operations_order(difficulty: int):
         ])
 
     if difficulty == 3:
-        question_data = fraction_equation()
+        question_data = fraction_operations_order()
         question_data["question"] = question_data["latex_fraction"]
         question_data["correct_answer"] = question_data["result"]
 

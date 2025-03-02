@@ -80,7 +80,38 @@ def integer_factorize(factorize: int):
     }
 
 
-def fraction_equation(max_numerator: int = 2, max_denominator: int = 2):
+def random_fraction(negative_allowed: bool = False, max_numerator: int = 10, max_denominator: int = 10):
+    """_summary_
+    Generates a random fraction.
+    Args:
+        negative_allowed (bool, optional): If negative numbers are allowed. Defaults to False.
+        max_numerator (int, optional): The maximum value of the numerator. Defaults to 10.
+        max_denominator (int, optional): The maximum value of the denominator. Defaults to 10.
+    Returns:
+        dict: 
+            numerator: integer
+            denominator: integer
+    """
+    numerator = rd.randint(1, max_numerator)
+    denominator = rd.randint(1, max_denominator)
+    if denominator == numerator:
+        if denominator == 1:
+            denominator += 1
+        else:
+            denominator -= 1
+
+    if negative_allowed:
+        if rd.random() > 0.5:
+            numerator = -numerator
+        if rd.random() > 0.5:
+            denominator = -denominator
+    return {
+        "numerator": numerator,
+        "denominator": denominator
+    }
+
+
+def fraction_operations_order(max_numerator: int = 2, max_denominator: int = 2):
     """_summary_
     Generates a fraction equation
     Returns:
