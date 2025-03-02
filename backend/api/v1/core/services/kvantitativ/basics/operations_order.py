@@ -1,9 +1,25 @@
 import random as rd
 from api.v1.core.services.equation_generator import fraction_equation
-from api.v1.core.services.wrong_answer_generator import wrong_answer_generator
+from api.v1.core.services.wrong_answer_generator import generate_math_choices
 
 
 def operations_order(difficulty: int):
+    """_summary_ Operations_order question with three different difficulties
+
+    Args:
+        difficulty (int): Different types of qustions based on difficulty
+
+    Returns:
+        _type_: _description_
+        subject: string = kvantitativ
+        category: string = basics
+        question: string (Latex) = the question
+        answers: list of strings (Latex) = the answers
+        correct_answer: string = the correct answer
+        drawing: list of lists = drawing if needed
+        explanation: string (Latex) = the explanation
+    """
+
     if difficulty == 1:
         nrs = [rd.randint(1, 10) for _ in range(3)]
         question_data = rd.choice([
@@ -31,8 +47,9 @@ def operations_order(difficulty: int):
         question_data = fraction_equation()
         question_data["question"] = question_data["latex_fraction"]
         question_data["correct_answer"] = question_data["result"]
-        question_data["answers"] = question_data["wrong_answers"]
 
+    question_data["answers"] = generate_math_choices(
+        question_data["question"], question_data["correct_answer"])
     return {
         "subject": "kvantitativ",
         "category": "basics",
@@ -41,5 +58,4 @@ def operations_order(difficulty: int):
         "correct_answer": str(question_data["correct_answer"]),
         "drawing": [],
         "explanation": ""
-
     }

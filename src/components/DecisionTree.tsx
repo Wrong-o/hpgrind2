@@ -27,46 +27,46 @@ const initialTree: TreeNode = {
   description: 'Klicka här för att hitta specifika skills att träna på',
   children: [
     {
-      id: 'kvant',
+      id: 'kvantitativ',
       title: 'Kvantitativ del',
       description: 'Träna på matematiken',
       children: [
         {
-          id: 'matematikbasic',
+          id: 'basics',
           title: 'Grunderna',
           description: 'Grunderna i matematiken som behövs för att kunna sätta igång',
           children: [
             {
-              id: 'matematikbasic-räknelagar',
-              title: 'Räkneregler',
-              description: 'Räknereglerna och ordningen för de olika räknesätten',
+              id: 'basics-operations_order',
+              title: 'Räkneordning',
+              description: 'Räknereordning för de olika räknesätten',
               children: []
             },
             {
-              id: 'matematikbasic-fraktioner',
+              id: 'basics-fraktioner',
               title: 'Fraktioner',
               description: 'Fraktioner och hur de fungerar',
               children: [
                 {
-                  id: 'matematikbasic-fraktioner-förlänga',
+                  id: 'basics-fraktioner-förlänga',
                   title: 'Förlänga',
                   description: 'Förlänga en fraktion',
                   children: []
                 },
                 {
-                  id: 'matematikbasic-fraktioner-förkorta',
+                  id: 'basics-fraktioner-förkorta',
                   title: 'Förkorta',
                   description: 'Förkorta en fraktion',
                   children: []
                 },
                 {
-                  id: 'matematikbasic-fraktioner-addera',
+                  id: 'basics-fraktioner-addera',
                   title: 'Addera',
                   description: 'Addera en fraktion',
                   children: []
                 },
                 {
-                  id: 'matematikbasic-fraktioner-multiplicera',
+                  id: 'basics-fraktioner-multiplicera',
                   title: 'Multiplicera',
                   description: 'Multiplicera en fraktion',
                   children: []
@@ -74,30 +74,30 @@ const initialTree: TreeNode = {
               ]
             },
             {
-              id: 'matematikbasic-ekvationslösning',
+              id: 'basics-ekvationslösning',
               title: 'Ekvationslösning',
               description: 'Grunderna i att lösa ekvationer',
               children: [
                 {
-                  id: 'matematikbasic-ekvationslösning-division',
+                  id: 'basics-ekvationslösning-division',
                   title: 'Dela för att lösa ekvationer',
                   description: 'Om en ekvation har ett gångertal i sig kan man dela båda sidor för att få fram x',
                   children: []
                 },
                 {
-                  id: 'matematikbasic-ekvationslösning-multiplikation',
+                  id: 'basics-ekvationslösning-multiplikation',
                   title: 'Multiplicera för att lösa ekvationer',
                   description: 'Om en ekvation har ett delat tal i sig kan man multiplicera båda sidor för att få fram x',
                   children: []
                 },
                 {
-                  id: 'matematikbasic-ekvationslösning-addition',
+                  id: 'basics-ekvationslösning-addition',
                   title: 'Addera för att lösa ekvationer',
                   description: 'Om en ekvation har ett subtraherat tal i sig kan man addera båda sidor för att få fram x',
                   children: []
                 },
                 {
-                  id: 'matematikbasic-ekvationslösning-subtraktion',
+                  id: 'basics-ekvationslösning-subtraktion',
                   title: 'Subtrahera för att lösa ekvationer',
                   description: 'Om en ekvation har ett adderat tal i sig kan man subtrahera båda sidor för att få fram x',
                   children: []
@@ -398,7 +398,7 @@ const initialTree: TreeNode = {
                   description: 'Beräkna arean av en triangel',
                   children: []
                 }
-                
+
               ]
             },
             {
@@ -690,8 +690,8 @@ const initialTree: TreeNode = {
                 }
               ]
             }
-            
-            
+
+
           ]
         }
       ]
@@ -750,7 +750,7 @@ export const DecisionTree: React.FC<DecisionTreeProps> = ({ onBack }) => {
 
   const getNodeColor = (progress?: Progress): string => {
     if (!progress) return 'bg-gray-200 text-gray-600' // No data
-    
+
     const isCompleted = progress.total_attempts >= 10 // Consider "completed" if at least 10 attempts
     const isFast = progress.average_time < 60 // Less than 60 seconds average
     const isAccurate = progress.correct_percentage > 70 // More than 70% correct
@@ -766,7 +766,7 @@ export const DecisionTree: React.FC<DecisionTreeProps> = ({ onBack }) => {
 
   const getNodeStatus = (progress?: Progress): 'none' | 'green' | 'yellow' | 'red' => {
     if (!progress) return 'none'
-    
+
     const isCompleted = progress.total_attempts >= 10
     const isFast = progress.average_time < 60
     const isAccurate = progress.correct_percentage > 70
@@ -778,7 +778,7 @@ export const DecisionTree: React.FC<DecisionTreeProps> = ({ onBack }) => {
 
   const countChildrenStatus = (node: TreeNode): { none: number; green: number; yellow: number; red: number } => {
     const counts = { none: 0, green: 0, yellow: 0, red: 0 }
-    
+
     const countNode = (n: TreeNode) => {
       if (n.children.length === 0) {
         // This is a leaf node, count its status
@@ -872,14 +872,14 @@ export const DecisionTree: React.FC<DecisionTreeProps> = ({ onBack }) => {
       >
         {/* Connection lines */}
         {level > 0 && (
-          <div 
+          <div
             className="absolute -left-6 top-1/2 w-6 h-px bg-blue-300"
             style={{ transform: 'translateY(-50%)' }}
           />
         )}
-        
+
         {/* Node content */}
-        <div 
+        <div
           className={`
             relative p-4 rounded-lg mb-4 cursor-pointer
             transition-all duration-300 transform hover:scale-102
@@ -895,7 +895,7 @@ export const DecisionTree: React.FC<DecisionTreeProps> = ({ onBack }) => {
           <p className={`text-sm ${isRoot ? 'text-blue-100' : ''}`}>
             {node.description}
           </p>
-          
+
           {/* Status summary for parent nodes */}
           {hasChildren && statusCounts && (
             <div className="mt-2 text-sm flex gap-3">

@@ -2,7 +2,7 @@ import random
 import re
 
 
-def generate_math_choices(expression, correct_answer):
+def generate_math_choices(expression, correct_answer, decimals=0):
     """
     Generate 4 answer choices for a math expression, including the correct answer and
     3 wrong answers that result from evaluating the expression with common errors:
@@ -33,7 +33,7 @@ def generate_math_choices(expression, correct_answer):
     if '(' in expression:
         no_parentheses = re.sub(r'[()]', '', expression)
         wrong1 = safe_eval(no_parentheses)
-        wrong_answers.append(round(wrong1, 2))
+        wrong_answers.append(round(wrong1, decimals))
 
     # Error 2: Evaluate from left to right, ignoring operator precedence
     if '+' in expression or '-' in expression or '*' in expression or '/' in expression or '×' in expression or '÷' in expression:
@@ -65,7 +65,7 @@ def generate_math_choices(expression, correct_answer):
             # Ignore parentheses for this calculation
 
         wrong2 = current_num if current_num is not None else correct_answer * 1.15
-        wrong_answers.append(round(wrong2, 2))
+        wrong_answers.append(round(wrong2, decimals))
 
     # Error 3: Apply the wrong precedence to operations
     # This simulates treating addition/subtraction before multiplication/division
@@ -121,30 +121,30 @@ def generate_math_choices(expression, correct_answer):
             i += 2
 
     wrong3 = float(tokens[0]) if tokens else correct_answer * 0.85
-    wrong_answers.append(round(wrong3, 2))
+    wrong_answers.append(round(wrong3, decimals))
 
     # Generate additional wrong answers if needed
     while len(wrong_answers) < 3:
         # Create a random modification of the correct answer
         wrong = correct_answer * random.uniform(0.7, 1.3)
         if abs(wrong - correct_answer) > 0.1 * abs(correct_answer):  # Ensure it's different enough
-            wrong_answers.append(round(wrong, 2))
+            wrong_answers.append(round(wrong, decimals))
 
     # Ensure all answers are unique and different from the correct answer
     unique_wrong = []
     for wrong in wrong_answers:
-        if wrong != round(correct_answer, 2) and wrong not in unique_wrong:
+        if wrong != round(correct_answer, decimals) and wrong not in unique_wrong:
             unique_wrong.append(wrong)
 
     # If we lost some answers due to duplicates, add more
     while len(unique_wrong) < 3:
         wrong = correct_answer * random.uniform(0.7, 1.3)
-        rounded = round(wrong, 2)
-        if rounded != round(correct_answer, 2) and rounded not in unique_wrong:
+        rounded = round(wrong, decimals)
+        if rounded != round(correct_answer, decimals) and rounded not in unique_wrong:
             unique_wrong.append(rounded)
 
     # Combine all answers and shuffle
-    all_answers = [round(correct_answer, 2)] + unique_wrong[:3]
+    all_answers = [round(correct_answer, decimals)] + unique_wrong[:3]
     random.shuffle(all_answers)
 
     return all_answers

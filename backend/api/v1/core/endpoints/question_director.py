@@ -4,16 +4,25 @@ from sqlalchemy import delete, insert, select, update
 from sqlalchemy.orm import Session, joinedload, selectinload
 from sqlalchemy.exc import IntegrityError
 from api.v1.core.services.kvantitativ.basics.operations_order import operations_order
+from api.v1.core.services.kvantitativ.basics.fraction_equation import fraction_equation
+
+from api.v1.core.services.explanations import explanation as get_explanation
 
 router = APIRouter()
+
+
+moment_functions = {
+    "operations_order": operations_order,
+    "fraction_equation": fraction_equation
+}
 
 
 @router.get("/{moment}{difficulty}", status_code=200)
 def get_question(moment: str, difficulty: int, db: Session = Depends(get_db)):
     """_summary_
-    This function is the endpoint for question generation. 
-    It routes uses services to generate a specific question based on userdata.
-
+    This is the endpoint for getting a question data.
+    It uses the moment and difficulty to generate a question and relevant 
+    explanations, dragings and answers.
     Args:
         db (Session, optional): _description_. Defaults to Depends(get_db).
 
@@ -32,6 +41,12 @@ def get_question(moment: str, difficulty: int, db: Session = Depends(get_db)):
         drawing: list of lists - drawing if needed
         explanation: string (Latex) - the explanation
     """
-    moment = moment
+    if moment not in moment_functions:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Moment not found")
     question_data = operations_order(difficulty=difficulty)
+
+    question_data["explanation"] = get_explanation(moment)
+    question_data["moment"] = moment
+    question_data["difficulty"] = difficulty
     return question_data

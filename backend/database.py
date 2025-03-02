@@ -4,8 +4,6 @@ from sqlalchemy.orm import sessionmaker
 import os
 from dotenv import load_dotenv
 
-load_dotenv()
-
 # Get environment
 ENV = os.getenv("ENV", "development")
 
@@ -13,7 +11,8 @@ ENV = os.getenv("ENV", "development")
 if ENV == "production":
     DATABASE_URL = os.getenv("PROD_DATABASE_URL")
 else:
-    DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/hpg")
+    DATABASE_URL = os.getenv(
+        "DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/hpg")
 
 # Ensure URL is PostgreSQL
 if not DATABASE_URL.startswith('postgresql://'):
@@ -31,9 +30,10 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 Base = declarative_base()
 
+
 def get_db():
     db = SessionLocal()
     try:
         yield db
     finally:
-        db.close() 
+        db.close()
