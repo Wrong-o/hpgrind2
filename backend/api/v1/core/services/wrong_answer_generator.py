@@ -150,28 +150,5 @@ def generate_math_choices(expression, correct_answer, decimals=0):
     return all_answers
 
 
-# Example usage
-if __name__ == "__main__":
-    # Test with a simple expression
-    expression1 = "17 + 53 / 27 - 20"
-    correct1 = -1.04
-
-    # Test with parentheses
-    expression2 = "(4 + 2) * 3"
-    correct2 = 18
-
-    # Test with a more complex expression
-    expression3 = "2 * (10 + 5) / 3 - 4"
-    correct3 = 6
-
-    print(f"Expression: {expression1}")
-    print(f"Correct answer: {correct1}")
-    print(f"Answer choices: {generate_math_choices(expression1, correct1)}")
-
-    print(f"\nExpression: {expression2}")
-    print(f"Correct answer: {correct2}")
-    print(f"Answer choices: {generate_math_choices(expression2, correct2)}")
-
-    print(f"\nExpression: {expression3}")
-    print(f"Correct answer: {correct3}")
-    print(f"Answer choices: {generate_math_choices(expression3, correct3)}")
+def generate_fraction_answers():
+    pass

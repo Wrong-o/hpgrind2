@@ -19,19 +19,67 @@ def fraction_equations(difficulty: int):
         explanation: string (Latex) = the explanation
     """
 
-    fraction1, fraction2 = random_fraction(
-        max_numerator=7, max_denominator=7), random_fraction(max_numerator=7, max_denominator=7)
     if difficulty == 1:
-        denominator = fraction1["denominator"] + fraction2["denominator"]
-        numerator = fraction1["numerator"] + fraction2["numerator"]
-        answer = f"\\frac{{{numerator}}}{{{denominator}}}"
-        # HÄR, fortsätt implementera difficulty logic
+        fraction1 = random_fraction(max_numerator=10, max_denominator=10)
+        fraction2 = random_fraction(max_numerator=10, max_denominator=10)
+        operator = rd.choice(["-", "+"])
+        if operator == "-":
+            denominator = fraction1["denominator"] * fraction2["denominator"]
+            numerator = fraction1["numerator"] * fraction2["denominator"] - \
+                fraction2["numerator"] * fraction1["denominator"]
+            question = f"\\frac{{{fraction1['numerator']}}}{{{fraction1['denominator']}}} - \\frac{{{fraction2['numerator']}}}{{{fraction2['denominator']}}}"
+        else:
+            denominator = fraction1["denominator"] * fraction2["denominator"]
+            numerator = fraction1["numerator"] * fraction2["denominator"] + \
+                fraction2["numerator"] * fraction1["denominator"]
+            question = f"\\frac{{{fraction1['numerator']}}}{{{fraction1['denominator']}}} + \\frac{{{fraction2['numerator']}}}{{{fraction2['denominator']}}}"
+
+    elif difficulty == 2:
+        fraction1 = random_fraction(max_numerator=10, max_denominator=10)
+        fraction2 = random_fraction(max_numerator=10, max_denominator=10)
+        operator = rd.choice(["/", "*"])
+        if operator == "/":
+            numerator = fraction1["numerator"] * fraction2["denominator"]
+            denominator = fraction1["denominator"] * fraction2["numerator"]
+            question = f"\\frac{{\\frac{{{fraction1['numerator']}}}{{{fraction1['denominator']}}}}}{{\\frac{{{fraction2['numerator']}}}{{{fraction2['denominator']}}}}}"
+        else:
+            numerator = fraction1["numerator"] * fraction2["numerator"]
+            denominator = fraction1["denominator"] * fraction2["denominator"]
+            question = f"\\frac{{{fraction1['numerator']}}}{{{fraction1['denominator']}}} \\cdot \\frac{{{fraction2['numerator']}}}{{{fraction2['denominator']}}}"
+
+    else:
+        fraction1 = random_fraction(
+            max_numerator=10, max_denominator=10, negative_allowed=True)
+        fraction2 = random_fraction(
+            max_numerator=10, max_denominator=10, negative_allowed=True)
+        operator = rd.choice(["-", "+", "/", "*"])
+        if operator == "-":
+            numerator = fraction1["numerator"] * fraction2["denominator"] - \
+                fraction2["numerator"] * fraction1["denominator"]
+            denominator = fraction1["denominator"] * fraction2["denominator"]
+            question = f"\\frac{{{fraction1['numerator']}}}{{{fraction1['denominator']}}} - \\frac{{{fraction2['numerator']}}}{{{fraction2['denominator']}}}"
+        elif operator == "+":
+            numerator = fraction1["numerator"] * fraction2["denominator"] + \
+                fraction2["numerator"] * fraction1["denominator"]
+            denominator = fraction1["denominator"] * fraction2["denominator"]
+            question = f"\\frac{{{fraction1['numerator']}}}{{{fraction1['denominator']}}} + \\frac{{{fraction2['numerator']}}}{{{fraction2['denominator']}}}"
+        elif operator == "/":
+            numerator = fraction1["numerator"] * fraction2["denominator"]
+            denominator = fraction1["denominator"] * fraction2["numerator"]
+            question = f"\\frac{{\\frac{{{fraction1['numerator']}}}{{{fraction1['denominator']}}}}}{{\\frac{{{fraction2['numerator']}}}{{{fraction2['denominator']}}}}}"
+        else:
+            numerator = fraction1["numerator"] * fraction2["numerator"]
+            denominator = fraction1["denominator"] * fraction2["denominator"]
+            question = f"\\frac{{{fraction1['numerator']}}}{{{fraction1['denominator']}}} \\cdot \\frac{{{fraction2['numerator']}}}{{{fraction2['denominator']}}}"
+
+    answer = f"\\frac{{{numerator}}}{{{denominator}}}"
+
     return {
         "subject": "kvantitativ",
         "category": "basics",
-        "question": "",
-        "answers": answer,
-        "correct_answer": "",
+        "question": question,
+        "answers": "",
+        "correct_answer": answer,
         "drawing": [],
         "explanation": ""
     }
