@@ -1,10 +1,11 @@
 import random
 import re
+from fractions import Fraction
 
 
 def generate_math_choices(expression, correct_answer, decimals=0):
     """
-    Generate 4 answer choices for a math expression, including the correct answer and
+    Generate 4 answer all_answers for a math expression, including the correct answer and
     3 wrong answers that result from evaluating the expression with common errors:
     - Ignoring parentheses
     - Applying operations in the wrong order
@@ -15,7 +16,7 @@ def generate_math_choices(expression, correct_answer, decimals=0):
     correct_answer (float): The correct result of evaluating the expression
 
     Returns:
-    list: List of 4 answer choices (including the correct answer), shuffled
+    list: List of 4 answer all_answers (including the correct answer), shuffled
     """
     # Function to safely evaluate a mathematical expression
     def safe_eval(expr):
@@ -150,5 +151,74 @@ def generate_math_choices(expression, correct_answer, decimals=0):
     return all_answers
 
 
-def generate_fraction_answers():
-    pass
+def generate_fraction_choices(expression, correct_answer, decimals=0):
+    """
+    Generate 4 answer all_answers for a math expression, including the correct answer and
+    3 wrong answers that result from evaluating the expression with common errors:
+    - Applying operations in the wrong order
+    - Incorrect simplification
+    - Treating fractions as integers
+    - Incorrect inversion during division
+
+    expression (list): A list of dict with 2 fractions and an operator, e.g {'numerator': 9, 'denominator': 4} / {'numerator': 4, 'denominator': 6}
+    correct_answer (float): The correct result of evaluating the expression
+
+    Returns:
+    list: List of 4 answer all_answers (including the correct answer), shuffled
+    """
+    # Parse the expression
+    frac1 = Fraction(expression[0]['numerator'],
+                     expression[0]['denominator'])
+    print(correct_answer)
+    operator = expression[1]
+    frac2 = Fraction(expression[2]['numerator'],
+                     expression[2]['denominator'])
+    # Generate wrong answers based on common errors
+    wrong_answers = []
+# Wrong order of operations
+    if operator == '+':
+        wrong_answers.append(frac1 * frac2)
+    elif operator == '-':
+        wrong_answers.append(frac1 * frac2)
+    elif operator == '*':
+        wrong_answers.append(frac1 + frac2)
+    elif operator == '/':
+        wrong_answers.append(frac1 + frac2)
+
+    # Incorrect simplification
+    if operator == '+':
+        wrong_answers.append(frac1 + frac2 + Fraction(1, 10))
+    elif operator == '-':
+        wrong_answers.append(frac1 - frac2 - Fraction(1, 10))
+    elif operator == '*':
+        wrong_answers.append(frac1 * frac2 + Fraction(1, 10))
+    elif operator == '/':
+        wrong_answers.append(frac1 / frac2 - Fraction(1, 10))
+
+    # Treating fractions as integers
+    int_frac1 = frac1.numerator // frac1.denominator
+    int_frac2 = frac2.numerator // frac2.denominator
+    if operator == '+':
+        wrong_answers.append(Fraction(int_frac1 + int_frac2))
+    elif operator == '-':
+        wrong_answers.append(Fraction(int_frac1 - int_frac2))
+    elif operator == '*':
+        wrong_answers.append(Fraction(int_frac1 * int_frac2))
+    elif operator == '/':
+        wrong_answers.append(Fraction(int_frac1, int_frac2)
+                             if int_frac2 != 0 else Fraction(0))
+
+    # Incorrect inversion during division
+    if operator == '/':
+        wrong_answers.append(frac1 * frac2)
+
+    # Ensure all wrong answers are unique and convert to LaTeX fraction form
+    wrong_answers = list(set(wrong_answers))
+    wrong_answers = [
+        f"\\frac{{{answer.numerator}}}{{{answer.denominator}}}" for answer in wrong_answers]
+
+    # Add the correct answer in LaTeX fraction form and shuffle
+    all_answers = [correct_answer] + wrong_answers[:3]
+    random.shuffle(all_answers)
+
+    return all_answers

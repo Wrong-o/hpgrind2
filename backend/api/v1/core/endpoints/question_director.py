@@ -46,7 +46,8 @@ def get_question(moment: str, difficulty: int, db: Session = Depends(get_db)):
             status_code=status.HTTP_404_NOT_FOUND, detail="Moment not found")
     question_data = moment_functions[moment](difficulty=difficulty)
 
-    question_data["explanation"] = get_explanation(moment)
+    question_data["explanation"] = get_explanation(
+        moment, difficulty=difficulty)
     question_data["moment"] = moment
     question_data["difficulty"] = difficulty
     return question_data
