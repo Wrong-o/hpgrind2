@@ -20,18 +20,20 @@ def fraction_whole_number():
     }
 
 
-def integer_splitter(split: int):
+def integer_splitter(split: int, negative_allowed: bool = False):
     """_summary_
     Splits an integer into two integers that sum up to the original integer.
+    Defaults to not allowing negatives
     Raises:
-        ValueError: If split is less than 2
     Returns:
         dict: {int1: int, int2: int} - two integers that sum up to split
     """
-    if split < 2:
-        raise ValueError("Integer must be greater than 2")
-    int1 = rd.randint(1, split - 1)
-    int2 = split - int1
+    if negative_allowed:
+        int1 = rd.randint(split - 20, split - 1)
+        int2 = split - int1
+    else:
+        int1 = rd.randint(1, split - 1)
+        int2 = split - int1
 
     return {
         "int1": int1,
@@ -41,7 +43,7 @@ def integer_splitter(split: int):
     }
 
 
-def integer_expander(expand: int):
+def integer_expander(expand: int, negative_allowed: bool = False):
     """_summary_
     Expands an integer into two integers with the difference of the original integer.
     Raises:
@@ -49,12 +51,18 @@ def integer_expander(expand: int):
     Returns:
         dict: {int1: int, int2: int} - integers with difference equal to expand
     """
-
-    try:
-        int1 = expand + rd.randint(1, (100-expand))
-        int2 = int1 - expand
-    except ValueError:
-        raise ValueError(f"Not an integer: {expand}")
+    if negative_allowed:
+        try:
+            int1 = expand + rd.randint(1, 100)
+            int2 = int1 - expand
+        except ValueError:
+            raise ValueError(f"Not an integer: {expand}")
+    else:
+        try:
+            int1 = expand + rd.randint(1, (100-expand))
+            int2 = int1 - expand
+        except ValueError:
+            raise ValueError(f"Not an integer: {expand}")
     return {
         "int1": int1,
         "operator": "-",
