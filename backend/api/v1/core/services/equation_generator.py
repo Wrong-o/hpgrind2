@@ -1,16 +1,22 @@
 import random as rd
 
 
-def fraction_whole_number():
+def fraction_whole_number(negative_allowed: bool = False):
     """_summary_
     This function generates a fraction where the numerator is below 100.
     The result is always whole number.
     Returns:
         dict: (string, int) - numerator, denominator, result
     """
-    result = rd.randint(1, 10)
-    denominator = rd.randint(2, 10)
-    numerator = result * denominator
+    if negative_allowed:
+        result = rd.randint(-12, 12)
+        denominator = rd.randint(-12, 12)
+        numerator = result * denominator
+
+    else:
+        result = rd.randint(1, 10)
+        denominator = rd.randint(2, 10)
+        numerator = result * denominator
 
     return {
         "int1": numerator,
@@ -71,7 +77,7 @@ def integer_expander(expand: int, negative_allowed: bool = False):
     }
 
 
-def integer_factorize(factorize: int = None):
+def integer_factorize(factorize: int = None, negative_allowed: bool = False):
     """_summary_
     Factorizes an integer into two integers with the product integer.
     If called without factorize, will return 2 random integers
@@ -80,14 +86,19 @@ def integer_factorize(factorize: int = None):
     Returns:
         dict: {int1: int, int2: int} - integers with product equal to factorize
     """
+    print(factorize)
     if factorize:
-        if factorize is not int:
-            raise ValueError("Not an integer")
-        int1 = rd.randint(1, factorize)
+        abs_factorize = abs(factorize)
+        divisors = [i for i in range(
+            1, abs_factorize + 1) if factorize % i == 0]
+
+        if factorize < 0:
+            divisors += [-i for i in divisors]
+        int1 = rd.choice(divisors)
         int2 = factorize // int1
     else:
-        int1 = rd.randint(1, 12)
-        int2 = rd.randint(1, 12)
+        int1 = rd.randint(-12, 12)
+        int2 = rd.randint(-12, 12)
         factorize = int1 * int2
 
     return {

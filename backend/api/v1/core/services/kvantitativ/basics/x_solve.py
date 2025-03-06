@@ -42,8 +42,8 @@ def x_solve(difficulty):
     Creates a solve for x question.
     difficulty settings:
     1. One operation needed
-    2. Two operations needed
-    3. TOdO
+    2. Two operations, + or -
+    3. Two operations needed, all operators avalible
 
     Args:
         difficulty (_int_): _How hard the question is_
@@ -76,17 +76,33 @@ def x_solve(difficulty):
         else:
             return "Error, invalid operator"
     elif difficulty == 2:
-        x_value = rd.choice([
+        question_data = rd.choice([
             integer_expander(rd.randint(-12, 12), negative_allowed=True),
             integer_splitter(rd.randint(-12, 12), negative_allowed=True),
         ])
-        print(x_value)
-        return {
-            "subject": "kvantitativ",
-            "category": "basics",
-            # "question": question_data["question"],
-            # "answers": question_data["answers"],
-            # "correct_answer": question_data["correct_answer"],
-            "drawing": [],
-            # "explanation": explanation(operator=operator, int1=int1, int2=int2)
-        }
+        question_data["extra_x"] = rd.randint(-5, 5)
+        print(question_data)
+        question_data["question"] = f"{question_data['int1']} {question_data['operator']} {question_data['extra_x'] + 1}x  = {question_data['result']} {question_data['extra_x']}x"
+        question_data["correct_answer"] = question_data["int2"]
+
+    elif difficulty == 3:
+        question_data = rd.choice([
+            integer_factorize(rd.randint(-12, 12), negative_allowed=True),
+            fraction_whole_number(negative_allowed=True),
+        ])
+        question_data["correct_answer"] = question_data["int2"]
+        extra_term = rd.randint(-12, 12)
+
+        question_data["question"] = f"{question_data['int1']} {question_data['operator']} x + {extra_term} = {question_data['result'] + extra_term} "
+
+    else:
+        raise ValueError("Not a valid difficulty")
+    return {
+        "subject": "kvantitativ",
+        "category": "basics",
+        "question": question_data["question"],
+        # "answers": question_data["answers"],
+        "correct_answer": question_data["correct_answer"],
+        "drawing": [],
+        # "explanation": explanation(operator=operator, int1=int1, int2=int2)
+    }
