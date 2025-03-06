@@ -72,5 +72,5 @@ def operations_order(difficulty: int):
         "answers": question_data["answers"],
         "correct_answer": str(question_data["correct_answer"]),
         "drawing": [],
-        "explanation": "explanation()"
+        "explanation": explanation()
     }

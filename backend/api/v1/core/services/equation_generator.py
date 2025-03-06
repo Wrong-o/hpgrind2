@@ -13,8 +13,9 @@ def fraction_whole_number():
     numerator = result * denominator
 
     return {
-        "numerator": numerator,
-        "denominator": denominator,
+        "int1": numerator,
+        "operator": "/",
+        "int2": denominator,
         "result": result
     }
 
@@ -35,13 +36,14 @@ def integer_splitter(split: int):
     return {
         "int1": int1,
         "operator": "+",
-        "int2": int2
+        "int2": int2,
+        "result": split
     }
 
 
 def integer_expander(expand: int):
     """_summary_
-    Expands an integer into two integers with the difference integer.
+    Expands an integer into two integers with the difference of the original integer.
     Raises:
         ValueError: If expand is not an integer
     Returns:
@@ -56,27 +58,35 @@ def integer_expander(expand: int):
     return {
         "int1": int1,
         "operator": "-",
-        "int2": int2
+        "int2": int2,
+        "result": expand
     }
 
 
-def integer_factorize(factorize: int):
+def integer_factorize(factorize: int = None):
     """_summary_
     Factorizes an integer into two integers with the product integer.
+    If called without factorize, will return 2 random integers
     Raises:
         ValueError: If factorize is not an integer
     Returns:
         dict: {int1: int, int2: int} - integers with product equal to factorize
     """
-    if factorize is not int:
-        raise ValueError("Not an integer")
-    int1 = rd.randint(1, factorize)
-    int2 = factorize // int1
+    if factorize:
+        if factorize is not int:
+            raise ValueError("Not an integer")
+        int1 = rd.randint(1, factorize)
+        int2 = factorize // int1
+    else:
+        int1 = rd.randint(1, 12)
+        int2 = rd.randint(1, 12)
+        factorize = int1 * int2
 
     return {
         "int1": int1,
-        "operator": "\\cdot",
-        "int2": int2
+        "operator": "*",
+        "int2": int2,
+        "result": factorize
     }
 
 

@@ -5,15 +5,16 @@ from sqlalchemy.orm import Session, joinedload, selectinload
 from sqlalchemy.exc import IntegrityError
 from api.v1.core.services.kvantitativ.basics.operations_order import operations_order
 from api.v1.core.services.kvantitativ.basics.fraction_equation import fraction_equations
+from api.v1.core.services.kvantitativ.basics.x_solve import x_solve
 
-from api.v1.core.services.explanations import explanation as get_explanation
 
 router = APIRouter()
 
 
 moment_functions = {
     "operations_order": operations_order,
-    "fraction_equation": fraction_equations
+    "fraction_equation": fraction_equations,
+    "x_solve": x_solve
 }
 
 
@@ -46,8 +47,6 @@ def get_question(moment: str, difficulty: int, db: Session = Depends(get_db)):
             status_code=status.HTTP_404_NOT_FOUND, detail="Moment not found")
     question_data = moment_functions[moment](difficulty=difficulty)
 
-    question_data["explanation"] = get_explanation(
-        moment, difficulty=difficulty)
     question_data["moment"] = moment
     question_data["difficulty"] = difficulty
     return question_data
