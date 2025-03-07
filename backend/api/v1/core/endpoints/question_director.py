@@ -6,6 +6,7 @@ from sqlalchemy.exc import IntegrityError
 from api.v1.core.services.kvantitativ.basics.operations_order import operations_order
 from api.v1.core.services.kvantitativ.basics.fraction_equation import fraction_equations
 from api.v1.core.services.kvantitativ.basics.x_solve import x_solve
+from api.v1.core.services.kvantitativ.formula_cheet.mean import mean
 
 
 router = APIRouter()
@@ -14,7 +15,8 @@ router = APIRouter()
 moment_functions = {
     "operations_order": operations_order,
     "fraction_equation": fraction_equations,
-    "x_solve": x_solve
+    "x_solve": x_solve,
+    "mean": mean
 }
 
 

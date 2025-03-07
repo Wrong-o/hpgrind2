@@ -198,3 +198,56 @@ def fraction_operations_order(max_numerator: int = 2, max_denominator: int = 2):
         "latex_fraction": latex_fraction,
         "wrong_answers": wrong_answer_tracker
     }
+
+
+def generate_sequence(min, max, n: int = 3, negative_allowed: bool = False, integers_only: bool = True, mean: float = None, median: float = None, mode: float = None):
+    """Generates a sequence of integers and sums them up
+
+    Args:
+        n (int, optional): Numbers of integers in the sequence. Defaults to 3.
+        negative_allowed (bool, optional): Allows negative numbers in the sequence. Defaults to False.
+
+    Returns: {
+        sequence: list of int,
+        mean: float
+        median: float
+        mode: float
+    }
+    """
+    sequence = []
+    if negative_allowed:
+        if integers_only:
+            mean = rd.randint(5, 25)
+            # offset =
+            while len(sequence) < n:
+                integer_splitter()
+                print(sequence)
+        else:
+            for i in range(1, n):
+                print(sequence)
+                sequence.append(rd.uniform(min, max))
+    else:
+        try:
+            min = int(min)
+            max = int(max)
+        except ValueError as e:
+            print(
+                f"Converting to integer error occured in question_generator.mean(): {e}")
+
+            raise
+
+        if integers_only:
+            for i in range(0, n):
+                sequence.append(rd.randint(min, max))
+                print(sequence)
+        else:
+            for i in range(1, n):
+                print(sequence)
+                sequence.append(rd.uniform(min, max))
+
+    return {
+        "sequence": sequence,
+        "mean": mean,
+        "mode": mode,
+        "median": median
+    }
