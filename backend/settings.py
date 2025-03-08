@@ -1,4 +1,4 @@
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import BaseSettings
 
 
 class Settings(BaseSettings):
@@ -7,7 +7,8 @@ class Settings(BaseSettings):
     access_token_expire_minutes: int
     env: str
 
-    model_config = SettingsConfigDict(env_file=".env")
+    class Config:
+        env_file = ".env"
 
 
 settings = Settings()

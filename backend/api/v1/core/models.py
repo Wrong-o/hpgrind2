@@ -45,3 +45,14 @@ class User_history(Base):
     difficulty: Mapped[str] = mapped_column(String)
     skipped: Mapped[bool] = mapped_column(Boolean, default=False)
     time_spent: Mapped[int] = mapped_column(Integer)
+
+
+class Token(Base):
+    __tablename__ = "tokens"
+
+    created: Mapped[datetime] = mapped_column(
+        default=lambda: datetime.now(timezone.utc)
+    )
+    token: Mapped[str] = mapped_column(unique=True, index=True)
+    user_id: Mapped[str] = mapped_column(ForeignKey("users.id"))
+    user: Mapped["User"] = relationship(back_populates="tokens")

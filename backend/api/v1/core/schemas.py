@@ -1,10 +1,11 @@
 from pydantic import BaseModel, Field, ConfigDict, EmailStr, validator
+from datetime import datetime
+from enum import Enum
 import re
 
 
 class UserBase(BaseModel):
     email: EmailStr = Field(
-        max_length=100,
         description="The email of the user"
     )
 
@@ -35,3 +36,35 @@ class User(UserBase):
 
     class Config:
         orm_mode = True
+
+
+class TokenSchema(BaseModel):
+    access_token: str
+    token_type: str
+
+
+class UserRegisterSchema(BaseModel):
+    email: EmailStr
+    password: str
+    
+    class Config:
+        orm_mode = True
+
+
+class UserOutSchema(BaseModel):
+    id: int
+    email: EmailStr
+    
+    class Config:
+        orm_mode = True
+
+
+class UserSchema(BaseModel):
+    id: int
+    email: EmailStr
+    created: datetime
+    
+    class Config:
+        orm_mode = True
+
+    
