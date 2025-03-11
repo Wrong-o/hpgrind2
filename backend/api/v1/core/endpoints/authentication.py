@@ -7,7 +7,11 @@ from api.v1.core.schemas import (
 )
 from db_setup import get_db
 from security import (
+    get_current_token,
+    get_current_user,
     hash_password,
+    verify_password,
+    create_database_token,
 )
 from fastapi import APIRouter, Depends, HTTPException, status, Response
 from fastapi.security import OAuth2PasswordRequestForm
@@ -18,11 +22,71 @@ from sqlalchemy.exc import IntegrityError
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
+@router.post("/token")
+def login(
+    form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
+    db: Session = Depends(get_db),
+) -> TokenSchema:
+    user = (
+        db.execute(
+            select(User).where(User.email == form_data.username),
+        )
+        .scalars()
+        .first()
+    )
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="User does not exist",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    if not verify_password(form_data.password, user.hashed_password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Passwords do not match",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    access_token = create_database_token(user_id=user.id, db=db)
+    return {"access_token": access_token.token, "token_type": "Bearer"}
+    
+
 @router.post("/user/create", status_code=status.HTTP_201_CREATED)
 def register_user(
     user: UserRegisterSchema, db: Session = Depends(get_db)
     ) -> UserOutSchema:
-    # TODO ADD VALIDATION TO CREATION OF PASSWORD
+    # Check if email already exists
+    existing_user = db.execute(
+        select(User).where(User.email == user.email)
+    ).scalars().first()
+    
+    if existing_user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Email already registered"
+        )
+    
+    # Validate password requirements
+    if len(user.password) < 8:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Lösenordet måste vara minst 8 tecken långt"
+        )
+    if not any(c.islower() for c in user.password):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Lösenordet måste innehålla minst en liten bokstav"
+        )
+    if not any(c.isupper() for c in user.password):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Lösenordet måste innehålla minst en stor bokstav"
+        )
+    if not any(c.isdigit() for c in user.password):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Lösenordet måste innehålla minst en siffra"
+        )
+
     hashed_password = hash_password(user.password)
     new_user = User(
         **user.model_dump(exclude={"password"}), hashed_password=hashed_password
@@ -30,3 +94,18 @@ def register_user(
     db.add(new_user)
     db.commit()
     return new_user
+
+@router.delete("/logout", status_code=status.HTTP_204_NO_CONTENT)
+def logout(
+    current_token: Token = Depends(get_current_token),
+    db: Session = Depends(get_db),
+):
+    db.execute(delete(Token).where(Token.token == current_token.token))
+    db.commit()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+@router.get("/me", response_model=UserOutSchema)
+def read_user_me(
+    current_user: User = Depends(get_current_user),
+):
+    return current_user

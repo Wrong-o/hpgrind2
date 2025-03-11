@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, ConfigDict, EmailStr, validator
+from pydantic import BaseModel, Field, ConfigDict, EmailStr, field_validator
 from datetime import datetime
 from enum import Enum
 import re
@@ -13,7 +13,7 @@ class UserBase(BaseModel):
 class UserCreate(UserBase):
     password: str
 
-    @validator("password")
+    @field_validator("password")
     def validate_password(cls, v):
         if len(v) < 8:
             raise ValueError("Lösenordet måste vara minst 8 tecken långt")
@@ -33,9 +33,8 @@ class UserCreate(UserBase):
 
 class User(UserBase):
     id: int
-
-    class Config:
-        orm_mode = True
+    
+    model_config = ConfigDict(from_attributes=True)
 
 
 class TokenSchema(BaseModel):
@@ -47,16 +46,14 @@ class UserRegisterSchema(BaseModel):
     email: EmailStr
     password: str
     
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class UserOutSchema(BaseModel):
     id: int
     email: EmailStr
     
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class UserSchema(BaseModel):
@@ -64,7 +61,6 @@ class UserSchema(BaseModel):
     email: EmailStr
     created: datetime
     
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
     
