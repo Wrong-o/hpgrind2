@@ -1,6 +1,8 @@
 import React from 'react';
 import Logo from '../assets/favicon.svg?react';
 import { useAuth } from '../contexts/AuthContext';
+import authStore from "../store/authStore";
+
 
 interface HeaderProps {
   onShowLogin?: () => void;

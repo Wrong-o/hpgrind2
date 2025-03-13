@@ -1,23 +1,57 @@
 import { create } from "zustand";
+import axios from "axios";
+
+interface AuthStore {
+    token: string | null;
+    userData: any | null;
+    setToken: (token: string) => void;
+    login: (email: string, password: string) => Promise<void>;
+    register: (userData: any) => Promise<void>;
+    logout: () => Promise<void>;
+}
 
 const loadInitialState = () => {
     const token = localStorage.getItem("token") || null;
-    const userData = JSON.parse(localStorage.getItem("userData") || null);
+    const userData = localStorage.getItem("userData") 
+        ? JSON.parse(localStorage.getItem("userData")!) 
+        : null;
 
-    return { token: token, userData };
+    return { token, userData };
 };
 
-const authStore = create((set, get) => ({
+const authStore = create<AuthStore>((set, get) => ({
     ...loadInitialState(),
     setToken: (token) => {
         localStorage.setItem("token", token);
-        set(() => ({ token: token }));
+        set(() => ({ token }));
     },
-    logout: () => {
-        localStorage.removeItem("token");
-        set(() => ({
-            token: null,
-        }));
+    login: async (email, password) => {
+        const formData = new FormData();
+        formData.append("username", email);
+        formData.append("password", password);
+        
+        const response = await axios.post("/api/v1/token", formData);
+        const token = response.data.access_token;
+        
+        localStorage.setItem("token", token);
+        set({ token });
+    },
+    register: async (userData) => {
+        await axios.post("/api/v1/user/create", userData);
+    },
+    logout: async () => {
+        try {
+            const token = get().token;
+            if (token) {
+                await axios.delete("/api/v1/logout", {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+            }
+        } finally {
+            localStorage.removeItem("token");
+            localStorage.removeItem("userData");
+            set({ token: null, userData: null });
+        }
     },
 }));
 

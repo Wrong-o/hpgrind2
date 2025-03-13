@@ -208,7 +208,6 @@ function AppContent() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
-      <Header onShowLogin={() => setShowLogin(true)} />
       
       {showLogin && <LoginPage onClose={() => setShowLogin(false)} />}
       
@@ -274,6 +273,7 @@ function App() {
   return (
     <AuthProvider>
       <SoundProvider>
+        <Header />
         <AppContent />
       </SoundProvider>
     </AuthProvider>

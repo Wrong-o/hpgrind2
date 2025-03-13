@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { VideoPlayer } from './VideoPlayer';
 import { useAuth } from '../contexts/AuthContext';
-import authStore from "../store/authStore";
 //// Forstätt härifrån: Vi har precis importerat authStore, vi ska kunna logga in via landingpage
 interface LandingPageProps {
   onShowLogin?: () => void;
