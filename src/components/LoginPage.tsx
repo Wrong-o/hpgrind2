@@ -51,7 +51,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onClose }) => {
         >
           ✕
         </button>
-        
+
         <h2 className="text-2xl font-bold text-blue-600 mb-6">
           {isLogin ? 'Logga in' : 'Skapa konto'}
         </h2>
@@ -91,13 +91,13 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onClose }) => {
             />
             {isLogin && (
 
-                <ul className="list-disc list-inside">
-                  <li>Minst 8 tecken</li>
-                  <li>Minst en stor bokstav</li>
-                  <li>Minst en liten bokstav</li>
-                  <li>Minst en siffra</li>
-                  <li>Minst ett specialtecken (!@#$%^&*(),.?":{}|&lt;&gt;)</li>
-                </ul>
+              <ul className="list-disc list-inside">
+                <li>Minst 8 tecken</li>
+                <li>Minst en stor bokstav</li>
+                <li>Minst en liten bokstav</li>
+                <li>Minst en siffra</li>
+                <li>Minst ett specialtecken (!@#$%^&*(),.?":{ }|&lt;&gt;)</li>
+              </ul>
             )}
           </div>
 

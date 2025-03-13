@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { VideoPlayer } from './VideoPlayer';
 import { useAuth } from '../contexts/AuthContext';
-
+import authStore from "../store/authStore";
+//// Forstätt härifrån: Vi har precis importerat authStore, vi ska kunna logga in via landingpage
 interface LandingPageProps {
   onShowLogin?: () => void;
 }
@@ -47,13 +48,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onShowLogin }) => {
               </ul>
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
-              <button 
+              <button
                 onClick={handleDemoClick}
                 className="px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors"
               >
                 Testa demo
               </button>
-              <button 
+              <button
                 onClick={handleHowItWorksClick}
                 className="px-6 py-3 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors"
               >
@@ -188,20 +189,20 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onShowLogin }) => {
             HPGrind använder avancerad teknik för att ge dig en personlig träningsupplevelse.
           </p>
         </div>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div className="bg-blue-50 p-6 rounded-lg">
             <div className="w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center mb-4 text-xl font-bold">1</div>
             <h3 className="text-xl font-bold mb-2">Diagnostisering</h3>
             <p>Vi analyserar dina styrkor och svagheter genom anpassade övningar.</p>
           </div>
-          
+
           <div className="bg-blue-50 p-6 rounded-lg">
             <div className="w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center mb-4 text-xl font-bold">2</div>
             <h3 className="text-xl font-bold mb-2">Personlig plan</h3>
             <p>Baserat på din profil skapar vi en skräddarsydd träningsplan.</p>
           </div>
-          
+
           <div className="bg-blue-50 p-6 rounded-lg">
             <div className="w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center mb-4 text-xl font-bold">3</div>
             <h3 className="text-xl font-bold mb-2">Kontinuerlig förbättring</h3>
@@ -252,7 +253,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onShowLogin }) => {
         </p>
         <div className="mt-8">
           {!isLoggedIn && (
-            <button 
+            <button
               onClick={onShowLogin}
               className="px-8 py-4 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors text-lg"
             >
