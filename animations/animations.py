@@ -1,9 +1,10 @@
 from manim import *
 
 
-class FractionMultiplication(Scene):
+class FractionMultiplication(MovingCameraScene):
     def construct(self):
         # Initial equation
+        self.camera.frame.scale(0.4)
         equation = MathTex(r"\frac{5}{3} \times \frac{4}{6} = x")
         self.play(Write(equation))
         self.wait(1)
@@ -131,9 +132,10 @@ class FractionMultiplication(Scene):
         self.wait(2)
 
 
-class FractionDivision(Scene):
+class FractionDivision(MovingCameraScene):
     def construct(self):
         # Initial equation
+        self.camera.frame.scale(0.4)
         equation = MathTex(r"\frac{\frac{5}{3}}{\frac{4}{6}} = x")
         self.play(Write(equation))
 
@@ -202,7 +204,8 @@ class FractionDivision(Scene):
             numerator_part.animate.move_to(
                 whole_fraction.get_center() + UP * 2),
             denominator_part.animate.move_to(
-                whole_fraction.get_center() + DOWN * 2)
+                whole_fraction.get_center() + DOWN * 2),
+            self.camera.frame.animate.scale(2),
         )
         self.wait(0.5)
 
@@ -223,7 +226,7 @@ class FractionDivision(Scene):
         # Replace the copies with the full calculations
         self.play(
             ReplacementTransform(numerator_part, numerator_calc),
-            ReplacementTransform(denominator_part, denominator_calc)
+            ReplacementTransform(denominator_part, denominator_calc),
         )
         self.wait(1)
 
@@ -247,7 +250,8 @@ class FractionDivision(Scene):
             FadeOut(numerator_calc),
             FadeOut(denominator_calc),
             FadeOut(arrow_up),
-            FadeOut(arrow_down)
+            FadeOut(arrow_down),
+            self.camera.frame.animate.scale(0.5)
         )
 
         # Fade out intermediate and fade in result
@@ -286,8 +290,9 @@ class FractionDivision(Scene):
         self.wait(2)
 
 
-class FractionAddition(Scene):
+class FractionAddition(MovingCameraScene):
     def construct(self):
+        self.play(self.camera.frame.animate.scale(0.4))
         equation = MathTex(r"\frac{5}{3} + \frac{4}{6} = x")
         self.play(Write(equation))
         left_denominator = equation[0][2].copy()
@@ -298,9 +303,9 @@ class FractionAddition(Scene):
             right_denominator.animate.set_color(RED)
         )
         left_denominator_upp = left_denominator.copy().next_to(
-            equation[0][4], RIGHT)
+            equation[0][4], RIGHT, buff=0.4)
         left_denominator_down = left_denominator.copy().next_to(
-            equation[0][6], RIGHT)
+            equation[0][6], RIGHT, buff=0.4)
         right_denominator_upp = right_denominator.copy().next_to(
             equation[0][0], LEFT, buff=0.4)
         right_denominator_down = right_denominator.copy().next_to(
@@ -309,26 +314,80 @@ class FractionAddition(Scene):
             right_denominator_down, RIGHT, buff=0.1)
         left_times_down = MathTex(r"\times").next_to(
             right_denominator_upp, RIGHT, buff=0.1)
+        right_times_upp = MathTex(r"\times").next_to(
+            left_denominator_down, LEFT, buff=0.1)
+        right_times_down = MathTex(r"\times").next_to(
+            left_denominator_upp, LEFT, buff=0.1)
 
         self.play(
             FadeIn(right_denominator_upp),
             FadeIn(right_denominator_down),
+            FadeIn(left_denominator_upp),
+            FadeIn(left_denominator_down),
             FadeIn(left_times_upp),
             FadeIn(left_times_down),
+            FadeIn(right_times_upp),
+            FadeIn(right_times_down),
         )
         top_left = MathTex(r"30")
         top_left.move_to(equation[0][0].get_center())
         bottom_left = MathTex(r"18")
         bottom_left.move_to(equation[0][2].get_center())
-
+        top_right = MathTex(r"12")
+        top_right.move_to(equation[0][4].get_center())
+        bottom_right = MathTex(r"18")
+        bottom_right.move_to(equation[0][6].get_center())
         self.play(
             FadeOut(left_denominator),
             FadeOut(left_times_upp),
             FadeOut(left_times_down),
-            FadeOut(right_denominator_upp),
-            FadeOut(right_denominator_down),
+            FadeOut(left_denominator_upp),
+            FadeOut(left_denominator_down),
             FadeOut(equation[0][0]),
             FadeOut(equation[0][2]),
+            FadeOut(right_denominator),
+            FadeOut(right_times_upp),
+            FadeOut(right_times_down),
+            FadeOut(right_denominator_upp),
+            FadeOut(right_denominator_down),
+            FadeOut(equation[0][4]),
+            FadeOut(equation[0][6]),
             FadeIn(top_left),
             FadeIn(bottom_left),
+            FadeIn(top_right),
+            FadeIn(bottom_right),
         )
+        combined_equation = MathTex(r"\frac{30 + 12}{18} = x")
+        self.play(
+            FadeIn(combined_equation),
+            FadeOut(top_left),
+            FadeOut(bottom_left),
+            FadeOut(top_right),
+            FadeOut(bottom_right),
+            FadeOut(equation[0][3]),
+            FadeOut(equation[0][7]),
+            FadeOut(equation[0][8]),
+        )
+        numerator = MathTex(r"42")
+        numerator.move_to(combined_equation[0][2].get_center())
+        self.play(
+            FadeOut(combined_equation[0][0:5]),
+            FadeIn(numerator),
+        )
+        calculated_equation = MathTex(r"\frac{7}{3} = x")
+        division_text = Text("÷ 6", font_size=24).next_to(
+            calculated_equation, LEFT, buff=0.8)
+        self.play(
+            numerator.animate.set_color(YELLOW),
+            combined_equation[0][5:].animate.set_color(YELLOW),
+            FadeIn(division_text),
+        )
+        self.play(
+            FadeOut(combined_equation[0][5:]),
+            FadeOut(numerator),
+            FadeOut(division_text),
+            FadeIn(calculated_equation),
+            FadeOut(equation[0][1]),
+            FadeOut(equation[0][5]),
+        )
+        self.wait(1)

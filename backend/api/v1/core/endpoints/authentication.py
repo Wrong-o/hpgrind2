@@ -20,7 +20,8 @@ from sqlalchemy.orm import Session
 from sqlalchemy import delete, select
 from sqlalchemy.exc import IntegrityError
 
-router = APIRouter(prefix="/auth", tags=["auth"])
+router = APIRouter()
+
 
 @router.post("/token")
 def login(
@@ -48,23 +49,23 @@ def login(
         )
     access_token = create_database_token(user_id=user.id, db=db)
     return {"access_token": access_token.token, "token_type": "Bearer"}
-    
+
 
 @router.post("/user/create", status_code=status.HTTP_201_CREATED)
 def register_user(
     user: UserRegisterSchema, db: Session = Depends(get_db)
-    ) -> UserOutSchema:
+) -> UserOutSchema:
     # Check if email already exists
     existing_user = db.execute(
         select(User).where(User.email == user.email)
     ).scalars().first()
-    
+
     if existing_user:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Email already registered"
         )
-    
+
     # Validate password requirements
     if len(user.password) < 8:
         raise HTTPException(
@@ -95,6 +96,7 @@ def register_user(
     db.commit()
     return new_user
 
+
 @router.delete("/logout", status_code=status.HTTP_204_NO_CONTENT)
 def logout(
     current_token: Token = Depends(get_current_token),
@@ -103,6 +105,7 @@ def logout(
     db.execute(delete(Token).where(Token.token == current_token.token))
     db.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
 
 @router.get("/me", response_model=UserOutSchema)
 def read_user_me(

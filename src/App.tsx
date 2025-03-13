@@ -10,7 +10,8 @@ import { CategoryStats } from './components/CategoryStats'
 import { SoundProvider } from './contexts/SoundContext'
 import { DecisionTree } from './components/DecisionTree'
 import { SecondChance } from './components/SecondChance'
-import { Header } from './components/Header'
+import Header from './components/Header'
+import { LandingPage } from './components/LandingPage'
 
 const FloatingCards: React.FC = () => {
   const items = [
@@ -126,6 +127,7 @@ function AppContent() {
   const [question2Answered, setQuestion2Answered] = useState(false)
   const [userAchievements, setUserAchievements] = useState<string[]>([])
   const [nextRecommendedPath, setNextRecommendedPath] = useState<string>('matematikbasic')
+  const [showLandingPage, setShowLandingPage] = useState(!isLoggedIn)
 
   // Fetch user achievements and determine next recommended path
   useEffect(() => {
@@ -166,6 +168,11 @@ function AppContent() {
     fetchUserProgress()
   }, [isLoggedIn])
 
+  // Add a useEffect to handle landing page visibility based on login status
+  useEffect(() => {
+    setShowLandingPage(!isLoggedIn);
+  }, [isLoggedIn]);
+
   const handleRecommendedPath = () => {
     if (!isLoggedIn) {
       setShowLogin(true)
@@ -200,59 +207,65 @@ function AppContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-teal-50">
-      <Header />
-      <main className="container mx-auto px-4 py-8">
-        {showLogin && <LoginPage onClose={() => setShowLogin(false)} />}
-        {showStats && <CategoryStats onBack={() => setShowStats(false)} />}
-        {showRoadMap && <RoadMap />}
-        {showDecisionTree && <DecisionTree onBack={() => setShowDecisionTree(false)} />}
-        {showSecondChance && <SecondChance onBack={() => setShowSecondChance(false)} />}
-        {!showLogin && !showStats && !showRoadMap && !showDecisionTree && !showSecondChance && (
-          <div className="bg-gradient-to-b from-blue-50 to-teal-100 min-h-screen flex flex-col items-center justify-center relative overflow-hidden">
-            <FloatingEquations />
-            <div className="container mx-auto text-center z-10 max-w-4xl px-8">
-              <FloatingCards />
-              <div className="mt-8 space-y-4">
-                {isLoggedIn ? (
-                  <>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
+      <Header onShowLogin={() => setShowLogin(true)} />
+      
+      {showLogin && <LoginPage onClose={() => setShowLogin(false)} />}
+      
+      {showLandingPage ? (
+        <LandingPage onShowLogin={() => setShowLogin(true)} />
+      ) : (
+        <main className="container mx-auto px-4 py-8">
+          {showStats && <CategoryStats onBack={() => setShowStats(false)} />}
+          {showRoadMap && <RoadMap />}
+          {showDecisionTree && <DecisionTree onBack={() => setShowDecisionTree(false)} />}
+          {showSecondChance && <SecondChance onBack={() => setShowSecondChance(false)} />}
+          {!showLogin && !showStats && !showRoadMap && !showDecisionTree && !showSecondChance && (
+            <div className="bg-gradient-to-b from-blue-50 to-teal-100 min-h-screen flex flex-col items-center justify-center relative overflow-hidden">
+              <FloatingEquations />
+              <div className="container mx-auto text-center z-10 max-w-4xl px-8">
+                <FloatingCards />
+                <div className="mt-8 space-y-4">
+                  {isLoggedIn ? (
+                    <>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <button
+                          onClick={() => setShowDecisionTree(true)}
+                          className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 
+                                  transition-colors flex items-center justify-center gap-2"
+                        >
+                          Börja öva
+                        </button>
+                        <button
+                          onClick={() => setShowSecondChance(true)}
+                          className="bg-teal-600 text-white px-6 py-3 rounded-lg hover:bg-teal-700 
+                                  transition-colors flex items-center justify-center gap-2"
+                        >
+                          Andra chansen
+                        </button>
+                      </div>
                       <button
-                        onClick={() => setShowDecisionTree(true)}
-                        className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 
-                                transition-colors flex items-center justify-center gap-2"
+                        onClick={() => setShowRoadMap(true)}
+                        className="text-blue-600 hover:text-blue-800 transition-colors"
                       >
-                        Börja öva
+                        Se din väg till målet
                       </button>
-                      <button
-                        onClick={() => setShowSecondChance(true)}
-                        className="bg-teal-600 text-white px-6 py-3 rounded-lg hover:bg-teal-700 
-                                transition-colors flex items-center justify-center gap-2"
-                      >
-                        Andra chansen
-                      </button>
-                    </div>
+                    </>
+                  ) : (
                     <button
-                      onClick={() => setShowRoadMap(true)}
-                      className="text-blue-600 hover:text-blue-800 transition-colors"
+                      onClick={() => setShowLogin(true)}
+                      className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 
+                              transition-colors flex items-center justify-center gap-2"
                     >
-                      Se din väg till målet
+                      Börja öva
                     </button>
-                  </>
-                ) : (
-                  <button
-                    onClick={() => setShowLogin(true)}
-                    className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 
-                            transition-colors flex items-center justify-center gap-2"
-                  >
-                    Börja öva
-                  </button>
-                )}
+                  )}
+                </div>
               </div>
             </div>
-          </div>
-        )}
-      </main>
+          )}
+        </main>
+      )}
     </div>
   )
 }
