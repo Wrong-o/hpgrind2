@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { VideoPlayer } from './VideoPlayer';
 import { useAuth } from '../contexts/AuthContext';
-//// Forstätt härifrån: Vi har precis importerat authStore, vi ska kunna logga in via landingpage
+import Sidebar from "./Sidebar";
+//// Forstätt härifrån: sätt in sidebaren för att testa authentication 
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 export const LandingPage = ({
   onShowLogin
