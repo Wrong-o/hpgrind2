@@ -13,10 +13,16 @@ services:
       - ACCESS_TOKEN_EXPIRE_MINUTES=120
       - ENV=development
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     volumes:
       - ./backend:/app
     restart: unless-stopped
+    platform: linux/amd64
+    deploy:
+      resources:
+        limits:
+          memory: 1G
 
   db:
     image: postgres:15
@@ -29,6 +35,11 @@ services:
     ports:
       - "5433:5432"
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
 volumes:
   postgres_data: 
