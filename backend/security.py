@@ -29,16 +29,15 @@ def verify_password(plain_password: str, hashed_password: str):
 
 def token_bytes(nbytes=None):
     """Return a random byte string.
-    If *nytes* is not supplied, a reasonable default is used.
+    If *nbytes* is not supplied, a reasonable default is used.
     """
-
     if nbytes is None:
         nbytes = DEFAULT_ENTROPY
-    return _sysrand.getrandbits(nbytes)
+    return _sysrand.randbytes(nbytes)
 
 def token_urlsafe(nbytes=None):
     """Return a random URL-safe string.
-    If *nytes* is not supplied, a reasonable default is used.
+    If *nbytes* is not supplied, a reasonable default is used.
     """
     tok = token_bytes(nbytes)
     return base64.urlsafe_b64encode(tok).rstrip(b"=").decode("ascii")

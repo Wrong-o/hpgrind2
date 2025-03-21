@@ -1,12 +1,13 @@
 import React from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import Logo from '../assets/favicon.svg?react';
-import { useAuth } from '../contexts/AuthContext';
+import authStore from '../store/authStore';
 
 const Header = () => {
-  const { isLoggedIn } = useAuth();
+  const { token } = authStore();
   const navigate = useNavigate();
   const location = useLocation();
+  const isLoggedIn = !!token;
 
   const handleDemoClick = () => {
     if (location.pathname !== '/') {

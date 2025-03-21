@@ -3,25 +3,78 @@ import { useNavigate } from 'react-router-dom';
 import authStore from '../store/authStore';
 
 export const LoginPage = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState(null);
   const navigate = useNavigate();
 
-  const { login, isLoading } = authStore();
+  const { setToken } = authStore();
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError(null);
+  const [email, setEmail] = useState("");
+  const [emailError, setEmailError] = useState("");
 
-    try {
-      await login(email, password);
-      navigate('/');
-    } catch (err) {
-      setError(err.message);
+  const [password, setPassword] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+
+  const [serverError, setServerError] = useState(""); // New state for server-side errors
+
+  function validateEmail() {
+    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!regex.test(email)) {
+      setEmailError("It must be a correct email");
+      return false;
+    } else if (!email) {
+      setEmailError("Email is required");
+      return false;
+    } else {
+      setEmailError("");
+      return true;
     }
-  };
+  }
 
+  function validatePassword() {
+    if (!password) {
+      setPasswordError("Password is required");
+      return false;
+    } else {
+      setPasswordError("");
+      return true;
+    }
+  }
+  async function submitLogin(e) {
+    e.preventDefault();
+    setServerError(""); // Reset server error before each login attempt
+    const isEmailValid = validateEmail();
+    const isPasswordValid = validatePassword();
+
+    if (isEmailValid && isPasswordValid) {
+      const formData = new FormData();
+      formData.append("username", email); // Use 'username' or 'email' as needed by your backend
+      formData.append("password", password);
+
+      try {
+        const response = await fetch("http://localhost:8000/api/v1/auth/token", {
+          method: "POST",
+          body: formData,
+        });
+
+        if (response.status === 200) {
+          const data = await response.json();
+          setToken(data.access_token); // Save the token in the global state
+          navigate("/stats");
+          // Handle successful login, e.g., storing the access token
+          console.log(data);
+        } else if (response.status === 400 || response.status === 401) {
+          const data = await response.json();
+          setServerError(data.detail); // Set server error based on the response
+        } else {
+          console.log("Login Failed");
+          setServerError(
+            "An unexpected error occurred. Please try again later."
+          );
+        }
+      } catch (error) {}
+    } else {
+      console.log("Validation errors");
+    }
+  }
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
@@ -31,7 +84,7 @@ export const LoginPage = () => {
           </h2>
         </div>
         
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+        <form className="mt-8 space-y-6" onSubmit={submitLogin}>
           <div className="rounded-md shadow-sm -space-y-px">
             <div>
               <label htmlFor="email-address" className="sr-only">
@@ -67,11 +120,11 @@ export const LoginPage = () => {
             </div>
           </div>
 
-          {error && (
+          {serverError && (
             <div className="rounded-md bg-red-50 p-4">
               <div className="flex">
                 <div className="ml-3">
-                  <h3 className="text-sm font-medium text-red-800">{error}</h3>
+                  <h3 className="text-sm font-medium text-red-800">{serverError}</h3>
                 </div>
               </div>
             </div>
@@ -80,37 +133,8 @@ export const LoginPage = () => {
           <div>
             <button
               type="submit"
-              disabled={isLoading}
-              className={`group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white ${
-                isLoading
-                  ? 'bg-indigo-400 cursor-not-allowed'
-                  : 'bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500'
-              }`}
+              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
             >
-              {isLoading ? (
-                <span className="absolute left-0 inset-y-0 flex items-center pl-3">
-                  <svg
-                    className="animate-spin h-5 w-5 text-white"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    ></circle>
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    ></path>
-                  </svg>
-                </span>
-              ) : null}
               Logga in
             </button>
           </div>
