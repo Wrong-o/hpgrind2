@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
 import { VideoPlayer } from './VideoPlayer';
 import { useAuth } from '../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import Sidebar from "./Sidebar";
 //// Forstätt härifrån: sätt in sidebaren för att testa authentication 
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 
-function LandingPage(props) {
+function LandingPage() {
   const [videoError, setVideoError] = useState({});
   const { isLoggedIn } = useAuth();
+  const navigate = useNavigate();
 
   // Function to handle video loading errors
   const handleVideoError = (videoId) => {
@@ -33,6 +35,10 @@ function LandingPage(props) {
         behavior: 'smooth'
       });
     }
+  };
+
+  const handleLoginClick = () => {
+    navigate('/login');
   };
 
   return (
@@ -261,7 +267,7 @@ function LandingPage(props) {
               Anslut dig till tusentals andra studenter som redan har förbättrat sina resultat med HPGrind.
             </p>
             <button
-              onClick={props.onShowLogin}
+              onClick={handleLoginClick}
               className="px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors"
             >
               Kom igång nu

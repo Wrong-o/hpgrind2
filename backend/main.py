@@ -6,7 +6,7 @@ from db_setup import init_db, get_db
 from api.v1.routers import router
 from sqlalchemy import delete, insert, select, update
 from sqlalchemy.orm import Session, joinedload, selectinload
-
+from fastapi.middleware.cors import CORSMiddleware
 
 async def lifespan(app: FastAPI):
     init_db()
@@ -15,3 +15,11 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 app.include_router(router, prefix="/api/v1")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
