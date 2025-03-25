@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../contexts/AuthContext';
-import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
+import authStore from '../store/authStore';
+
 const initialTree = {
   id: 'root',
   title: 'Totala skills',
@@ -248,49 +248,14 @@ const initialTree = {
         title: 'Trianglar',
         description: 'Typer av trianglar, vinkelsumma och pytagoras sats',
         children: [{
-          id: 'trianglar-typer',
-          title: 'Typer av trianglar',
-          description: 'Rätvinkliga, liksidiga och likbenta',
-          children: [{
-            id: 'trianglar-typer-rätvinkliga',
-            title: 'Rätvinkliga trianglar',
-            description: 'Lös ekvationer med rätvinkliga trianglar',
-            children: [{
-              id: 'trianglar-typer-rätvinkliga-pytagoras',
-              title: 'Pytagoras sats',
-              description: 'Lös ekvationer med pytagoras sats',
-              children: [{
-                id: 'trianglar-typer-rätvinkliga-pytagoras-katet',
-                title: 'Katet',
-                description: 'Lös ekvationer med pytagoras sats när katet saknas',
-                children: []
-              }, {
-                id: 'trianglar-typer-rätvinkliga-pytagoras-hypotenusa',
-                title: 'Hypotenusa',
-                description: 'Lös ekvationer med pytagoras sats när hypotenusa saknas',
-                children: []
-              }, {
-                id: 'trianglar-typer-rätvinkliga-pytagoras-avståndsformel',
-                title: 'Avståndsformel',
-                description: 'Använd pytagoras sats för att beräkna avståndet mellan två punkter',
-                children: []
-              }]
-            }]
-          }, {
-            id: 'trianglar-typer-liksidiga',
-            title: 'Liksidiga trianglar',
-            description: 'Lös ekvationer med liksidiga trianglar',
-            children: []
-          }, {
-            id: 'trianglar-typer-likbenta',
-            title: 'Likbenta trianglar',
-            description: 'Lös ekvationer med likbenta trianglar',
-            children: []
-          }]
-        }, {
           id: 'trianglar-vinkelsumma',
           title: 'Vinkelsumma',
-          description: 'Beräkna vinkelsumman i en triangel',
+          description: 'Hitta vinklar i trianglar',
+          children: []
+        }, {
+          id: 'trianglar-pythagoras',
+          title: 'Pythagoras sats',
+          description: 'Beräkna sidor i rätvinkliga trianglar',
           children: []
         }, {
           id: 'trianglar-area',
@@ -299,472 +264,327 @@ const initialTree = {
           children: []
         }]
       }, {
-        id: 'cirklar',
-        title: 'Cirklar',
-        description: 'Beräkna omkrets och area av en cirkel',
+        id: 'procent',
+        title: 'Procent',
+        description: 'Räkna med procent',
         children: [{
-          id: 'cirklar-omkrets',
-          title: 'Omkrets',
-          description: 'Beräkna omkretsen av en cirkel eller en cirkelbåge',
-          children: [{
-            id: 'cirklar-omkrets-cirkel',
-            title: 'Cirkel',
-            description: 'Beräkna omkretsen av en cirkel',
-            children: []
-          }, {
-            id: 'cirklar-omkrets-cirkelbåge',
-            title: 'Cirkelbåge',
-            description: 'Beräkna omkretsen av en cirkelbåge',
-            children: []
-          }]
+          id: 'procent-grundläggande',
+          title: 'Grundläggande',
+          description: 'Grundläggande procenträkning',
+          children: []
         }, {
-          id: 'cirklar-area',
-          title: 'Area',
-          description: 'Beräkna arean av en cirkel eller en cirkelbåge',
-          children: [{
-            id: 'cirklar-area-cirkel',
-            title: 'Cirkel',
-            description: 'Beräkna arean av en cirkel',
-            children: []
-          }, {
-            id: 'cirklar-area-cirkelbåge',
-            title: 'Cirkelbåge',
-            description: 'Beräkna arean av en cirkelbåge',
-            children: []
-          }]
+          id: 'procent-förändring',
+          title: 'Förändring',
+          description: 'Beräkna procentuell förändring',
+          children: []
+        }, {
+          id: 'procent-ränta',
+          title: 'Ränta',
+          description: 'Räkna med ränta',
+          children: []
         }]
-      }, {
-        id: 'vinklar',
-        title: 'Vinklar',
-        description: 'Använd vinklar för att hitta andra vinklar',
+      }]
+    }, {
+      id: 'algebra',
+      title: 'Algebra',
+      description: 'Algebra och ekvationer',
+      children: [{
+        id: 'algebra-räkneregler',
+        title: 'Räkneregler',
+        description: 'Grundläggande räkneregler i algebra',
         children: [{
-          id: 'vinklar-relationer',
-          title: 'Relationer mellan vinklar',
-          description: 'Använd relationer mellan vinklar för att hitta andra vinklar',
+          id: 'algebra-räkneregler-konjugat',
+          title: 'Konjugatregeln',
+          description: 'Konjugatregeln för att multiplicera uttryck',
           children: []
         }, {
-          id: 'vinklar-raka-linjer',
-          title: 'Antaganden om raka linjer',
-          description: 'Använd antaganden om raka linjer för att hitta andra vinklar',
-          children: [{
-            id: 'vinklar-raka-linjer-180',
-            title: '180 grader',
-            description: 'Använd 180 grader för att hitta andra vinklar',
-            children: []
-          }, {
-            id: 'vinklar-raka-linjer-360',
-            title: '360 grader',
-            description: 'Använd 360 grader för att hitta andra vinklar',
-            children: []
-          }]
-        }]
-      }, {
-        id: 'volym',
-        title: '3d former',
-        description: 'Beräkna volymen av en kropp',
-        children: [{
-          id: 'volym-klot',
-          title: 'Klot',
-          description: 'Beräkna volymen av en klot',
+          id: 'algebra-räkneregler-kvadrering',
+          title: 'Kvadreringsregeln',
+          description: 'Kvadreringsregeln för att multiplicera uttryck',
           children: []
         }, {
-          id: 'volym-pyramid',
-          title: 'Pyramid',
-          description: 'Beräkna volymen av en pyramid',
-          children: []
-        }, {
-          id: 'volym-cylinder',
-          title: 'Cylinder',
-          description: 'Beräkna volym, mantelarea och begränsningsarea av en cylinder',
-          children: [{
-            id: 'volym-cylinder-volym',
-            title: 'Volym',
-            description: 'Beräkna volymen av en cylinder',
-            children: []
-          }, {
-            id: 'volym-cylinder-mantelarea',
-            title: 'Mantelarea',
-            description: 'Beräkna mantelarean av en cylinder',
-            children: []
-          }, {
-            id: 'volym-cylinder-begränsningsarea',
-            title: 'Begränsningsarea',
-            description: 'Beräkna begränsningsarean av en cylinder',
-            children: []
-          }]
-        }, {
-          id: 'volym-kub',
-          title: 'Kub',
-          description: 'Beräkna volymen av en kub',
+          id: 'algebra-räkneregler-faktorisering',
+          title: 'Faktorisering',
+          description: 'Faktorisera uttryck',
           children: []
         }]
       }, {
-        id: 'fyrkanter',
-        title: 'Fyrkanter',
-        description: 'Beräkna omkrets och area av olika fyrkanter',
+        id: 'algebra-ekvationer',
+        title: 'Ekvationer',
+        description: 'Lösa ekvationer',
         children: [{
-          id: 'fyrkanter-rektangel',
-          title: 'Rektangel',
-          description: 'Beräkna omkrets och area av en rektangel',
-          children: [{
-            id: 'fyrkanter-rektangel-omkrets',
-            title: 'Omkrets',
-            description: 'Beräkna omkretsen av en rektangel',
-            children: []
-          }, {
-            id: 'fyrkanter-rektangel-area',
-            title: 'Area',
-            description: 'Beräkna arean av en rektangel',
-            children: []
-          }]
+          id: 'algebra-ekvationer-förstagradsekvationer',
+          title: 'Förstagradsekvationer',
+          description: 'Linjära ekvationer',
+          children: []
         }, {
-          id: 'fyrkanter-kvadrat',
-          title: 'Kvadrat',
-          description: 'Beräkna omkrets och area av en kvadrat',
-          children: [{
-            id: 'fyrkanter-kvadrat-omkrets',
-            title: 'Omkrets',
-            description: 'Beräkna omkretsen av en kvadrat',
-            children: []
-          }, {
-            id: 'fyrkanter-kvadrat-area',
-            title: 'Area',
-            description: 'Beräkna arean av en kvadrat',
-            children: []
-          }]
+          id: 'algebra-ekvationer-andragradsekvationer',
+          title: 'Andragradsekvationer',
+          description: 'Kvadratiska ekvationer',
+          children: []
         }, {
-          id: 'fyrkanter-parallellogram',
-          title: 'Parallellogram',
-          description: 'Beräkna omkrets och area av en parallellogram',
-          children: [{
-            id: 'fyrkanter-parallellogram-omkrets',
-            title: 'Omkrets',
-            description: 'Beräkna omkretsen av en parallellogram',
-            children: []
-          }, {
-            id: 'fyrkanter-parallellogram-area',
-            title: 'Area',
-            description: 'Beräkna arean av en parallellogram',
-            children: []
-          }]
-        }, {
-          id: 'fyrkanter-parallelltrapets',
-          title: 'Parallelltrapets',
-          description: 'Beräkna omkrets och area av en parallelltrapets',
-          children: [{
-            id: 'fyrkanter-parallelltrapets-omkrets',
-            title: 'Omkrets',
-            description: 'Beräkna omkretsen av en parallelltrapets',
-            children: []
-          }, {
-            id: 'fyrkanter-parallelltrapets-area',
-            title: 'Area',
-            description: 'Beräkna arean av en parallelltrapets',
-            children: []
-          }]
+          id: 'algebra-ekvationer-polynomekvationer',
+          title: 'Polynomekvationer',
+          description: 'Ekvationer av högre grad',
+          children: []
         }]
       }, {
-        id: 'potenser',
-        title: 'Potenser',
-        description: 'Beräkna potenser',
+        id: 'algebra-funktioner',
+        title: 'Funktioner',
+        description: 'Förstå och arbeta med funktioner',
         children: [{
-          id: 'potenser-rotenur',
-          title: 'Roten ur',
-          description: 'Beräkna roten ur',
-          children: [{
-            id: 'potenser-rotenur-upphöjt',
-            title: 'Roten ur upphöjt',
-            description: 'Beräkna roten ur upphöjt',
-            children: []
-          }, {
-            id: 'potenser-rotenur-gångerrotenur',
-            title: 'Roten ur gånger roten ur',
-            description: 'Beräkna roten ur gånger roten ur',
-            children: []
-          }]
+          id: 'algebra-funktioner-linjära',
+          title: 'Linjära funktioner',
+          description: 'Funktioner av första graden',
+          children: []
         }, {
-          id: 'potenser-upphöjt',
-          title: 'Upphöjt',
-          description: 'Beräkna upphöjt i kvadrat, kubik och negativt tal',
-          children: [{
-            id: 'potenser-upphöjt-kvadrat',
-            title: 'Kvadrat',
-            description: 'Beräkna kvadraten av ett tal',
-            children: []
-          }, {
-            id: 'potenser-upphöjt-kubik',
-            title: 'Kubik',
-            description: 'Beräkna kubiken av ett tal',
-            children: []
-          }, {
-            id: 'potenser-upphöjt-negativ',
-            title: 'Negativ',
-            description: 'Beräkna negativt tal',
-            children: []
-          }]
+          id: 'algebra-funktioner-kvadratiska',
+          title: 'Kvadratiska funktioner',
+          description: 'Funktioner av andra graden',
+          children: []
         }, {
-          id: 'potenser-potenslagar',
-          title: 'Potenslagar',
-          description: 'Beräkna potenslagar',
-          children: [{
-            id: 'potenser-potenslagar-multiplikation',
-            title: 'Multiplikation',
-            description: 'Beräkna multiplikation',
-            children: []
-          }, {
-            id: 'potenser-potenslagar-division',
-            title: 'Division',
-            description: 'Beräkna division',
-            children: []
-          }, {
-            id: 'potenser-potenslagar-basbyte',
-            title: 'Basbyte',
-            description: 'Beräkna basbyte',
-            children: []
-          }]
+          id: 'algebra-funktioner-exponentiella',
+          title: 'Exponentiella funktioner',
+          description: 'Funktioner som växer exponentiellt',
+          children: []
         }]
       }]
     }]
   }, {
-    id: 'kval',
-    title: 'Kvalitativ del',
-    description: 'Läsförståelse och analytiskt tänkande',
+    id: 'verbal',
+    title: 'Verbal del',
+    description: 'Träna på den verbala delen av högskoleprovet',
     children: [{
-      id: 'pro',
-      title: 'PRO - Problemlösning',
-      description: 'Logiska problem och resonemang',
-      children: [{
-        id: 'pro-logic',
-        title: 'Logiska resonemang',
-        description: 'Träna på logiskt tänkande',
-        children: []
-      }, {
-        id: 'pro-complex',
-        title: 'Komplexa problem',
-        description: 'Flera steg och samband',
-        children: []
-      }]
+      id: 'läsförståelse',
+      title: 'Läsförståelse',
+      description: 'Träna på att förstå och analysera texter',
+      children: []
     }, {
-      id: 'dtk',
-      title: 'DTK - Diagram, tabeller och kartor',
-      description: 'Tolka visuell information',
-      children: [{
-        id: 'dtk-diagrams',
-        title: 'Diagramtolkning',
-        description: 'Förstå och analysera diagram',
-        children: []
-      }, {
-        id: 'dtk-maps',
-        title: 'Kartor och skalor',
-        description: 'Arbeta med kartor och skalor',
-        children: []
-      }]
+      id: 'ordförståelse',
+      title: 'Ordförståelse',
+      description: 'Träna på att förstå och använda ord korrekt',
+      children: []
+    }, {
+      id: 'meningskomplettering',
+      title: 'Meningskomplettering',
+      description: 'Träna på att komplettera meningar',
+      children: []
     }]
   }]
 };
-export const DecisionTree = ({
-  onBack
-}) => {
+
+const ProgressColors = {
+  RED: '#ff6b6b',
+  YELLOW: '#feca57',
+  GREEN: '#1dd1a1'
+};
+
+export const DecisionTree = ({ onBack }) => {
   const [tree, setTree] = useState(initialTree);
-  const {
-    token,
-    isLoggedIn
-  } = useAuth();
-  const getNodeColor = progress => {
-    if (!progress) return 'bg-gray-200 text-gray-600'; // No data
+  const [currentNode, setCurrentNode] = useState(initialTree);
+  const [path, setPath] = useState([initialTree]);
+  const [progress, setProgress] = useState({});
+  const { token } = authStore();
 
-    const isCompleted = progress.total_attempts >= 10; // Consider "completed" if at least 10 attempts
-    const isFast = progress.average_time < 60; // Less than 60 seconds average
-    const isAccurate = progress.correct_percentage > 70; // More than 70% correct
-
-    if (isCompleted && isFast && isAccurate) {
-      return 'bg-green-100 text-green-800'; // Done
-    } else if (isCompleted && isAccurate) {
-      return 'bg-yellow-100 text-yellow-800'; // Too slow
-    } else {
-      return 'bg-red-100 text-red-800'; // Not completed or not accurate enough
-    }
-  };
-  const getNodeStatus = progress => {
-    if (!progress) return 'none';
-    const isCompleted = progress.total_attempts >= 10;
-    const isFast = progress.average_time < 60;
-    const isAccurate = progress.correct_percentage > 70;
-    if (isCompleted && isFast && isAccurate) return 'green';
-    if (isCompleted && isAccurate) return 'yellow';
-    return 'red';
-  };
-  const countChildrenStatus = node => {
-    const counts = {
-      none: 0,
-      green: 0,
-      yellow: 0,
-      red: 0
-    };
-    const countNode = n => {
-      if (n.children.length === 0) {
-        // This is a leaf node, count its status
-        counts[getNodeStatus(n.progress)]++;
-      } else {
-        // Recursively count children
-        n.children.forEach(countNode);
-      }
-    };
-    node.children.forEach(countNode);
-    return counts;
-  };
-  const fetchProgress = async nodeId => {
-    if (!isLoggedIn || !token) return;
-    try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/user/stats/${nodeId}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Accept': 'application/json'
-        },
-        credentials: 'include'
-      });
-      if (response.ok) {
-        const progress = await response.json();
-        updateNodeProgress(nodeId, progress);
-      }
-    } catch (error) {
-      console.error('Error fetching progress:', error);
-    }
-  };
-  const updateNodeProgress = (nodeId, progress) => {
-    const updateNode = node => {
-      if (node.id === nodeId) {
-        return {
-          ...node,
-          progress
-        };
-      }
-      return {
-        ...node,
-        children: node.children.map(updateNode)
-      };
-    };
-    setTree(updateNode(tree));
-  };
   useEffect(() => {
-    const fetchAllProgress = node => {
-      if (node.children.length === 0) {
-        fetchProgress(node.id);
-      } else {
-        node.children.forEach(fetchAllProgress);
-      }
-    };
-    if (isLoggedIn) {
-      fetchAllProgress(tree);
-    }
-  }, [isLoggedIn, tree.id]);
-  const toggleNode = nodeId => {
-    const updateNode = node => {
-      if (node.id === nodeId) {
-        return {
-          ...node,
-          isExpanded: !node.isExpanded
-        };
-      }
-      return {
-        ...node,
-        children: node.children.map(updateNode)
-      };
-    };
-    setTree(updateNode(tree));
-  };
-  const renderNode = (node, level = 0) => {
-    const hasChildren = node.children.length > 0;
-    const isRoot = level === 0;
-    const nodeColor = hasChildren ? isRoot ? 'bg-blue-600 text-white' : 'bg-white/80 backdrop-blur-sm' : getNodeColor(node.progress);
-
-    // Get status counts for nodes with children
-    const statusCounts = hasChildren ? countChildrenStatus(node) : null;
-    return /*#__PURE__*/_jsxs("div", {
-      className: `
-          ${level > 0 ? 'ml-8' : ''} 
-          relative
-        `,
-      children: [level > 0 && /*#__PURE__*/_jsx("div", {
-        className: "absolute -left-6 top-1/2 w-6 h-px bg-blue-300",
-        style: {
-          transform: 'translateY(-50%)'
+    // Fetch progress data from API
+    const fetchProgress = async () => {
+      try {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/progress`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Accept': 'application/json'
+          }
+        });
+        if (response.ok) {
+          const data = await response.json();
+          // Convert the data to a more usable format
+          const progressMap = {};
+          data.forEach(item => {
+            progressMap[item.node_id] = {
+              accuracy: item.accuracy,
+              attempts: item.attempts,
+              avgTime: item.avg_time
+            };
+          });
+          setProgress(progressMap);
         }
-      }), /*#__PURE__*/_jsxs("div", {
-        className: `
-            relative p-4 rounded-lg mb-4 cursor-pointer
-            transition-all duration-300 transform hover:scale-102
-            ${nodeColor}
-            border border-blue-200 shadow-lg
-            ${hasChildren ? 'hover:shadow-xl' : ''}
-          `,
-        onClick: () => hasChildren && toggleNode(node.id),
-        children: [/*#__PURE__*/_jsx("h3", {
-          className: `text-lg font-bold ${isRoot ? 'text-white' : ''}`,
-          children: node.title
-        }), /*#__PURE__*/_jsx("p", {
-          className: `text-sm ${isRoot ? 'text-blue-100' : ''}`,
-          children: node.description
-        }), hasChildren && statusCounts && /*#__PURE__*/_jsxs("div", {
-          className: "mt-2 text-sm flex gap-3",
-          children: [/*#__PURE__*/_jsx("span", {
-            className: "font-medium",
-            children: "Delmoment:"
-          }), statusCounts.green > 0 && /*#__PURE__*/_jsxs("span", {
-            className: "text-green-600",
-            children: ["\u2713 ", statusCounts.green]
-          }), statusCounts.yellow > 0 && /*#__PURE__*/_jsxs("span", {
-            className: "text-yellow-600",
-            children: ["\u26A0 ", statusCounts.yellow]
-          }), statusCounts.red > 0 && /*#__PURE__*/_jsxs("span", {
-            className: "text-red-600",
-            children: ["\u2717 ", statusCounts.red]
-          }), statusCounts.none > 0 && /*#__PURE__*/_jsxs("span", {
-            className: "text-gray-400",
-            children: ["? ", statusCounts.none]
-          })]
-        }), !hasChildren && node.progress && /*#__PURE__*/_jsxs("div", {
-          className: "mt-2 text-sm",
-          children: [/*#__PURE__*/_jsxs("p", {
-            children: ["Antal klarade \xF6vningar: ", Math.floor(node.progress.correct_percentage * node.progress.total_attempts / 100)]
-          }), /*#__PURE__*/_jsxs("p", {
-            children: ["Totalt antal f\xF6rs\xF6k: ", node.progress.total_attempts]
-          }), /*#__PURE__*/_jsxs("p", {
-            children: ["Genomsnittlig tid: ", Math.round(node.progress.average_time), "s"]
-          })]
-        }), hasChildren && /*#__PURE__*/_jsx("div", {
-          className: "absolute right-4 top-1/2 transform -translate-y-1/2",
-          children: /*#__PURE__*/_jsx("svg", {
-            xmlns: "http://www.w3.org/2000/svg",
-            className: `h-6 w-6 transition-transform duration-300 ${node.isExpanded ? 'rotate-180' : ''}`,
-            fill: "none",
-            viewBox: "0 0 24 24",
-            stroke: isRoot ? 'white' : 'currentColor',
-            children: /*#__PURE__*/_jsx("path", {
-              strokeLinecap: "round",
-              strokeLinejoin: "round",
-              strokeWidth: 2,
-              d: "M19 9l-7 7-7-7"
-            })
-          })
-        })]
-      }), hasChildren && node.isExpanded && /*#__PURE__*/_jsxs("div", {
-        className: "space-y-4 relative",
-        children: [/*#__PURE__*/_jsx("div", {
-          className: "absolute left-0 top-0 bottom-0 w-px bg-blue-300"
-        }), node.children.map(child => renderNode(child, level + 1))]
-      })]
-    }, node.id);
+      } catch (error) {
+        console.error('Failed to fetch progress data:', error);
+      }
+    };
+
+    if (token) {
+      fetchProgress();
+    } else {
+      // Mock data for development
+      setProgress({
+        'root': { accuracy: 0.75, attempts: 100, avgTime: 45 },
+        'kvantitativ': { accuracy: 0.8, attempts: 80, avgTime: 40 },
+        'basics': { accuracy: 0.9, attempts: 40, avgTime: 30 },
+        'basics-fraktioner': { accuracy: 0.85, attempts: 20, avgTime: 35 },
+        'basics-fraktioner-förlänga': { accuracy: 0.7, attempts: 10, avgTime: 40 },
+        'verbal': { accuracy: 0.6, attempts: 20, avgTime: 60 }
+      });
+    }
+  }, [token]);
+
+  const getProgressColor = (nodeId) => {
+    const nodeProgress = progress[nodeId];
+    if (!nodeProgress) return 'transparent';
+
+    if (nodeProgress.accuracy >= 0.75 && nodeProgress.avgTime <= 30) {
+      return ProgressColors.GREEN;
+    } else if (nodeProgress.accuracy >= 0.75) {
+      return ProgressColors.YELLOW;
+    } else {
+      return ProgressColors.RED;
+    }
   };
-  return /*#__PURE__*/_jsxs("div", {
-    className: "w-full max-w-6xl p-8",
-    children: [/*#__PURE__*/_jsx("button", {
-      onClick: onBack,
-      className: "fixed top-4 left-4 px-4 py-2 bg-blue-600 text-white  rounded-lg hover:bg-blue-700 transition-colors z-50",
-      children: "Tillbaka"
-    }), /*#__PURE__*/_jsx("div", {
-      className: "mt-16 space-y-6",
-      children: renderNode(tree)
-    })]
-  });
+
+  const updateNodeProgress = (nodeId, progress) => {
+    // This would typically be called after completing exercises for a node
+    setProgress(prev => ({
+      ...prev,
+      [nodeId]: progress
+    }));
+  };
+
+  const navigateToNode = (node) => {
+    setCurrentNode(node);
+    setPath(prev => [...prev, node]);
+  };
+
+  const navigateBack = () => {
+    if (path.length > 1) {
+      const newPath = [...path];
+      newPath.pop();
+      setPath(newPath);
+      setCurrentNode(newPath[newPath.length - 1]);
+    }
+  };
+
+  const navigateToRoot = () => {
+    setCurrentNode(initialTree);
+    setPath([initialTree]);
+  };
+
+  const renderNode = (node, level = 0) => {
+    const progressColor = getProgressColor(node.id);
+    const hasChildren = node.children && node.children.length > 0;
+    const isCurrentParent = currentNode.children && currentNode.children.includes(node);
+
+    return (
+      <div
+        key={node.id}
+        className={`relative p-4 rounded-lg mb-3 transition-all duration-300 
+                  ${isCurrentParent ? 'bg-white shadow-lg' : 'bg-gray-50 hover:bg-white/80 hover:shadow-md'}`}
+        onClick={() => hasChildren && navigateToNode(node)}
+      >
+        <div className="flex items-center">
+          <div
+            className="w-3 h-3 rounded-full mr-3"
+            style={{ backgroundColor: progressColor }}
+          />
+          <div className="flex-1">
+            <h3 className="font-medium text-gray-900">{node.title}</h3>
+            <p className="text-sm text-gray-600">{node.description}</p>
+          </div>
+          {hasChildren && (
+            <div className="ml-4 text-blue-500">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 5l7 7-7 7"
+                />
+              </svg>
+            </div>
+          )}
+        </div>
+
+        {progress[node.id] && (
+          <div className="mt-2 grid grid-cols-3 gap-2 text-xs text-gray-500">
+            <div>
+              <span className="font-medium">Accuracy: </span>
+              {Math.round(progress[node.id].accuracy * 100)}%
+            </div>
+            <div>
+              <span className="font-medium">Attempts: </span>
+              {progress[node.id].attempts}
+            </div>
+            <div>
+              <span className="font-medium">Avg Time: </span>
+              {progress[node.id].avgTime}s
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  return (
+    <div className="w-full max-w-4xl mx-auto px-4 py-8">
+      {/* Navigation */}
+      <div className="flex items-center mb-6">
+        <button
+          onClick={onBack}
+          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors mr-4"
+        >
+          Tillbaka
+        </button>
+
+        <div className="flex items-center overflow-x-auto py-2 flex-1">
+          <button
+            onClick={navigateToRoot}
+            className="px-3 py-1 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors flex-shrink-0"
+          >
+            Hem
+          </button>
+
+          {path.slice(1).map((pathNode, index) => (
+            <div key={pathNode.id} className="flex items-center flex-shrink-0">
+              <span className="mx-2 text-gray-400">/</span>
+              <button
+                onClick={() => {
+                  const newPath = path.slice(0, index + 2);
+                  setPath(newPath);
+                  setCurrentNode(newPath[newPath.length - 1]);
+                }}
+                className="px-3 py-1 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors"
+              >
+                {pathNode.title}
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Current Node Information */}
+      <div className="mb-6">
+        <h2 className="text-2xl font-bold mb-2">{currentNode.title}</h2>
+        <p className="text-gray-600">{currentNode.description}</p>
+      </div>
+
+      {/* Children Nodes */}
+      <div className="space-y-2">
+        {currentNode.children && currentNode.children.length > 0 ? (
+          currentNode.children.map(childNode => renderNode(childNode))
+        ) : (
+          <div className="p-6 bg-blue-50 rounded-lg text-center">
+            <p className="text-lg text-blue-700">
+              Du har nått en slutnod! Här kan du träna på specifika övningar.
+            </p>
+            <button
+              onClick={() => console.log(`Start exercises for ${currentNode.id}`)}
+              className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              Börja träna
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
 };

@@ -3,8 +3,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { FloatingEquations } from './components/FloatingEquations';
 import { LoginPage } from './components/LoginPage';
 import RegisterForm from './components/RegisterForm';
-import { RoadMap } from './components/RoadMap';
-import { AuthProvider, useAuth } from './contexts/AuthContext';
+import authStore from './store/authStore';
 import { CategoryStats } from './components/CategoryStats';
 import { SoundProvider } from './contexts/SoundContext';
 import { DecisionTree } from './components/DecisionTree';
@@ -12,7 +11,6 @@ import { SecondChance } from './components/SecondChance';
 import Header from './components/Header';
 import LandingPage from './components/LandingPage';
 import Sidebar from './components/Sidebar';
-
 function FloatingCards() {
   const items = [
     {
@@ -110,7 +108,7 @@ function FloatingCards() {
 }
 
 function AppContent() {
-  const { isLoggedIn } = useAuth();
+  const { isLoggedIn } = authStore();
   const [showLogin, setShowLogin] = useState(false);
   const [showStats, setShowStats] = useState(false);
   const [showRoadMap, setShowRoadMap] = useState(false);
@@ -259,29 +257,26 @@ function AppContent() {
 
 function App() {
   return (
-    <AuthProvider>
-      <SoundProvider>
-        <BrowserRouter>
-          <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
-            <Header />
-            <div className="flex">
-              <Sidebar />
-              <main className="flex-1">
-                <Routes>
-                  <Route path="/" element={<LandingPage />} />
-                  <Route path="/login" element={<LoginPage />} />
-                  <Route path="/register" element={<RegisterForm />} />
-                  <Route path="/stats" element={<CategoryStats />} />
-                  <Route path="/roadmap" element={<RoadMap />} />
-                  <Route path="/decision-tree" element={<DecisionTree />} />
-                  <Route path="/second-chance" element={<SecondChance />} />
-                </Routes>
-              </main>
-            </div>
+    <SoundProvider>
+      <BrowserRouter>
+        <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
+          <Header />
+          <div className="flex">
+            <Sidebar />
+            <main className="flex-1">
+              <Routes>
+                <Route path="/" element={<LandingPage />} />
+                <Route path="/login" element={<LoginPage />} />
+                <Route path="/register" element={<RegisterForm />} />
+                <Route path="/stats" element={<CategoryStats />} />
+                <Route path="/decision-tree" element={<DecisionTree />} />
+                <Route path="/second-chance" element={<SecondChance />} />
+              </Routes>
+            </main>
           </div>
-        </BrowserRouter>
-      </SoundProvider>
-    </AuthProvider>
+        </div>
+      </BrowserRouter>
+    </SoundProvider>
   );
 }
 

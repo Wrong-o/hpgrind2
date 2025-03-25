@@ -49,7 +49,7 @@ def create_database_token(user_id: UUID, db: Session):
     db.commit()
     return new_token
 
-def verify_database_token(token: str, db: Session):
+def verify_database_token(token_str: str, db: Session):
     """
     Return a token
     """
@@ -57,7 +57,8 @@ def verify_database_token(token: str, db: Session):
     token = (
         db.execute(
             select(Token).where(
-                Token.token == token_str, Token.created >= datetime.now(UTC) - max_age
+                Token.token == token_str,
+                Token.created >= datetime.now(timezone.utc) - max_age
             ),
         )
         .scalars()
@@ -70,6 +71,13 @@ def verify_database_token(token: str, db: Session):
             headers={"WWW-Authenticate": "Bearer"},
         )
     return token
+
+def verify_token_access(token_str: str, db: Session):
+    """
+    Verify token access and return the token if valid
+    Used by authentication functions
+    """
+    return verify_database_token(token_str=token_str, db=db)
 
 def get_current_user(
         token: Annotated[str, Depends(oauth2_scheme)], db: Session = Depends(get_db)

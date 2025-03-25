@@ -50,7 +50,7 @@ export const LoginPage = () => {
       formData.append("password", password);
 
       try {
-        const response = await fetch("http://localhost:8000/api/v1/auth/token", {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/v1/auth/token`, {
           method: "POST",
           body: formData,
         });

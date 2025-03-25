@@ -53,6 +53,7 @@ class Token(Base):
     __tablename__ = "tokens"
 
     created: Mapped[datetime] = mapped_column(
+        DateTime,
         default=lambda: datetime.now(timezone.utc)
     )
     token: Mapped[str] = mapped_column(unique=True, index=True)

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { VideoPlayer } from './VideoPlayer';
-import { useAuth } from '../contexts/AuthContext';
+import authStore from '../store/authStore';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from "./Sidebar";
 //// Forstätt härifrån: sätt in sidebaren för att testa authentication 
@@ -8,7 +8,7 @@ import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 
 function LandingPage() {
   const [videoError, setVideoError] = useState({});
-  const { isLoggedIn } = useAuth();
+  const { isLoggedIn } = authStore();
   const navigate = useNavigate();
 
   // Function to handle video loading errors

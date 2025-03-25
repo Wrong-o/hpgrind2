@@ -1,39 +1,33 @@
 import React, { useEffect, useState } from 'react';
-import { useAuth } from '../contexts/AuthContext';
+import authStore from '../store/authStore';
 import 'katex/dist/katex.min.css';
 import Latex from '@matejmazur/react-katex';
-import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
+
 const formatQuestion = question => {
   // Split the text by $ to separate LaTeX and regular text
   const parts = question.split(/(\$[^$]+\$)/);
-  return /*#__PURE__*/_jsx("div", {
-    className: "space-y-6 text-center",
-    children: /*#__PURE__*/_jsx("div", {
-      className: "text-2xl py-4",
-      children: parts.map((part, index) => {
-        if (part.startsWith('$') && part.endsWith('$')) {
-          // Remove the $ symbols and render as LaTeX
-          return /*#__PURE__*/_jsx(Latex, {
-            math: part.slice(1, -1)
-          }, index);
-        }
-        return /*#__PURE__*/_jsx("span", {
-          children: part
-        }, index);
-      })
-    })
-  });
+  return (
+    <div className="space-y-6 text-center">
+      <div className="text-2xl py-4">
+        {parts.map((part, index) => {
+          if (part.startsWith('$') && part.endsWith('$')) {
+            // Remove the $ symbols and render as LaTeX
+            return <Latex key={index} math={part.slice(1, -1)} />;
+          }
+          return <span key={index}>{part}</span>;
+        })}
+      </div>
+    </div>
+  );
 };
-export const SecondChance = ({
-  onBack
-}) => {
+
+export const SecondChance = ({ onBack }) => {
   const [incorrectQuestions, setIncorrectQuestions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedAnswers, setSelectedAnswers] = useState({});
   const [showExplanation, setShowExplanation] = useState({});
-  const {
-    token
-  } = useAuth();
+  const { token } = authStore();
+
   useEffect(() => {
     const fetchIncorrectQuestions = async () => {
       try {
@@ -57,6 +51,7 @@ export const SecondChance = ({
     };
     fetchIncorrectQuestions();
   }, [token]);
+
   const handleAnswer = async (questionId, answer, question) => {
     if (selectedAnswers[questionId]) return; // Prevent multiple selections
 
@@ -149,90 +144,112 @@ export const SecondChance = ({
       }
     }
   };
+
   if (loading) {
-    return /*#__PURE__*/_jsx("div", {
-      className: "flex items-center justify-center min-h-screen",
-      children: /*#__PURE__*/_jsx("div", {
-        className: "animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"
-      })
-    });
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600" />
+      </div>
+    );
   }
+
   if (incorrectQuestions.length === 0) {
-    return /*#__PURE__*/_jsxs("div", {
-      className: "w-full max-w-4xl px-4 py-8 relative",
-      children: [/*#__PURE__*/_jsx("button", {
-        onClick: onBack,
-        className: "absolute top-4 left-4 px-4 py-2 bg-blue-600 text-white  rounded-lg hover:bg-blue-700 transition-colors",
-        children: "Tillbaka"
-      }), /*#__PURE__*/_jsxs("div", {
-        className: "text-center mt-16",
-        children: [/*#__PURE__*/_jsx("h2", {
-          className: "text-2xl font-bold text-blue-600 mb-4",
-          children: "Andra chansen"
-        }), /*#__PURE__*/_jsx("p", {
-          className: "text-xl text-teal-700",
-          children: "Du har inga felaktiga svar att \xF6va p\xE5 just nu. Bra jobbat!"
-        })]
-      })]
-    });
+    return (
+      <div className="w-full max-w-4xl px-4 py-8 relative">
+        <button
+          onClick={onBack}
+          className="absolute top-4 left-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+        >
+          Tillbaka
+        </button>
+        <div className="text-center mt-16">
+          <h2 className="text-2xl font-bold text-blue-600 mb-4">
+            Andra chansen
+          </h2>
+          <p className="text-xl text-teal-700">
+            Du har inga felaktiga svar att öva på just nu. Bra jobbat!
+          </p>
+        </div>
+      </div>
+    );
   }
-  return /*#__PURE__*/_jsxs("div", {
-    className: "w-full max-w-4xl px-4 py-8 relative",
-    children: [/*#__PURE__*/_jsx("button", {
-      onClick: onBack,
-      className: "absolute top-4 left-4 px-4 py-2 bg-blue-600 text-white  rounded-lg hover:bg-blue-700 transition-colors",
-      children: "Tillbaka"
-    }), /*#__PURE__*/_jsxs("div", {
-      className: "space-y-4 mt-16",
-      children: [/*#__PURE__*/_jsx("h2", {
-        className: "text-2xl font-bold text-blue-600 mb-4 text-center",
-        children: "Andra chansen"
-      }), /*#__PURE__*/_jsx("div", {
-        className: "grid gap-4",
-        children: incorrectQuestions.map(question => /*#__PURE__*/_jsxs("div", {
-          className: "bg-white/50 backdrop-blur-sm rounded-xl p-6 shadow-lg",
-          children: [/*#__PURE__*/_jsxs("div", {
-            className: "text-sm text-teal-600 mb-2",
-            children: [question.moment, " \u2022 Sv\xE5righetsgrad ", question.difficulty, "/5"]
-          }), /*#__PURE__*/_jsx("div", {
-            className: "text-lg text-blue-600 mb-4",
-            children: formatQuestion(question.question)
-          }), /*#__PURE__*/_jsx("div", {
-            className: "grid grid-cols-2 gap-4",
-            children: question.answers.map((answer, index) => /*#__PURE__*/_jsx("button", {
-              onClick: () => handleAnswer(question.id, answer, question),
-              disabled: !!selectedAnswers[question.id],
-              className: `px-4 py-3 rounded-lg min-h-[80px]
-                             flex items-center justify-center transition-colors
-                             ${selectedAnswers[question.id] === answer ? answer === question.correct_answer ? 'bg-green-500 text-white' : 'bg-red-500 text-white' : selectedAnswers[question.id] ? 'bg-blue-500/50 text-white cursor-not-allowed' : 'bg-blue-500 text-white hover:bg-blue-600'}`,
-              children: /*#__PURE__*/_jsx("div", {
-                className: "text-xl",
-                children: /*#__PURE__*/_jsx(Latex, {
-                  math: answer.slice(1, -1)
-                })
-              })
-            }, index))
-          }), showExplanation[question.id] && /*#__PURE__*/_jsxs("div", {
-            className: `mt-4 p-4 rounded-lg ${selectedAnswers[question.id] === question.correct_answer ? 'bg-green-100' : 'bg-red-100'}`,
-            children: [/*#__PURE__*/_jsx("h3", {
-              className: "font-bold mb-2 text-lg",
-              children: selectedAnswers[question.id] === question.correct_answer ? 'Bra jobbat!' : 'Nästan rätt!'
-            }), /*#__PURE__*/_jsx("div", {
-              className: "text-lg whitespace-pre-line",
-              children: question.explanation.split(/(\$[^$]+\$)/).map((part, index) => {
-                if (part.startsWith('$') && part.endsWith('$')) {
-                  return /*#__PURE__*/_jsx(Latex, {
-                    math: part.slice(1, -1)
-                  }, index);
-                }
-                return /*#__PURE__*/_jsx("span", {
-                  children: part
-                }, index);
-              })
-            })]
-          })]
-        }, question.id))
-      })]
-    })]
-  });
+
+  return (
+    <div className="w-full max-w-4xl px-4 py-8 relative">
+      <button
+        onClick={onBack}
+        className="absolute top-4 left-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+      >
+        Tillbaka
+      </button>
+
+      <div className="space-y-4 mt-16">
+        <h2 className="text-2xl font-bold text-blue-600 mb-4 text-center">
+          Andra chansen
+        </h2>
+
+        <div className="grid gap-4">
+          {incorrectQuestions.map(question => (
+            <div key={question.id} className="bg-white/50 backdrop-blur-sm rounded-xl p-6 shadow-lg">
+              <div className="text-sm text-teal-600 mb-2">
+                {question.moment} • Svårighetsgrad {question.difficulty}/5
+              </div>
+
+              <div className="text-lg text-blue-600 mb-4">
+                {formatQuestion(question.question)}
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                {question.answers.map((answer, index) => (
+                  <button
+                    key={index}
+                    onClick={() => handleAnswer(question.id, answer, question)}
+                    disabled={!!selectedAnswers[question.id]}
+                    className={`px-4 py-3 rounded-lg min-h-[80px]
+                      flex items-center justify-center transition-colors
+                      ${selectedAnswers[question.id] === answer
+                        ? answer === question.correct_answer
+                          ? 'bg-green-500 text-white'
+                          : 'bg-red-500 text-white'
+                        : selectedAnswers[question.id]
+                          ? 'bg-blue-500/50 text-white cursor-not-allowed'
+                          : 'bg-blue-500 text-white hover:bg-blue-600'
+                      }`}
+                  >
+                    <div className="text-xl">
+                      <Latex math={answer.slice(1, -1)} />
+                    </div>
+                  </button>
+                ))}
+              </div>
+
+              {showExplanation[question.id] && (
+                <div
+                  className={`mt-4 p-4 rounded-lg ${selectedAnswers[question.id] === question.correct_answer
+                      ? 'bg-green-100'
+                      : 'bg-red-100'
+                    }`}
+                >
+                  <h3 className="font-bold mb-2 text-lg">
+                    {selectedAnswers[question.id] === question.correct_answer
+                      ? 'Bra jobbat!'
+                      : 'Nästan rätt!'
+                    }
+                  </h3>
+                  <div className="text-lg whitespace-pre-line">
+                    {question.explanation.split(/(\$[^$]+\$)/).map((part, index) => {
+                      if (part.startsWith('$') && part.endsWith('$')) {
+                        return <Latex key={index} math={part.slice(1, -1)} />;
+                      }
+                      return <span key={index}>{part}</span>;
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
 };
