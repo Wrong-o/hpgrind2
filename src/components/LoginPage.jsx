@@ -149,6 +149,11 @@ export const LoginPage = () => {
             Har du inget konto? Skapa ett här
           </button>
         </div>
+        <Link to ="/password-reset">
+          <p className="mt-4 text-indigo-600 underline text-small">
+            Glömt ditt lösenord?
+          </p>
+        </Link>
       </div>
     </div>
   );

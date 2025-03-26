@@ -64,3 +64,10 @@ class UserSchema(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     
+class PasswordResetRequestSchema(BaseModel):
+    email: EmailStr = Field(..., description="Email address for password reset")
+
+    model_config = ConfigDict(
+        json_schema_extra={"example": {"email": "user@example.com"}}
+    )
+

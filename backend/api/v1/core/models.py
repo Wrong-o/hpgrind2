@@ -52,10 +52,22 @@ class User_history(Base):
 class Token(Base):
     __tablename__ = "tokens"
 
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True, autoincrement=True)
     created: Mapped[datetime] = mapped_column(
         DateTime,
         default=lambda: datetime.now(timezone.utc)
     )
     token: Mapped[str] = mapped_column(unique=True, index=True)
-    user_id: Mapped[str] = mapped_column(ForeignKey("users.id"))
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
     user: Mapped["User"] = relationship(back_populates="tokens")
+
+class PasswordResetToken(Base):
+    """Token used for password reset"""
+    __tablename__ = "password_reset_tokens"
+    created: Mapped[datetime] = mapped_column(
+        default=lambda: datetime.now(timezone.utc)
+    )
+    token: Mapped[str] = mapped_column(unique=True, index=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    user: Mapped["User"] = relationship(back_populates="reset_tokens")
+    used: Mapped[bool] = mapped_column(Boolean, default=False)
