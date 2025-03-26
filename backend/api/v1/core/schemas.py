@@ -71,3 +71,18 @@ class PasswordResetRequestSchema(BaseModel):
         json_schema_extra={"example": {"email": "user@example.com"}}
     )
 
+    
+class PasswordResetConfirmSchema(BaseModel):
+    token: str = Field(..., description="Password reset token recieved via email")
+    new_password: str = Field(
+        ..., min_length=8, description="New password that meets security"
+    )
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "examples": {
+                "token": "randomsecuretoken",
+                "new_password": "NewP@ssw0rd!",
+            }
+        }
+        )

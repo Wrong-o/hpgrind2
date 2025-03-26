@@ -2,8 +2,8 @@ import json
 import secrets
 from datetime import datetime, timedelta, timezone
 import requests
-from app.api.v1.core.models import PasswordResetToken, User
-from app.settings import settings
+from api.v1.core.models import PasswordResetToken, User
+from settings import settings
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -30,6 +30,7 @@ def send_password_reset_email(email: str, token: str):
     """
     Send a password reset email using Postmark API
     """
+    print(token)
     reset_url = f"{settings.FRONTEND_BASE_URL}/password-reset?token={token}"
 
     message = {
@@ -65,6 +66,4 @@ def send_password_reset_email(email: str, token: str):
         return True
     except Exception as e:
         print(f"Misslyckades med att skicka email till {email}: {e}")
-        return False
-    
-    
+        return False 

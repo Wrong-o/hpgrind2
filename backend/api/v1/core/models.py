@@ -19,6 +19,7 @@ class User(Base):
     hashed_password: Mapped[str] = mapped_column(String)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=func.now())
     tokens: Mapped[List["Token"]] = relationship(back_populates="user")
+    reset_tokens: Mapped[List["PasswordResetToken"]] = relationship(back_populates="user")
 
 
 class Premium(Base):
@@ -65,25 +66,10 @@ class PasswordResetToken(Base):
     """Token used for password reset"""
     __tablename__ = "password_reset_tokens"
     created: Mapped[datetime] = mapped_column(
+        DateTime,
         default=lambda: datetime.now(timezone.utc)
     )
     token: Mapped[str] = mapped_column(unique=True, index=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
     user: Mapped["User"] = relationship(back_populates="reset_tokens")
     used: Mapped[bool] = mapped_column(Boolean, default=False)
-
-
-class PasswordResetConfirmSchema(BaseModel):
-    token: str = Field(..., description="Password reset token recieved via email")
-    new_password: str = Field(
-        ..., min_length=8, description="New password that meets security"
-    )
-
-    model_config = ConfigDict(
-        json_schema_extra={
-            "examples": {
-                "token": "randomsecuretoken",
-                "new_password": "NewP@ssw0rd!",
-            }
-        }
-        )

@@ -30,3 +30,5 @@ function PasswordResetRequestPage() {
     </div>
   );
 }
+
+export default PasswordResetRequestPage;

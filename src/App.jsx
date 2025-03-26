@@ -11,6 +11,8 @@ import { SecondChance } from './components/SecondChance';
 import Header from './components/Header';
 import LandingPage from './components/LandingPage';
 import Sidebar from './components/Sidebar';
+import PasswordResetRequestPage from './components/PasswordResetRequestPage';
+
 function FloatingCards() {
   const items = [
     {
@@ -271,6 +273,7 @@ function App() {
                 <Route path="/stats" element={<CategoryStats />} />
                 <Route path="/decision-tree" element={<DecisionTree />} />
                 <Route path="/second-chance" element={<SecondChance />} />
+                <Route path="/password-reset" element={<PasswordResetRequestPage />} />
               </Routes>
             </main>
           </div>

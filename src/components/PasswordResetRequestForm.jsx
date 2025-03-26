@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 
   const PasswordResetRequestForm = () => {
     const API_URL = import.meta.env.VITE_API_URL;
-    const [email, setEmail] = UseState("");
+    const [email, setEmail] = useState("");
     const [emailError, setEmailError] = useState("");
     const [serverError, setServerError] = useState("");
     const [success, setSuccess] = useState("");

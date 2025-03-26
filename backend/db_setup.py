@@ -5,7 +5,7 @@ from api.v1.core.models import Base
 from settings import settings
 
 # Create engine with echo for debugging
-engine = create_engine(f"{settings.DATABASE_URL}", echo=True)
+engine = create_engine(settings.DB_URL, echo=True)
 
 def get_db():
     """

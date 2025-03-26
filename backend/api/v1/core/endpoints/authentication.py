@@ -3,7 +3,8 @@ from api.v1.core.models import User, Token
 from api.v1.core.schemas import (
     TokenSchema,
     UserOutSchema,
-    UserRegisterSchema
+    UserRegisterSchema,
+    PasswordResetRequestSchema
 )
 from db_setup import get_db
 from security import (
@@ -12,6 +13,11 @@ from security import (
     hash_password,
     verify_password,
     create_database_token,
+)
+from email_service import (
+    get_user_by_email,
+    generate_password_reset_token,
+    send_password_reset_email
 )
 from fastapi import APIRouter, Depends, HTTPException, status, Response
 from fastapi.security import OAuth2PasswordRequestForm
