@@ -71,3 +71,19 @@ class PasswordResetToken(Base):
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
     user: Mapped["User"] = relationship(back_populates="reset_tokens")
     used: Mapped[bool] = mapped_column(Boolean, default=False)
+
+
+class PasswordResetConfirmSchema(BaseModel):
+    token: str = Field(..., description="Password reset token recieved via email")
+    new_password: str = Field(
+        ..., min_length=8, description="New password that meets security"
+    )
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "examples": {
+                "token": "randomsecuretoken",
+                "new_password": "NewP@ssw0rd!",
+            }
+        }
+        )

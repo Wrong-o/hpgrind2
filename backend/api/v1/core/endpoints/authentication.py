@@ -112,3 +112,24 @@ def read_user_me(
     current_user: User = Depends(get_current_user),
 ):
     return current_user
+
+@router.post("/password-reset-request", status_code=status.HTTP_200_OK)
+def request_password_reset(
+    reset_request: PasswordResetRequestSchema,
+    db: Session = Depends(get_db),
+):
+    """
+    Request a password reset emial
+    This endpoint sends a password reset link to the user email
+    """
+    user = get_user_by_email(session=db, email=reset_request.email)
+    if not user:
+        return {
+            "message": "En länk för att återställa ditt lösenord har skickats till din email"
+        }
+    token = generate_password_reset_token(user_id=user.id, db=db)
+    send_password_reset_email(reset_request.email, token)
+
+    return {
+        "message": "En länk för att återställa ditt lösenord har skickats till din email"
+    }
