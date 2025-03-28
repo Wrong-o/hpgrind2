@@ -16,6 +16,8 @@ export const LoginPage = () => {
 
   const [serverError, setServerError] = useState(""); // New state for server-side errors
 
+  const isLoggedIn = authStore((state) => state.isLoggedIn);
+
   function validateEmail() {
     const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!regex.test(email)) {
@@ -39,6 +41,8 @@ export const LoginPage = () => {
       return true;
     }
   }
+
+  
   async function submitLogin(e) {
     e.preventDefault();
     setServerError(""); // Reset server error before each login attempt
@@ -59,7 +63,7 @@ export const LoginPage = () => {
         if (response.status === 200) {
           const data = await response.json();
           setToken(data.access_token); // Save the token in the global state
-          navigate("/stats");
+          navigate("/decision-tree");
           // Handle successful login, e.g., storing the access token
           console.log(data);
         } else if (response.status === 400 || response.status === 401) {

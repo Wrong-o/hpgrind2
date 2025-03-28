@@ -3,7 +3,6 @@ import { VideoPlayer } from './VideoPlayer';
 import authStore from '../store/authStore';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from "./Sidebar";
-//// Forstätt härifrån: sätt in sidebaren för att testa authentication 
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 
 function LandingPage() {

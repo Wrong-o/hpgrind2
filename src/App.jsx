@@ -10,8 +10,9 @@ import { DecisionTree } from './components/DecisionTree';
 import { SecondChance } from './components/SecondChance';
 import Header from './components/Header';
 import LandingPage from './components/LandingPage';
-import Sidebar from './components/Sidebar';
 import PasswordResetRequestPage from './components/PasswordResetRequestPage';
+import ProtectedRoute from './components/ProtectedRoute';
+
 
 function FloatingCards() {
   const items = [
@@ -110,7 +111,6 @@ function FloatingCards() {
 }
 
 function AppContent() {
-  const { isLoggedIn } = authStore();
   const [showLogin, setShowLogin] = useState(false);
   const [showStats, setShowStats] = useState(false);
   const [showRoadMap, setShowRoadMap] = useState(false);
@@ -124,6 +124,7 @@ function AppContent() {
   const [userAchievements, setUserAchievements] = useState([]);
   const [nextRecommendedPath, setNextRecommendedPath] = useState('matematikbasic');
   const [showLandingPage, setShowLandingPage] = useState(!isLoggedIn);
+  const isLoggedIn = authStore((state) => state.isLoggedIn);
 
   useEffect(() => {
     const fetchUserProgress = async () => {
@@ -198,7 +199,6 @@ function AppContent() {
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
       {showLogin && <LoginPage onClose={() => setShowLogin(false)} />}
       <div className="flex">
-        <Sidebar />
         <main className="flex-1">
           {showLandingPage ? (
             <LandingPage onShowLogin={() => setShowLogin(true)} />
@@ -258,22 +258,46 @@ function AppContent() {
 }
 
 function App() {
+  const isLoggedIn = authStore((state) => state.isLoggedIn);
   return (
     <SoundProvider>
       <BrowserRouter>
         <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
           <Header />
           <div className="flex">
-            <Sidebar />
             <main className="flex-1">
               <Routes>
                 <Route path="/" element={<LandingPage />} />
-                <Route path="/login" element={<LoginPage />} />
-                <Route path="/register" element={<RegisterForm />} />
-                <Route path="/stats" element={<CategoryStats />} />
-                <Route path="/decision-tree" element={<DecisionTree />} />
-                <Route path="/second-chance" element={<SecondChance />} />
-                <Route path="/password-reset" element={<PasswordResetRequestPage />} />
+                <Route path="/login" element={
+                  <ProtectedRoute isLoggedIn={isLoggedIn} redirectTo="/decision-tree">
+                    <LoginPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="/register" element={
+                  <ProtectedRoute isLoggedIn={isLoggedIn} redirectTo="/decision-tree">
+                    <RegisterForm />
+                  </ProtectedRoute>
+                } />
+                <Route path="/stats" element={
+                  <ProtectedRoute isLoggedIn={!isLoggedIn} redirectTo="/">
+                    <CategoryStats />
+                  </ProtectedRoute>
+                } />
+                <Route path="/decision-tree" element={
+                  <ProtectedRoute isLoggedIn={!isLoggedIn} redirectTo="/">
+                    <DecisionTree />
+                  </ProtectedRoute>
+                } />
+                <Route path="/second-chance" element={
+                  <ProtectedRoute isLoggedIn={!isLoggedIn} redirectTo="/">
+                    <SecondChance />
+                  </ProtectedRoute>
+                } />
+                <Route path="/password-reset" element={
+                  <ProtectedRoute isLoggedIn={!isLoggedIn} redirectTo="/">
+                    <PasswordResetRequestPage />
+                  </ProtectedRoute>
+                } />
               </Routes>
             </main>
           </div>

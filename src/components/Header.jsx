@@ -8,6 +8,12 @@ const Header = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const isLoggedIn = !!token;
+  const logout = authStore((state) => state.logout);
+
+  function logoutUser () {
+    logout();
+    navigate("/");
+  }
 
   const handleDemoClick = () => {
     if (location.pathname !== '/') {
@@ -75,22 +81,22 @@ const Header = () => {
             {!isLoggedIn && (
               <li>
                 <Link
-                  to="/register"
+                  to="/login"
                   className="px-4 py-2 bg-white text-blue-600 hover:bg-blue-50 rounded-lg font-medium transition-colors inline-block"
                 >
-                  Skapa konto
+                  Logga in
                 </Link>
               </li>
             )}
             {isLoggedIn && (
               <>
                 <li>
-                  <Link
-                    to="/login"
+                  <button
+                    onClick={logoutUser}
                     className="px-4 py-2 bg-transparent hover:bg-blue-500 text-white border border-white rounded-lg transition-colors inline-block"
                   >
-                    Min väg
-                  </Link>
+                    Logga ut
+                  </button>
                 </li>
               </>
             )}
