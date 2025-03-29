@@ -1,60 +1,55 @@
 import React, { useState, useEffect } from 'react';
-import { useDatabase } from '../contexts/DatabaseContext';
+import authStore from '../store/authStore';
 
 const UserStatsPage = () => {
-  const { recommendedPath, questionHistory, isLoading, error } = useDatabase();
+    const token = authStore((state) => state.token);
+    const [achievements, setAchievements] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
-  if (isLoading) {
+    useEffect(() => {
+        const loadAchievements = async () => {
+            try {
+                console.log('Fetching achievements...');
+                const data = await fetchAchievements();
+                console.log('Achievements fetched successfully:', data);
+                setAchievements(data);
+            } catch (err) {
+                setError(err.message);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        loadAchievements();
+    }, []);
+
+    const fetchAchievements = async () => {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/v1/general/user_achievements`, {
+            headers: {
+                'Authorization': `Bearer ${token}`,
+            },
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to fetch achievements');
+        }
+
+        const text = await response.text();  // Use .text() instead of .json() since we're expecting a string
+        return text;
+    }
+
     return (
-      <div className="container mx-auto p-6">
-        <h1 className="text-2xl font-bold mb-4">Användarstatistik</h1>
-        <p>Laddar...</p>
-      </div>
-    );
-  }
+        <div>
+            <h1>Användarstatistik</h1>
+            <h2>Rekommenderad väg</h2>
+            
+            <h2>Prestationer</h2>
+            <p>{achievements}</p>
 
-  if (error) {
-    return (
-      <div className="container mx-auto p-6">
-        <h1 className="text-2xl font-bold mb-4">Användarstatistik</h1>
-        <p className="text-red-600">{error}</p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="container mx-auto p-6">
-      <h1 className="text-2xl font-bold mb-4">Användarstatistik</h1>
-      
-      <div className="mb-8">
-        <h2 className="text-xl font-semibold mb-3">Rekommenderad väg</h2>
-        {recommendedPath ? (
-          <pre className="bg-gray-100 p-4 rounded-lg overflow-auto">
-            {JSON.stringify(recommendedPath, null, 2)}
-          </pre>
-        ) : (
-          <p>Ingen rekommenderad väg tillgänglig</p>
-        )}
-      </div>
-
-      <div>
-        <h2 className="text-xl font-semibold mb-3">Frågehistorik</h2>
-        {questionHistory && questionHistory.length > 0 ? (
-          <div className="space-y-4">
-            {questionHistory.map((question, index) => (
-              <div key={index} className="bg-gray-100 p-4 rounded-lg">
-                <pre className="overflow-auto">
-                  {JSON.stringify(question, null, 2)}
-                </pre>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <p>Ingen frågehistorik tillgänglig</p>
-        )}
-      </div>
-    </div>
-  );
-};
+            <h2>Frågehistorik</h2>
+        </div>
+    )
+}
 
 export default UserStatsPage;

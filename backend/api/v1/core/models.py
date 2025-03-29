@@ -74,15 +74,20 @@ class PasswordResetToken(Base):
     user: Mapped["User"] = relationship(back_populates="reset_tokens")
     used: Mapped[bool] = mapped_column(Boolean, default=False)
 
-class User_achievements(Base):
+class Achievement(Base):
+    __tablename__ = "achievements"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    title: Mapped[str] = mapped_column(String)
+    description: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=func.now())
+
+class UserAchievements(Base):
     __tablename__ = "user_achievements"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True, autoincrement=True)
     user_id: Mapped[int] = mapped_column(
         Integer,
-        ForeignKey("users.id"),
-        primary_key=True)
+        ForeignKey("users.id"))
     achievement_id: Mapped[int] = mapped_column(
         Integer,
-        ForeignKey("achievements.id"),
-        primary_key=True)
-    achieved: Mapped[bool] = mapped_column(Boolean, default=False)
+        ForeignKey("achievements.id"))
     timestamp: Mapped[datetime] = mapped_column(DateTime, default=func.now())
