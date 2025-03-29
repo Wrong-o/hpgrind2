@@ -10,22 +10,36 @@ const loadInitialState = () => {
 };
 
 const authStore = create((set, get) => ({
-    ...loadInitialState(),
-    token: null,
-    userData: null,
-    isLoading: false,
-    error: null,
+  token: loadInitialState().token,
+  userData: loadInitialState().userData,
+  isLoggedIn: !!loadInitialState().token,
+  isLoading: false,
+  error: null,
+  
+  initializeAuth: () => {
+    const token = localStorage.getItem("token");
+    set({ 
+      token,
+      isLoggedIn: !!token 
+    });
+  },
 
-    setToken: (token) => {
-        localStorage.setItem("token", token);
-        set(() => ({ token }))
-    },
-    logout: () => {
-      localStorage.removeItem("token");
-      set(() => ({
-        token: null,
-      }));
-    },
+  setToken: (token) => {
+    localStorage.setItem("token", token);
+    set({ 
+      token,
+      isLoggedIn: !!token 
+    });
+  },
+
+  logout: () => {
+    localStorage.removeItem("token");
+    set({ 
+      token: null,
+      isLoggedIn: false,
+      userData: null 
+    });
+  }
 }));
 
 export default authStore;

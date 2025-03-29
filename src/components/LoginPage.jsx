@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import authStore from '../store/authStore';
 import { Link } from 'react-router-dom';
+import Popup from './Popup';
 
 export const LoginPage = () => {
   const navigate = useNavigate();
@@ -15,8 +16,8 @@ export const LoginPage = () => {
   const [passwordError, setPasswordError] = useState("");
 
   const [serverError, setServerError] = useState(""); // New state for server-side errors
-
-  const isLoggedIn = authStore((state) => state.isLoggedIn);
+  const [showWelcomePopup, setShowWelcomePopup] = useState(false); // State for welcome popup
+  const [tempToken, setTempToken] = useState(null); // Temporary store for token
 
   function validateEmail() {
     const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -42,6 +43,15 @@ export const LoginPage = () => {
     }
   }
 
+  // Handle popup close
+  const handlePopupClose = () => {
+    setShowWelcomePopup(false);
+    // Now set the token in the store and navigate
+    if (tempToken) {
+      setToken(tempToken);
+      navigate("/main-menu");
+    }
+  };
   
   async function submitLogin(e) {
     e.preventDefault();
@@ -62,9 +72,12 @@ export const LoginPage = () => {
 
         if (response.status === 200) {
           const data = await response.json();
-          setToken(data.access_token); // Save the token in the global state
-          navigate("/decision-tree");
-          // Handle successful login, e.g., storing the access token
+          console.log("Login successful, will show welcome popup");
+          
+          // Store token temporarily but don't set it in the store yet
+          setTempToken(data.access_token);
+          setShowWelcomePopup(true);
+          
           console.log(data);
         } else if (response.status === 400 || response.status === 401) {
           const data = await response.json();
@@ -159,6 +172,27 @@ export const LoginPage = () => {
             Glömt ditt lösenord?
           </p>
         </Link>
+      </div>
+
+      {/* Welcome Popup */}
+      <Popup
+        isOpen={showWelcomePopup}
+        onClose={handlePopupClose}
+        title="Du är nu inloggad"
+      >
+        <p className="text-center text-gray-700 mb-4">
+          Klicka på knappen för att börja få anpassade uppgifter
+        </p>
+        <button
+          onClick={handlePopupClose}
+          className="w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 transition-colors"
+        >
+          Börja Grinda
+        </button>
+      </Popup>
+      {/* Debug information - remove after fixing */}
+      <div style={{ display: 'none' }}>
+        Popup state: {showWelcomePopup ? 'true' : 'false'}
       </div>
     </div>
   );

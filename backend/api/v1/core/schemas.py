@@ -86,3 +86,11 @@ class PasswordResetConfirmSchema(BaseModel):
             }
         }
         )
+
+class AchievementResponse(BaseModel):
+    id: int
+    name: str
+    description: str
+    achieved_at: str
+    
+    

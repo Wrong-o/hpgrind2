@@ -5,7 +5,7 @@ This script initializes the database by creating all tables based on
 the SQLAlchemy models directly, without relying on migrations.
 """
 from db_setup import engine
-from api.v1.core.models import Base, User, Token, Premium, User_history
+from api.v1.core.models import Base, User, Token, Premium, User_history, User_achievements
 
 def initialize_database():
     """
