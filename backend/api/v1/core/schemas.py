@@ -87,9 +87,17 @@ class PasswordResetConfirmSchema(BaseModel):
         }
         )
 
+class AchievementBase(BaseModel):
+    title: str
+    description: str
+
 class UserAchievementsOut(BaseModel):
     user_id: int
     achievement_id: int
     timestamp: datetime
-    
+    achievement: AchievementBase
+
+    class Config:
+        from_attributes = True
+
     

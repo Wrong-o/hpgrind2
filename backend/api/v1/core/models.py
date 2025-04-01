@@ -80,6 +80,7 @@ class Achievement(Base):
     title: Mapped[str] = mapped_column(String)
     description: Mapped[str] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=func.now())
+    user_achievements: Mapped[List["UserAchievements"]] = relationship(back_populates="achievement")
 
 class UserAchievements(Base):
     __tablename__ = "user_achievements"
@@ -91,3 +92,4 @@ class UserAchievements(Base):
         Integer,
         ForeignKey("achievements.id"))
     timestamp: Mapped[datetime] = mapped_column(DateTime, default=func.now())
+    achievement: Mapped["Achievement"] = relationship(back_populates="user_achievements")

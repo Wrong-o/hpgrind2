@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import authStore from '../store/authStore';
+import { useNavigate } from 'react-router-dom';
+
 function MainMenu() {
+  const navigate = useNavigate();
   const [showLogin, setShowLogin] = useState(false);
   const [showStats, setShowStats] = useState(false);
   const [showRoadMap, setShowRoadMap] = useState(false);
@@ -32,11 +35,13 @@ function MainMenu() {
     }
   };
 
-  const handleQuizStart = (testType) => {
-    setCurrentTest(testType);
-    setCurrentView('quiz');
+  function handleGrindQuizStart ()  {
+    navigate("/quiz");
   };
-
+  function logoutUser () {
+    logout();
+    navigate("/");
+  }
   const handleQuizComplete = (score) => {
     setFinalScore(score);
     setCurrentView('complete');
@@ -52,7 +57,7 @@ function MainMenu() {
                     <div className="mt-8 space-y-4">
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <button
-                              onClick={() => setShowDecisionTree(true)}
+                              onClick={() => handleGrindQuizStart()}
                               className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
                             >
                               Börja öva

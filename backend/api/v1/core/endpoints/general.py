@@ -9,16 +9,14 @@ from security import get_current_user
 router = APIRouter()
 
 
-@router.get("/users", status_code=200)
-def list_users(db: Session = Depends(get_db)):
-    users = db.scalars(select(User)).all()
-    if not users:
-        raise HTTPException(status_code=404, detail="No users found")
-    return users
-
 @router.get("/user_achievements", status_code=200, response_model=list[UserAchievementsOut])
 def get_user_achievements(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    achievements = db.query(UserAchievements).filter(UserAchievements.user_id == current_user.id).all()
+    achievements = (
+        db.query(UserAchievements)
+        .options(joinedload(UserAchievements.achievement))
+        .filter(UserAchievements.user_id == current_user.id)
+        .all()
+    )
     if not achievements:
         return []
     return achievements
