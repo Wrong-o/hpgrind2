@@ -100,4 +100,23 @@ class UserAchievementsOut(BaseModel):
     class Config:
         from_attributes = True
 
-    
+class UserAnswerIn(BaseModel):
+    user_id: int
+    category: str
+    subject: str
+    moment: str
+    difficulty: str
+    skipped: bool
+    time: int
+    correct: bool
+
+    model_config = ConfigDict(from_attributes=True)
+
+class UserHistoryOut(BaseModel):
+    category: str
+    subject: str
+    moment: str
+    difficulty: str
+    skipped: bool
+    time: int
+    correct: bool

@@ -9,7 +9,88 @@ const UserStatsPage = () => {
     const [error, setError] = useState(null);
     const [recommendedPath, setRecommendedPath] = useState("mememememem");
     const isLoggedIn = authStore((state) => state.isLoggedIn);
-
+    const [userHistory, setUserHistory] = useState([]);
+    
+    useEffect(() => {
+        const loadUserHistory = async () => {
+            try {
+                // Try to get cached user history first
+                const cachedData = getCachedUserHistory();
+                
+                if (cachedData) {
+                    console.log('Using cached user history data');
+                    setUserHistory(cachedData);
+                    return;
+                }
+                
+                // If no cache or it's stale, fetch fresh data
+                console.log('Fetching user history from API...');
+                const response = await fetch(`${import.meta.env.VITE_API_URL}/api/v1/general/user_history`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                    },
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to fetch user history');
+                }
+                
+                const data = await response.json();
+                console.log('User history fetched successfully:', data);
+                
+                // Cache the fetched data
+                cacheUserHistory(data);
+                
+                setUserHistory(data);
+            } catch (err) {
+                console.error('Error loading user history:', err);
+                // Don't set the error state here to avoid breaking the whole page
+                // if only the history section fails
+            }
+        };
+        
+        if (isLoggedIn && token) {
+            loadUserHistory();
+        }
+    }, [isLoggedIn, token]);
+    
+    // Function to get cached user history
+    const getCachedUserHistory = () => {
+        try {
+            const cachedDataString = localStorage.getItem('userHistory');
+            if (!cachedDataString) return null;
+            
+            const cachedData = JSON.parse(cachedDataString);
+            const cacheTimestamp = cachedData.timestamp;
+            const currentTime = new Date().getTime();
+            
+            // Cache is valid for 1 hour (3600000 ms)
+            if (currentTime - cacheTimestamp > 3600000) {
+                console.log('User history cache is stale, will fetch fresh data');
+                return null;
+            }
+            
+            return cachedData.history;
+        } catch (error) {
+            console.error('Error reading user history from cache:', error);
+            return null;
+        }
+    };
+    
+    // Function to cache user history
+    const cacheUserHistory = (data) => {
+        try {
+            const cacheData = {
+                history: data,
+                timestamp: new Date().getTime()
+            };
+            localStorage.setItem('userHistory', JSON.stringify(cacheData));
+            console.log('User history cached successfully');
+        } catch (error) {
+            console.error('Error caching user history:', error);
+        }
+    };
+    
     useEffect(() => {
         const loadAchievements = async () => {
             try {
@@ -114,9 +195,24 @@ const UserStatsPage = () => {
     const handleRefresh = async () => {
         try {
             setLoading(true);
-            const data = await fetchAchievements();
-            cacheAchievements(data);
-            setAchievements(data);
+            
+            // Refresh achievements
+            const achievementsData = await fetchAchievements();
+            cacheAchievements(achievementsData);
+            setAchievements(achievementsData);
+            
+            // Refresh user history
+            const historyResponse = await fetch(`${import.meta.env.VITE_API_URL}/api/v1/general/user_history`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                },
+            });
+            
+            if (historyResponse.ok) {
+                const historyData = await historyResponse.json();
+                cacheUserHistory(historyData);
+                setUserHistory(historyData);
+            }
         } catch (err) {
             setError(err.message);
         } finally {
@@ -241,8 +337,50 @@ const UserStatsPage = () => {
                         Frågehistorik
                     </h2>
                     <div className="bg-blue-50 rounded-lg p-4">
-                        {/* Placeholder for question history */}
-                        <p className="text-gray-600">Din frågehistorik visas här...</p>
+                        {userHistory.length > 0 ? (
+                            <div className="overflow-x-auto">
+                                <table className="min-w-full bg-white">
+                                    <thead>
+                                        <tr className="bg-blue-100 text-blue-700">
+                                            <th className="py-2 px-4 text-left">Kategori</th>
+                                            <th className="py-2 px-4 text-left">Fråga</th>
+                                            <th className="py-2 px-4 text-center">Korrekt</th>
+                                            <th className="py-2 px-4 text-left">Datum</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {userHistory.slice(0, 10).map((item, index) => (
+                                            <tr key={index} className={index % 2 === 0 ? "bg-white" : "bg-blue-50"}>
+                                                <td className="py-2 px-4">{item.category || "Okänd"}</td>
+                                                <td className="py-2 px-4">{item.question_text ? 
+                                                    (item.question_text.length > 30 ? 
+                                                        `${item.question_text.substring(0, 30)}...` : 
+                                                        item.question_text) : 
+                                                    "Ingen frågetext"}
+                                                </td>
+                                                <td className="py-2 px-4 text-center">
+                                                    {item.correct ? (
+                                                        <span className="text-green-500">✓</span>
+                                                    ) : (
+                                                        <span className="text-red-500">✗</span>
+                                                    )}
+                                                </td>
+                                                <td className="py-2 px-4">
+                                                    {new Date(item.created_at).toLocaleDateString('sv-SE')}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                                {userHistory.length > 10 && (
+                                    <div className="mt-4 text-center text-sm text-gray-500">
+                                        Visar de 10 senaste frågorna av {userHistory.length} totalt
+                                    </div>
+                                )}
+                            </div>
+                        ) : (
+                            <p className="text-gray-600">Du har inte besvarat några frågor än.</p>
+                        )}
                     </div>
                 </section>
             </div>

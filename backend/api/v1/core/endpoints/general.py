@@ -1,5 +1,5 @@
 from api.v1.core.models import User, UserAchievements, UserHistory
-from api.v1.core.schemas import UserAchievementsOut
+from api.v1.core.schemas import UserAchievementsOut, UserAnswerIn, UserHistoryOut
 from db_setup import get_db
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import delete, insert, select, update, func, distinct, case
@@ -31,7 +31,12 @@ def get_user_stats(db: Session = Depends(get_db), current_user: User = Depends(g
 
 @router.get("/category_stats", status_code=200, response_model=List[Dict[str, Any]])
 def get_category_stats(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    # Query to get statistics for each category from user history
+    """
+    Get statistics for each category from user_history table
+
+    Returns:
+        List[Dict[str, Any]]: A list of dictionaries containing the category, total answers, and correct answers
+    """
     category_stats = (
         db.query(
             UserHistory.category,
@@ -46,7 +51,6 @@ def get_category_stats(db: Session = Depends(get_db), current_user: User = Depen
         .all()
     )
     
-    # Format the results
     results = [
         {
             "category": stat.category,
@@ -56,8 +60,32 @@ def get_category_stats(db: Session = Depends(get_db), current_user: User = Depen
         for stat in category_stats
     ]
     
-    # Return empty list if no stats found
     if not results:
         return []
     
     return results
+
+@router.get("/user_history", status_code=200, response_model=List[UserHistoryOut])
+def get_user_history(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """
+    Get the user's question history
+    
+    Returns:
+        List[UserHistoryOut]: A list of the user's question history
+    """
+    try:
+        user_history = (
+            db.query(UserHistory)
+            .filter(UserHistory.user_id == current_user.id)
+            .order_by(UserHistory.created_at.desc())  # Sort by newest first
+            .all()
+        )
+        
+        if not user_history:
+            return []
+        
+        return user_history
+    except Exception as e:
+        # Log the error but return an empty list rather than throwing an exception
+        print(f"Error fetching user history: {str(e)}")
+        return []

@@ -34,7 +34,7 @@ class Premium(Base):
     expiration_date: Mapped[datetime] = mapped_column(DateTime)
 
 
-class User_history(Base):
+class UserHistory(Base):
     __tablename__ = "user_history"
 
     user_id: Mapped[int] = mapped_column(
