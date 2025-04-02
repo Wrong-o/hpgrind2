@@ -89,3 +89,61 @@ def get_user_history(db: Session = Depends(get_db), current_user: User = Depends
         # Log the error but return an empty list rather than throwing an exception
         print(f"Error fetching user history: {str(e)}")
         return []
+    
+@router.post("/submit_quiz_answer", status_code=200)
+def submit_quiz_answer(answer: UserAnswerIn, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """
+    Submit a user's answer to a question
+    
+    Args:
+        answer (UserAnswerIn): The user's answer to a question
+        
+    Returns:
+        str: A success message
+    """
+    try:
+        # Check if this specific question has already been answered by the user
+        existing_answer = db.query(UserHistory).filter(
+            UserHistory.user_id == current_user.id,
+            UserHistory.category == answer.category,
+            UserHistory.subject == answer.subject,
+            UserHistory.moment == answer.moment,
+            UserHistory.question_id == answer.question_id
+        ).first()
+        
+        if existing_answer:
+            # Update existing record
+            existing_answer.answer = answer.answer
+            existing_answer.correct = answer.correct
+            db.commit()
+            return {"status": "success", "message": "Answer updated successfully"}
+        else:
+            # Create new user history record
+            new_history = UserHistory(
+                user_id=current_user.id,
+                category=answer.category,
+                subject=answer.subject,
+                moment=answer.moment,
+                question_id=answer.question_id,
+                question_text=answer.question_text,
+                answer=answer.answer,
+                correct=answer.correct,
+                difficulty=answer.difficulty
+            )
+            db.add(new_history)
+            db.commit()
+            return {"status": "success", "message": "Answer submitted successfully"}
+            
+    except IntegrityError as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Database integrity error: {str(e)}"
+        )
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error submitting answer: {str(e)}"
+        )
+    

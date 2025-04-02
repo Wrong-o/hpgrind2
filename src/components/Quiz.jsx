@@ -86,8 +86,18 @@ const Quiz = () => {
       setLoading(false);
     }
   };
-  
-  // Get current question data
+  const submitAnswer = async (answer) => {
+    console.log("Submitting answer:", answer);
+    const response = await fetch(`${import.meta.env.VITE_API_URL}/api/v1/general/submit_quiz_answer`, {
+      method: "POST",
+      body: JSON.stringify(answer)
+    });
+    if (!response.ok) {
+      throw new Error("Failed to submit answer");
+    }
+    const data = await response.json();
+    console.log("Answer submitted:", data);
+  };
   const currentQuestion = questions[currentQuestionIndex] || {
     question: "",
     options: []
@@ -99,6 +109,7 @@ const Quiz = () => {
   
   const handleCheckAnswer = () => {
     setShowAnswer(true);
+    submitAnswer(currentQuestion);
   };
   
   const handleNextQuestion = () => {
