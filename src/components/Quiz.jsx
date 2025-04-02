@@ -1,11 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
-;
 import QuestionBox from './quiz-components/QuestionBox';
 import AnswerButton from './quiz-components/AnswerButton';
 import LoadingScreen from './quiz-components/LoadingScreen';
-
-const SOUNDS = {
-};
+import authStore from '../store/authStore';
+import SkipButton from './quiz-components/SkipButton';
 
 const Quiz = () => {
   const [selectedAnswer, setSelectedAnswer] = useState(null);
@@ -14,7 +12,9 @@ const Quiz = () => {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [skipped, setSkipped] = useState(false);
   const fetchedRef = useRef(false);
+  const startTimeRef = useRef(Date.now());
   
   useEffect(() => {
     // Only run if not already fetched - prevents duplicate calls in StrictMode
@@ -22,6 +22,11 @@ const Quiz = () => {
     
     fetchQuestions();
   }, []);
+  
+  // Reset timer when moving to a new question
+  useEffect(() => {
+    startTimeRef.current = Date.now();
+  }, [currentQuestionIndex]);
   
   // Define fetchQuestions as async function
   const fetchQuestions = async () => {
@@ -73,7 +78,8 @@ const Quiz = () => {
         explanation: data.explanation,
         subject: data.subject,
         category: data.category,
-        difficulty: data.difficulty
+        difficulty: data.difficulty,
+        moment: data.moment || "operations_order" // Ensure moment is available
       }));
       
       console.log("Formatted questions:", formattedQuestions);
@@ -86,30 +92,117 @@ const Quiz = () => {
       setLoading(false);
     }
   };
-  const submitAnswer = async (answer) => {
-    console.log("Submitting answer:", answer);
-    const response = await fetch(`${import.meta.env.VITE_API_URL}/api/v1/general/submit_quiz_answer`, {
-      method: "POST",
-      body: JSON.stringify(answer)
-    });
-    if (!response.ok) {
-      throw new Error("Failed to submit answer");
-    }
-    const data = await response.json();
-    console.log("Answer submitted:", data);
-  };
-  const currentQuestion = questions[currentQuestionIndex] || {
-    question: "",
-    options: []
-  };
   
   const handleAnswerClick = (id) => {
     setSelectedAnswer(id);
   };
   
-  const handleCheckAnswer = () => {
+  // Handle skipping a question
+  const handleSkip = async () => {
+    if (showAnswer) return;
+    
+    const timeSpent = Math.floor((Date.now() - startTimeRef.current) / 1000);
+    
+    if (authStore.getState().isLoggedIn) {
+      try {
+        const question = questions[currentQuestionIndex];
+        
+        const skipData = {
+          category: question.category,
+          subject: question.subject,
+          moment: question.moment,
+          difficulty: question.difficulty,
+          skipped: true,
+          correct: false,
+          time_spent: timeSpent,
+        };
+        
+        console.log("Recording skipped question:", skipData);
+        
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/v1/general/submit_quiz_answer`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${authStore.getState().token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(skipData)
+        });
+        
+        const result = await response.json();
+        console.log("Skip recorded:", result);
+      } catch (error) {
+        console.error("Error recording skip:", error);
+      }
+    }
+    
+    // Move to the next question
+    setSelectedAnswer(null);
+    
+    if (currentQuestionIndex < questions.length - 1) {
+      setCurrentQuestionIndex(currentQuestionIndex + 1);
+    } else {
+      // If this is the last question, handle completion
+      console.log("Quiz completed by skipping the last question");
+      // You could redirect to a results page or show a completion message
+    }
+  };
+  
+  const handleCheckAnswer = async () => {
     setShowAnswer(true);
-    submitAnswer(currentQuestion);
+    
+    // Don't submit answers if not logged in
+    if (!authStore.getState().isLoggedIn) {
+      console.log("User not logged in. Answer not submitted.");
+      return;
+    }
+    
+    try {
+      // Calculate time spent on this question
+      const timeSpent = Math.floor((Date.now() - startTimeRef.current) / 1000);
+      
+      // Get the current question data
+      const question = questions[currentQuestionIndex];
+      // Get the selected option
+      const selectedOption = question.options[selectedAnswer];
+      
+      // Create a customized answer object - only include what you need
+      const answerData = {
+        // Essential fields for identifying the question
+        question_id: question.id.toString(),
+        category: question.category || "Grundläggande",
+        subject: question.subject || "Kvantitativa",
+        moment: question.moment || "operations_order",
+        
+        // Selected answer data
+        answer: selectedOption.latex,
+        correct: selectedOption.isCorrect,
+        
+        // Additional fields
+        question_text: question.question.substring(0, 100), // Truncate long questions
+        difficulty: question.difficulty || 1,
+        skipped: false,
+        time_spent: timeSpent
+      };
+      
+      console.log("Submitting answer:", answerData);
+      
+      // Submit the answer
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/v1/general/submit_quiz_answer`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${authStore.getState().token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(answerData)
+      });
+      
+      const result = await response.json();
+      console.log("Answer submission result:", result);
+      
+    } catch (error) {
+      console.error("Error submitting answer:", error);
+      // Optional: Show a notification to the user that their progress wasn't saved
+    }
   };
   
   const handleNextQuestion = () => {
@@ -119,7 +212,17 @@ const Quiz = () => {
     // Move to next question if available
     if (currentQuestionIndex < questions.length - 1) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
+    } else {
+      // If this is the last question, handle completion
+      console.log("Quiz completed!");
+      // You could redirect to a results page or show a completion message
     }
+  };
+
+  // Get current question data
+  const currentQuestion = questions[currentQuestionIndex] || {
+    question: "",
+    options: []
   };
 
   if (loading) {
@@ -184,23 +287,29 @@ const Quiz = () => {
         {/* Controls */}
         <div className="flex justify-center mt-4 gap-4">
           {!showAnswer ? (
-            <button 
-              onClick={handleCheckAnswer}
-              disabled={selectedAnswer === null}
-              className={`px-6 py-2 rounded-lg font-medium ${
-                selectedAnswer !== null
-                  ? "bg-blue-600 hover:bg-blue-700 text-white"
-                  : "bg-gray-300 text-gray-500 cursor-not-allowed"
-              }`}
-            >
-              Kolla svar
-            </button>
+            <>
+              <SkipButton 
+                onClick={handleSkip}
+                showAnswer={showAnswer} 
+              />
+              <button 
+                onClick={handleCheckAnswer}
+                disabled={selectedAnswer === null}
+                className={`px-6 py-2 rounded-lg font-medium ${
+                  selectedAnswer !== null
+                    ? "bg-blue-600 hover:bg-blue-700 text-white"
+                    : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                }`}
+              >
+                Kolla svar
+              </button>
+            </>
           ) : (
             <button 
               onClick={handleNextQuestion}
               className="px-6 py-2 rounded-lg font-medium bg-green-600 hover:bg-green-700 text-white"
             >
-              {currentQuestionIndex < questions.length - 1 ? "Next Question" : "Finish Quiz"}
+              {currentQuestionIndex < questions.length - 1 ? "Nästa fråga" : "Avsluta quiz"}
             </button>
           )}
         </div>

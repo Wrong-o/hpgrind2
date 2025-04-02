@@ -1,4 +1,5 @@
 from pydantic import BaseModel, Field, ConfigDict, EmailStr, field_validator
+from typing import Optional
 from datetime import datetime
 from enum import Enum
 import re
@@ -106,7 +107,7 @@ class UserAnswerIn(BaseModel):
     subject: str
     moment: str
     difficulty: str
-    skipped: bool
+    skipped: Optional[bool] = 0 
     time: int
     correct: bool
 
