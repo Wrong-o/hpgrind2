@@ -21,7 +21,7 @@ const AnswerButton = ({
     stateClasses = "bg-green-100 hover:bg-green-200 border-green-500 text-green-800";
   } else if (isSelected && !isCorrect) {
     // Selected but incorrect answer
-    stateClasses = "bg-red-100 hover:bg-red-200 border-red-500 text-red-800";
+    stateClasses = "bg-indigo-100 hover:bg-indigo-200 border-indigo-500 text-indigo-800";
   } else if (isCorrect) {
     // Correct answer (revealed state)
     stateClasses = "bg-green-50 hover:bg-green-100 border-green-300 text-green-700";

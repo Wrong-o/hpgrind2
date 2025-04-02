@@ -48,6 +48,7 @@ class User_history(Base):
     difficulty: Mapped[str] = mapped_column(String)
     skipped: Mapped[bool] = mapped_column(Boolean, default=False)
     time_spent: Mapped[int] = mapped_column(Integer)
+    correct: Mapped[bool] = mapped_column(Boolean, default=False)
 
 
 class Token(Base):

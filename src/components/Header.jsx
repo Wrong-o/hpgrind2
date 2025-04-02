@@ -81,7 +81,9 @@ const Header = () => {
       }
     }
   };
-
+  const handleMainMenuClick = () => {
+    navigate('/main-menu');
+  };
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
   };
@@ -116,6 +118,14 @@ const Header = () => {
     </>
   ) : (
     <>
+      <li className="mb-2 md:mb-0">
+        <button
+          onClick={handleMainMenuClick}
+          className="w-full md:w-auto px-4 py-2 bg-transparent hover:bg-blue-500 text-white border border-white rounded-lg transition-colors"
+        >
+         Huvudmeny
+        </button>
+      </li>
       <li className="mb-2 md:mb-0">
         <button
           onClick={handleUserStatsClick}

@@ -1,7 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
+;
 import QuestionBox from './quiz-components/QuestionBox';
 import AnswerButton from './quiz-components/AnswerButton';
 import LoadingScreen from './quiz-components/LoadingScreen';
+
+const SOUNDS = {
+};
 
 const Quiz = () => {
   const [selectedAnswer, setSelectedAnswer] = useState(null);
@@ -25,7 +29,7 @@ const Quiz = () => {
       setLoading(true);
       
       // Number of questions to fetch
-      const questionCount = 12;
+      const questionCount = 5;
       
       console.log("Fetching questions from batch endpoint...");
       const requestBody = {
@@ -142,9 +146,8 @@ const Quiz = () => {
           ></div>
         </div>
         
-        {/* Question counter */}
         <div className="text-gray-500 text-sm font-medium">
-          Question {currentQuestionIndex + 1} of {questions.length}
+          Fråga {currentQuestionIndex + 1} av {questions.length}
         </div>
         
         {/* Question Box - displayed prominently above answers */}
