@@ -106,9 +106,9 @@ class UserAnswerIn(BaseModel):
     category: str
     subject: str
     moment: str
-    difficulty: str
-    skipped: Optional[bool] = 0 
-    time: int
+    difficulty: int 
+    skipped: bool
+    time_spent: int
     correct: bool
 
     model_config = ConfigDict(from_attributes=True)
@@ -117,7 +117,7 @@ class UserHistoryOut(BaseModel):
     category: str
     subject: str
     moment: str
-    difficulty: int
+    difficulty: int 
     skipped: bool
     time: int
     correct: bool
