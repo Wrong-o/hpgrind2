@@ -101,64 +101,6 @@ def submit_quiz_answer(answer: UserAnswerIn, db: Session = Depends(get_db), curr
     Returns:
         dict: A status and message about the operation
     """
-    try:
-        # Check if this specific question has already been answered by the user
-        existing_answer = db.query(UserHistory).filter(
-            UserHistory.user_id == current_user.id,
-            UserHistory.question_id == answer.question_id
-        ).first()
-        
-        if existing_answer:
-            # Update existing record
-            existing_answer.answer = answer.answer
-            existing_answer.correct = answer.correct
-            # Only update optional fields if they are provided
-            if answer.category:
-                existing_answer.category = answer.category
-            if answer.subject:
-                existing_answer.subject = answer.subject
-            if answer.moment:
-                existing_answer.moment = answer.moment
-            if answer.question_text:
-                existing_answer.question_text = answer.question_text
-            if answer.difficulty:
-                existing_answer.difficulty = answer.difficulty
-                
-            db.commit()
-            return {"status": "success", "message": "Answer updated successfully"}
-        else:
-            # Create new user history record
-            new_history = UserHistory(
-                user_id=current_user.id,
-                question_id=answer.question_id,
-                answer=answer.answer,
-                correct=answer.correct,
-                # Include optional fields
-                category=answer.category,
-                subject=answer.subject,
-                moment=answer.moment,
-                question_text=answer.question_text,
-                difficulty=answer.difficulty,
-                # Set default values for other fields
-                skipped=False,
-                time_spent=0  # Default if not provided
-            )
-            db.add(new_history)
-            db.commit()
-            return {"status": "success", "message": "Answer submitted successfully"}
-            
-    except IntegrityError as e:
-        db.rollback()
-        print(f"Database integrity error: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Database integrity error: {str(e)}"
-        )
-    except Exception as e:
-        db.rollback()
-        print(f"Error submitting answer: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error submitting answer: {str(e)}"
-        )
-    
+    user = get_current_user(db, answer.token)
+    print(user)
+    return 0

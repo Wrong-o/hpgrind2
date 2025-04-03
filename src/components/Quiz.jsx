@@ -97,55 +97,6 @@ const Quiz = () => {
     setSelectedAnswer(id);
   };
   
-  // Handle skipping a question
-  const handleSkip = async () => {
-    if (showAnswer) return;
-    
-    const timeSpent = Math.floor((Date.now() - startTimeRef.current) / 1000);
-    
-    if (authStore.getState().isLoggedIn) {
-      try {
-        const question = questions[currentQuestionIndex];
-        
-        const skipData = {
-          category: question.category,
-          subject: question.subject,
-          moment: question.moment,
-          difficulty: question.difficulty,
-          skipped: true,
-          correct: false,
-          time_spent: timeSpent,
-        };
-        
-        console.log("Recording skipped question:", skipData);
-        
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/v1/general/submit_quiz_answer`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${authStore.getState().token}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(skipData)
-        });
-        
-        const result = await response.json();
-        console.log("Skip recorded:", result);
-      } catch (error) {
-        console.error("Error recording skip:", error);
-      }
-    }
-    
-    // Move to the next question
-    setSelectedAnswer(null);
-    
-    if (currentQuestionIndex < questions.length - 1) {
-      setCurrentQuestionIndex(currentQuestionIndex + 1);
-    } else {
-      // If this is the last question, handle completion
-      console.log("Quiz completed by skipping the last question");
-      // You could redirect to a results page or show a completion message
-    }
-  };
   
   const handleCheckAnswer = async () => {
     setShowAnswer(true);
@@ -168,20 +119,14 @@ const Quiz = () => {
       // Create a customized answer object - only include what you need
       const answerData = {
         // Essential fields for identifying the question
-        question_id: question.id.toString(),
-        category: question.category || "Grundläggande",
-        subject: question.subject || "Kvantitativa",
-        moment: question.moment || "operations_order",
-        
-        // Selected answer data
-        answer: selectedOption.latex,
+        token: authStore.getState().token,
+        subject: question.subject,
+        category: question.category,
+        moment: question.moment,
+        difficulty: question.difficulty,
+        skipped: skipped,
+        time_spent: timeSpent,
         correct: selectedOption.isCorrect,
-        
-        // Additional fields
-        question_text: question.question.substring(0, 100), // Truncate long questions
-        difficulty: question.difficulty || 1,
-        skipped: false,
-        time_spent: timeSpent
       };
       
       console.log("Submitting answer:", answerData);
@@ -201,10 +146,12 @@ const Quiz = () => {
       
     } catch (error) {
       console.error("Error submitting answer:", error);
-      // Optional: Show a notification to the user that their progress wasn't saved
     }
   };
-  
+  const handleSkip = () => {
+    setSkipped(true);
+    handleCheckAnswer();
+  };
   const handleNextQuestion = () => {
     setSelectedAnswer(null);
     setShowAnswer(false);

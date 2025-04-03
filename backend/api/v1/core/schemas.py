@@ -102,7 +102,7 @@ class UserAchievementsOut(BaseModel):
         from_attributes = True
 
 class UserAnswerIn(BaseModel):
-    user_id: int
+    token: str
     category: str
     subject: str
     moment: str
@@ -117,7 +117,7 @@ class UserHistoryOut(BaseModel):
     category: str
     subject: str
     moment: str
-    difficulty: str
+    difficulty: int
     skipped: bool
     time: int
     correct: bool
