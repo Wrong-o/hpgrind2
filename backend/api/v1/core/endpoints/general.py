@@ -102,5 +102,4 @@ def submit_quiz_answer(answer: UserAnswerIn, db: Session = Depends(get_db), curr
         dict: A status and message about the operation
     """
     user = get_current_user(token=answer.token, db=db)
-    user_id = user.id
-    return user_id
+    return user.id

@@ -143,7 +143,6 @@ const Quiz = () => {
       
       const result = await response.json();
       console.log("Answer submission result:", result);
-      
     } catch (error) {
       console.error("Error submitting answer:", error);
     }
@@ -155,7 +154,7 @@ const Quiz = () => {
   const handleNextQuestion = () => {
     setSelectedAnswer(null);
     setShowAnswer(false);
-    
+    setSkipped(false);
     // Move to next question if available
     if (currentQuestionIndex < questions.length - 1) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);

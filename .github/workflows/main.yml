@@ -1,28 +1,59 @@
-name: Deploy on EC2
+name: Deploy Backend to EC2
 
 on:
   push:
     branches:
       - main
     paths:
-      - 'backend/**    
+      - 'backend/**'  
+
 jobs:
   deploy:
-    runs-on: debian-latest
+    runs-on: ubuntu-latest
 
     steps:
-    - name: Checkhout code
+    - name: Checkout code
       uses: actions/checkout@v2
 
-    - name: Set up SSH
+    - name: Configure SSH
       env:
         SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
+        SSH_KNOWN_HOSTS: ${{ secrets.EC2_KNOWN_HOSTS }}
       run: |
-        mkdir -p ~/.shh
-        echo "$SSH_PRIVATE_KEY" > ~/.shh/id_rsa
-        chmod 600 ~/.shh/id-rsa
-        ssh-keyscan -H ${{ secrets.EC2_HOSTNAME }} >> ~/.shh/known_hosts
+        mkdir -p ~/.ssh
+        echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+        echo "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
 
-      - name: Build Docker Image
-        run: |
+    - name: Copy files to EC2
+      env:
+        EC2_HOST: ${{ secrets.EC2_HOST }}
+        EC2_USERNAME: ${{ secrets.EC2_USERNAME }}
+      run: |
+        rsync -avz --delete \
+          -e "ssh -i ~/.ssh/id_rsa" \
+          ./backend/ \
+          $EC2_USERNAME@$EC2_HOST:/home/$EC2_USERNAME/app/backend/
         
+        rsync -avz \
+          -e "ssh -i ~/.ssh/id_rsa" \
+          ./docker-compose.yml \
+          $EC2_USERNAME@$EC2_HOST:/home/$EC2_USERNAME/app/
+        
+        rsync -avz \
+          -e "ssh -i ~/.ssh/id_rsa" \
+          ./Dockerfile \
+          $EC2_USERNAME@$EC2_HOST:/home/$EC2_USERNAME/app/
+
+    - name: Deploy with Docker Compose
+      env:
+        EC2_HOST: ${{ secrets.EC2_HOST }}
+        EC2_USERNAME: ${{ secrets.EC2_USERNAME }}
+      run: |
+        ssh -i ~/.ssh/id_rsa $EC2_USERNAME@$EC2_HOST '
+          cd /home/$EC2_USERNAME/app && 
+          echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" > .env &&
+          echo "SECRET_KEY=${{ secrets.SECRET_KEY }}" >> .env &&
+          docker-compose down &&
+          docker-compose up -d --build
+        '
