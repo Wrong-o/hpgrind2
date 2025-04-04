@@ -1,0 +1,28 @@
+name: Deploy on EC2
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'backend/**    
+jobs:
+  deploy:
+    runs-on: debian-latest
+
+    steps:
+    - name: Checkhout code
+      uses: actions/checkout@v2
+
+    - name: Set up SSH
+      env:
+        SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
+      run: |
+        mkdir -p ~/.shh
+        echo "$SSH_PRIVATE_KEY" > ~/.shh/id_rsa
+        chmod 600 ~/.shh/id-rsa
+        ssh-keyscan -H ${{ secrets.EC2_HOSTNAME }} >> ~/.shh/known_hosts
+
+      - name: Build Docker Image
+        run: |
+        
