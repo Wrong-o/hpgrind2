@@ -34,6 +34,10 @@ def login(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
     db: Session = Depends(get_db),
 ) -> TokenSchema:
+    """
+    Login a user
+    This endpoint validates the user's credentials and returns an access token
+    """
     user = (
         db.execute(
             select(User).where(User.email == form_data.username),
