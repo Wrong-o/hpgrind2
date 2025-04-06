@@ -26,7 +26,7 @@ def generate_password_reset_token(user_id: int, db: Session) -> str:
     db.commit()
 
     return token
-
+#
 def send_password_reset_email(email: str, token: str):
     """
     Send a password reset email using Postmark API

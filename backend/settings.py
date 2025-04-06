@@ -14,13 +14,11 @@ class Settings(BaseSettings):
     POSTMARK_TOKEN: str
     FRONTEND_BASE_URL: str
     
-    # CORS settings
-    CORS_ORIGINS: list[str] = []
-    
     # Environment
     ENV: str = "development"
 
-    def get_cors_origins(self):
+    @property
+    def cors_origins(self) -> list[str]:
         if self.ENV == "development":
             return [
                 "http://localhost:3000",
@@ -28,10 +26,6 @@ class Settings(BaseSettings):
                 self.FRONTEND_BASE_URL
             ]
         return [self.FRONTEND_BASE_URL]
-
-    @property
-    def cors_origins(self) -> list[str]:
-        return self.get_cors_origins()
 
     model_config = SettingsConfigDict(
         env_file=".env",

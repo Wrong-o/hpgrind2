@@ -13,7 +13,6 @@ services:
       - POSTMARK_TOKEN=${POSTMARK_TOKEN}
       - FRONTEND_BASE_URL=${FRONTEND_BASE_URL}
       - ENV=production
-      - CORS_ORIGINS=["https://www.hpggrind.se"]
     volumes:
       - ./backend:/app/backend
       - ./certs:/app/certs
