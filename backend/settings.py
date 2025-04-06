@@ -3,26 +3,35 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
     # Database settings
-    DB_URL: str = "postgresql://postgres:postgres@db:5432/hpg"
+    DB_URL: str
     
     # Security settings
-    SECRET_KEY: str = "your-secret-key-here"
+    SECRET_KEY: str
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 120
     PASSWORD_RESET_TOKEN_EXPIRE_MINUTES: int = 60
     
     # Service settings
-    POSTMARK_TOKEN: str = "dummy-token"  # Default value for development
-    FRONTEND_BASE_URL: str = "https://www.hpggrind.se"  # Update this with your Vercel domain
+    POSTMARK_TOKEN: str
+    FRONTEND_BASE_URL: str
     
     # CORS settings
-    CORS_ORIGINS: list[str] = [
-        "http://localhost:3000",  # Local development
-        "http://localhost:5173",  # Vite dev server
-        "https://www.hpggrind.se",  # Production Vercel domain
-    ]
+    CORS_ORIGINS: list[str] = []
     
     # Environment
     ENV: str = "development"
+
+    def get_cors_origins(self):
+        if self.ENV == "development":
+            return [
+                "http://localhost:3000",
+                "http://localhost:5173",
+                self.FRONTEND_BASE_URL
+            ]
+        return [self.FRONTEND_BASE_URL]
+
+    @property
+    def cors_origins(self) -> list[str]:
+        return self.get_cors_origins()
 
     model_config = SettingsConfigDict(
         env_file=".env",

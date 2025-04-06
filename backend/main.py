@@ -21,6 +21,8 @@ async def lifespan(app: FastAPI):
         print("Initializing database schema...")
         Base.metadata.create_all(bind=engine)
         print("Database schema initialized successfully.")
+        print(f"Running in {settings.ENV} mode")
+        print(f"CORS origins: {settings.cors_origins}")
     except Exception as e:
         print(f"Error initializing database schema: {str(e)}")
     
@@ -33,7 +35,7 @@ app.include_router(router, prefix="/api/v1")
 # CORS Configuration - updated for production security
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.CORS_ORIGINS,
+    allow_origins=settings.cors_origins,
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["Authorization", "Content-Type"],
