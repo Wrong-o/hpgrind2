@@ -132,6 +132,7 @@ def read_user_me(
     """
     Get the current user's information
     This endpoint returns the current user's information
+    
     """
     return current_user
 
