@@ -28,6 +28,16 @@ jobs:
           StrictHostKeyChecking no
           UserKnownHostsFile=/dev/null" > ~/.ssh/config
           
+    - name: Get remote home directory
+      env:
+        EC2_HOST: ${{ secrets.EC2_HOST }}
+        EC2_USERNAME: ${{ secrets.EC2_USERNAME }}
+      id: get_home
+      run: |
+        REMOTE_HOME=$(ssh -i ~/.ssh/ec2-key.pem $EC2_USERNAME@$EC2_HOST 'echo $HOME')
+        echo "REMOTE_HOME=$REMOTE_HOME" >> $GITHUB_ENV
+        echo "Remote home directory: $REMOTE_HOME"
+
     - name: Debug SSH connection
       env:
         EC2_HOST: ${{ secrets.EC2_HOST }}
@@ -41,18 +51,18 @@ jobs:
         EC2_HOST: ${{ secrets.EC2_HOST }}
         EC2_USERNAME: ${{ secrets.EC2_USERNAME }}
       run: |
-        # First create the app directory structure
-        ssh -i ~/.ssh/ec2-key.pem $EC2_USERNAME@$EC2_HOST "mkdir -p \$HOME/app/backend"
+        # First create the app directory structure with explicit path
+        ssh -i ~/.ssh/ec2-key.pem $EC2_USERNAME@$EC2_HOST "mkdir -p $REMOTE_HOME/app/backend"
         
-        # Use scp instead of rsync
+        # Use scp with explicit remote path
         echo "Copying backend directory..."
-        scp -i ~/.ssh/ec2-key.pem -r ./backend/* $EC2_USERNAME@$EC2_HOST:$HOME/app/backend/
+        scp -i ~/.ssh/ec2-key.pem -r ./backend/* $EC2_USERNAME@$EC2_HOST:$REMOTE_HOME/app/backend/
         
         echo "Copying docker-compose.yml..."
-        scp -i ~/.ssh/ec2-key.pem ./docker-compose.yml $EC2_USERNAME@$EC2_HOST:$HOME/app/
+        scp -i ~/.ssh/ec2-key.pem ./docker-compose.yml $EC2_USERNAME@$EC2_HOST:$REMOTE_HOME/app/
         
         echo "Copying Dockerfile..."
-        scp -i ~/.ssh/ec2-key.pem ./Dockerfile $EC2_USERNAME@$EC2_HOST:$HOME/app/
+        scp -i ~/.ssh/ec2-key.pem ./Dockerfile $EC2_USERNAME@$EC2_HOST:$REMOTE_HOME/app/
 
     - name: Install Docker and Docker Compose
       env:
@@ -99,7 +109,7 @@ jobs:
         SECRET_KEY: ${{ secrets.SECRET_KEY }}
       run: |
         ssh -i ~/.ssh/ec2-key.pem $EC2_USERNAME@$EC2_HOST "
-          cd \$HOME/app && 
+          cd $REMOTE_HOME/app && 
           echo \"DATABASE_URL=$DATABASE_URL\" > .env &&
           echo \"SECRET_KEY=$SECRET_KEY\" >> .env &&
           

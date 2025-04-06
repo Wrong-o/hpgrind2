@@ -27,6 +27,9 @@ def get_user_achievements(db: Session = Depends(get_db), current_user: User = De
 
 @router.get("/user_stats", status_code=200)
 def get_user_stats(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """
+    Get the user's stats
+    """
     user = db.query(User).filter(User.id == current_user.id).first()
     if not user:
         raise HTTPException(status_code=404, detail="Logga in för att få rekomenderade uppgifter")
