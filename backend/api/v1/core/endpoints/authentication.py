@@ -61,6 +61,10 @@ def login(
 def register_user(
     user: UserRegisterSchema, db: Session = Depends(get_db)
 ) -> UserOutSchema:
+    """
+    Register a new user
+    This endpoint creates a new user in the database
+    """
     # Check if email already exists
     existing_user = db.execute(
         select(User).where(User.email == user.email)
