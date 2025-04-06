@@ -46,13 +46,10 @@ jobs:
         echo "Testing connection to $EC2_HOST as user $EC2_USERNAME..."
         ssh -i ~/.ssh/ec2-key.pem $EC2_USERNAME@$EC2_HOST 'echo SSH connection successful; echo User home: $HOME; ls -la $HOME'
 
-    - name: Prepare Docker files
+    - name: Create docker-compose.yml
       run: |
-        # Check if docker-compose.yml exists, if not create a default one
-        if [ ! -f "./docker-compose.yml" ]; then
-          echo "Creating default docker-compose.yml file"
-          cat > ./docker-compose.yml << EOF
-version: '3'
+        echo "Creating docker-compose.yml file"
+        echo 'version: "3"
 
 services:
   backend:
@@ -63,15 +60,12 @@ services:
     env_file:
       - .env
     volumes:
-      - ./backend:/app/backend
-EOF
-        fi
-        
-        # Check if Dockerfile exists, if not create a default one
-        if [ ! -f "./Dockerfile" ]; then
-          echo "Creating default Dockerfile"
-          cat > ./Dockerfile << EOF
-FROM python:3.9-slim
+      - ./backend:/app/backend' > docker-compose.yml
+
+    - name: Create Dockerfile
+      run: |
+        echo "Creating Dockerfile"
+        echo 'FROM python:3.9-slim
 
 WORKDIR /app
 
@@ -82,9 +76,7 @@ COPY backend /app/backend
 
 WORKDIR /app/backend
 
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
-EOF
-        fi
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]' > Dockerfile
 
     - name: Copy files to EC2 using SCP
       env:
@@ -141,6 +133,29 @@ EOF
           fi
         "
 
+    - name: Create requirements.txt on EC2
+      env:
+        EC2_HOST: ${{ secrets.EC2_HOST }}
+        EC2_USERNAME: ${{ secrets.EC2_USERNAME }}
+      run: |
+        ssh -i ~/.ssh/ec2-key.pem $EC2_USERNAME@$EC2_HOST "
+          if [ ! -f $REMOTE_HOME/app/backend/requirements.txt ]; then
+            echo 'Creating requirements.txt'
+            cat > $REMOTE_HOME/app/backend/requirements.txt << EOL
+fastapi>=0.68.0
+uvicorn>=0.15.0
+sqlalchemy>=1.4.23
+psycopg2-binary>=2.9.1
+python-jose>=3.3.0
+passlib>=1.7.4
+python-multipart>=0.0.5
+pydantic>=1.8.2
+bcrypt>=3.2.0
+python-dotenv>=0.19.0
+EOL
+          fi
+        "
+
     - name: Deploy with Docker Compose
       env:
         EC2_HOST: ${{ secrets.EC2_HOST }}
@@ -152,23 +167,6 @@ EOF
           cd $REMOTE_HOME/app && 
           echo \"DATABASE_URL=$DATABASE_URL\" > .env &&
           echo \"SECRET_KEY=$SECRET_KEY\" >> .env &&
-          
-          # Check if requirements.txt exists, create if needed
-          if [ ! -f ./backend/requirements.txt ]; then
-            echo 'Creating default requirements.txt'
-            cat > ./backend/requirements.txt << 'EOF'
-fastapi>=0.68.0
-uvicorn>=0.15.0
-sqlalchemy>=1.4.23
-psycopg2-binary>=2.9.1
-python-jose>=3.3.0
-passlib>=1.7.4
-python-multipart>=0.0.5
-pydantic>=1.8.2
-bcrypt>=3.2.0
-python-dotenv>=0.19.0
-EOF
-          fi
           
           # Run docker-compose
           docker-compose down || echo 'No existing containers to stop'

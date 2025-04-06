@@ -108,6 +108,10 @@ def logout(
     current_token: Token = Depends(get_current_token),
     db: Session = Depends(get_db),
 ):
+    """
+    Logout a user
+    This endpoint invalidates the user's current token
+    """
     db.execute(delete(Token).where(Token.token == current_token.token))
     db.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)
