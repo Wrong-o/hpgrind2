@@ -51,7 +51,7 @@ jobs:
         # Check if docker-compose.yml exists, if not create a default one
         if [ ! -f "./docker-compose.yml" ]; then
           echo "Creating default docker-compose.yml file"
-          cat > ./docker-compose.yml << 'EOL'
+          cat > ./docker-compose.yml << EOF
 version: '3'
 
 services:
@@ -64,13 +64,13 @@ services:
       - .env
     volumes:
       - ./backend:/app/backend
-EOL
+EOF
         fi
         
         # Check if Dockerfile exists, if not create a default one
         if [ ! -f "./Dockerfile" ]; then
           echo "Creating default Dockerfile"
-          cat > ./Dockerfile << 'EOL'
+          cat > ./Dockerfile << EOF
 FROM python:3.9-slim
 
 WORKDIR /app
@@ -83,7 +83,7 @@ COPY backend /app/backend
 WORKDIR /app/backend
 
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
-EOL
+EOF
         fi
 
     - name: Copy files to EC2 using SCP
@@ -156,7 +156,7 @@ EOL
           # Check if requirements.txt exists, create if needed
           if [ ! -f ./backend/requirements.txt ]; then
             echo 'Creating default requirements.txt'
-            cat > ./backend/requirements.txt << 'EOL'
+            cat > ./backend/requirements.txt << 'EOF'
 fastapi>=0.68.0
 uvicorn>=0.15.0
 sqlalchemy>=1.4.23
@@ -167,7 +167,7 @@ python-multipart>=0.0.5
 pydantic>=1.8.2
 bcrypt>=3.2.0
 python-dotenv>=0.19.0
-EOL
+EOF
           fi
           
           # Run docker-compose

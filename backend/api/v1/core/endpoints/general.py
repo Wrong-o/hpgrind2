@@ -14,6 +14,10 @@ router = APIRouter()
 def get_user_achievements(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     """
     Get the user's achievements
+
+    Returns:
+        list[UserAchievementsOut]: A list of the user's achievements
+        empty list if no achievements
     """
     achievements = (
         db.query(UserAchievements)
