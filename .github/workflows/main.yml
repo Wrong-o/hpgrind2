@@ -63,11 +63,19 @@ jobs:
 
     - name: Create Dockerfile
       run: |
-        echo 'FROM python:3.9-slim' > Dockerfile
+        echo 'FROM python:3.13-slim' > Dockerfile
         echo '' >> Dockerfile
         echo 'WORKDIR /app' >> Dockerfile
         echo '' >> Dockerfile
+        echo '# Install build tools needed for some Python packages' >> Dockerfile
+        echo 'RUN apt-get update && apt-get install -y --no-install-recommends build-essential gcc && rm -rf /var/lib/apt/lists/*' >> Dockerfile
+        echo '' >> Dockerfile
         echo 'COPY backend/requirements.txt .' >> Dockerfile
+        echo '# Debug: List files and show requirements.txt content' >> Dockerfile
+        echo 'RUN ls -la /app' >> Dockerfile
+        echo 'RUN cat /app/requirements.txt' >> Dockerfile
+        echo '# Update pip before installing requirements' >> Dockerfile
+        echo 'RUN python -m pip install --upgrade pip' >> Dockerfile
         echo 'RUN pip install --no-cache-dir -r requirements.txt' >> Dockerfile
         echo '' >> Dockerfile
         echo 'COPY backend /app/backend' >> Dockerfile
@@ -142,27 +150,6 @@ jobs:
           fi
         "
 
-    - name: Create requirements.txt on EC2
-      env:
-        EC2_HOST: ${{ secrets.EC2_HOST }}
-        EC2_USERNAME: ${{ secrets.EC2_USERNAME }}
-      run: |
-        ssh -i ~/.ssh/ec2-key.pem $EC2_USERNAME@$EC2_HOST "
-          if [ ! -f $REMOTE_HOME/app/backend/requirements.txt ]; then
-            echo 'Creating requirements.txt'
-            echo 'fastapi>=0.68.0' > $REMOTE_HOME/app/backend/requirements.txt
-            echo 'uvicorn>=0.15.0' >> $REMOTE_HOME/app/backend/requirements.txt
-            echo 'sqlalchemy>=1.4.23' >> $REMOTE_HOME/app/backend/requirements.txt
-            echo 'psycopg2-binary>=2.9.1' >> $REMOTE_HOME/app/backend/requirements.txt
-            echo 'python-jose>=3.3.0' >> $REMOTE_HOME/app/backend/requirements.txt
-            echo 'passlib>=1.7.4' >> $REMOTE_HOME/app/backend/requirements.txt
-            echo 'python-multipart>=0.0.5' >> $REMOTE_HOME/app/backend/requirements.txt
-            echo 'pydantic>=1.8.2' >> $REMOTE_HOME/app/backend/requirements.txt
-            echo 'bcrypt>=3.2.0' >> $REMOTE_HOME/app/backend/requirements.txt
-            echo 'python-dotenv>=0.19.0' >> $REMOTE_HOME/app/backend/requirements.txt
-          fi
-        "
-
     - name: Deploy with Docker Compose
       env:
         EC2_HOST: ${{ secrets.EC2_HOST }}
@@ -175,7 +162,11 @@ jobs:
           echo "DATABASE_URL=$DATABASE_URL" > .env &&
           echo "SECRET_KEY=$SECRET_KEY" >> .env &&
           
-          # Use Docker Compose v2 command
-          docker compose down || echo 'No existing containers to stop'
-          docker compose up -d --build
+          # Force recreation, remove orphans, and build fresh
+          echo 'Stopping and removing old containers...'
+          docker compose down --remove-orphans || echo 'No existing containers to stop/remove.'
+          echo 'Pruning old images...'
+          docker image prune -a -f || echo 'Failed to prune images or no images to prune.'
+          echo 'Building and starting new containers...'
+          docker compose up -d --build --force-recreate --no-deps backend # Rebuild only backend if needed
         "
