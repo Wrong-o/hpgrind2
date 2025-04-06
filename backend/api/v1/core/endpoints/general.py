@@ -12,6 +12,9 @@ router = APIRouter()
 
 @router.get("/user_achievements", status_code=200, response_model=list[UserAchievementsOut])
 def get_user_achievements(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """
+    Get the user's achievements
+    """
     achievements = (
         db.query(UserAchievements)
         .options(joinedload(UserAchievements.achievement))
@@ -103,3 +106,4 @@ def submit_quiz_answer(answer: UserAnswerIn, db: Session = Depends(get_db), curr
     """
     user = get_current_user(token=answer.token, db=db)
     return user.id
+
