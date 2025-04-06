@@ -18,6 +18,8 @@ def get_user_achievements(db: Session = Depends(get_db), current_user: User = De
     Returns:
         list[UserAchievementsOut]: A list of the user's achievements
         empty list if no achievements
+        
+    This endpoint is used to populate the achievements section of the user dashboard.
     """
     achievements = (
         db.query(UserAchievements)
