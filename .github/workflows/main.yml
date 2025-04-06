@@ -18,12 +18,15 @@ jobs:
     - name: Configure SSH
       env:
         SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
-        SSH_KNOWN_HOSTS: ${{ secrets.EC2_KNOWN_HOSTS }}
       run: |
         mkdir -p ~/.ssh
-        echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
-        chmod 600 ~/.ssh/id_rsa
-        echo "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+        # Store the PEM key with proper formatting
+        echo "$SSH_PRIVATE_KEY" > ~/.ssh/ec2-key.pem
+        chmod 600 ~/.ssh/ec2-key.pem
+        # Disable strict host key checking for deployment
+        echo "Host *
+          StrictHostKeyChecking no
+          UserKnownHostsFile=/dev/null" > ~/.ssh/config
 
     - name: Debug SSH connection
       env:
@@ -31,14 +34,16 @@ jobs:
         EC2_USERNAME: ${{ secrets.EC2_USERNAME }}
       run: |
         echo "Testing connection to $EC2_HOST..."
-        # Verbose ssh attempt with 10 second timeout
-        ssh -v -o ConnectTimeout=10 -i ~/.ssh/id_rsa $EC2_USERNAME@$EC2_HOST 'echo SSH connection successful'
+        # Use the same command structure as your local script
+        ssh -v -i ~/.ssh/ec2-key.pem $EC2_USERNAME@$EC2_HOST 'echo SSH connection successful'
       continue-on-error: true
 
     - name: Check EC2 connectivity
+      env:
+        EC2_HOST: ${{ secrets.EC2_HOST }}
       run: |
         echo "Checking if host is reachable..."
-        ping -c 4 ${{ secrets.EC2_HOST }}
+        ping -c 4 $EC2_HOST
       continue-on-error: true
 
     - name: Copy files to EC2
@@ -47,21 +52,21 @@ jobs:
         EC2_USERNAME: ${{ secrets.EC2_USERNAME }}
       run: |
         # Create remote directory if it doesn't exist
-        ssh -i ~/.ssh/id_rsa -o ConnectTimeout=10 $EC2_USERNAME@$EC2_HOST 'mkdir -p /home/$EC2_USERNAME/app/backend/' || echo "Could not create directory, continuing..."
+        ssh -i ~/.ssh/ec2-key.pem $EC2_USERNAME@$EC2_HOST 'mkdir -p /home/$EC2_USERNAME/app/backend/' || echo "Could not create directory, continuing..."
         
-        # Try with higher timeout values and less verbosity for actual file transfer
+        # Use the PEM key format for rsync
         rsync -az --timeout=60 --delete \
-          -e "ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no -o ConnectTimeout=30" \
+          -e "ssh -i ~/.ssh/ec2-key.pem" \
           ./backend/ \
           $EC2_USERNAME@$EC2_HOST:/home/$EC2_USERNAME/app/backend/
         
         rsync -az --timeout=60 \
-          -e "ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no -o ConnectTimeout=30" \
+          -e "ssh -i ~/.ssh/ec2-key.pem" \
           ./docker-compose.yml \
           $EC2_USERNAME@$EC2_HOST:/home/$EC2_USERNAME/app/
         
         rsync -az --timeout=60 \
-          -e "ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no -o ConnectTimeout=30" \
+          -e "ssh -i ~/.ssh/ec2-key.pem" \
           ./Dockerfile \
           $EC2_USERNAME@$EC2_HOST:/home/$EC2_USERNAME/app/
 
@@ -69,11 +74,13 @@ jobs:
       env:
         EC2_HOST: ${{ secrets.EC2_HOST }}
         EC2_USERNAME: ${{ secrets.EC2_USERNAME }}
+        DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        SECRET_KEY: ${{ secrets.SECRET_KEY }}
       run: |
-        ssh -i ~/.ssh/id_rsa -o ConnectTimeout=30 $EC2_USERNAME@$EC2_HOST '
+        ssh -i ~/.ssh/ec2-key.pem $EC2_USERNAME@$EC2_HOST "
           cd /home/$EC2_USERNAME/app && 
-          echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" > .env &&
-          echo "SECRET_KEY=${{ secrets.SECRET_KEY }}" >> .env &&
+          echo \"DATABASE_URL=$DATABASE_URL\" > .env &&
+          echo \"SECRET_KEY=$SECRET_KEY\" >> .env &&
           docker-compose down &&
           docker-compose up -d --build
-        '
+        "
