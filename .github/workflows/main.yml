@@ -28,61 +28,68 @@ jobs:
           StrictHostKeyChecking no
           UserKnownHostsFile=/dev/null" > ~/.ssh/config
           
-    - name: Check network and connectivity
-      env:
-        EC2_HOST: ${{ secrets.EC2_HOST }}
-      run: |
-        echo "GitHub Actions Runner IP address:"
-        curl -s ifconfig.me
-        echo ""
-        echo "DNS lookup for EC2 host:"
-        nslookup $EC2_HOST || echo "Could not resolve hostname"
-        echo "Attempting to telnet to port 22:"
-        timeout 5 telnet $EC2_HOST 22 || echo "Telnet failed - port might be blocked"
-        echo "Traceroute to EC2 host:"
-        traceroute $EC2_HOST || echo "Traceroute failed"
-
     - name: Debug SSH connection
       env:
         EC2_HOST: ${{ secrets.EC2_HOST }}
         EC2_USERNAME: ${{ secrets.EC2_USERNAME }}
       run: |
-        echo "Testing connection to $EC2_HOST..."
-        # Try with maximum verbosity and longer timeout
-        ssh -vvv -o ConnectTimeout=60 -i ~/.ssh/ec2-key.pem $EC2_USERNAME@$EC2_HOST 'echo SSH connection successful'
-      continue-on-error: true
+        echo "Testing connection to $EC2_HOST as user $EC2_USERNAME..."
+        ssh -i ~/.ssh/ec2-key.pem $EC2_USERNAME@$EC2_HOST 'echo SSH connection successful; echo User home: $HOME; ls -la $HOME'
 
-    - name: Check EC2 connectivity
-      env:
-        EC2_HOST: ${{ secrets.EC2_HOST }}
-      run: |
-        echo "Checking if host is reachable..."
-        ping -c 4 $EC2_HOST
-      continue-on-error: true
-
-    - name: Copy files to EC2
+    - name: Copy files to EC2 using SCP
       env:
         EC2_HOST: ${{ secrets.EC2_HOST }}
         EC2_USERNAME: ${{ secrets.EC2_USERNAME }}
       run: |
-        # Create remote directory if it doesn't exist
-        ssh -i ~/.ssh/ec2-key.pem $EC2_USERNAME@$EC2_HOST 'mkdir -p /home/$EC2_USERNAME/app/backend/' || echo "Could not create directory, continuing..."
+        # First create the app directory structure
+        ssh -i ~/.ssh/ec2-key.pem $EC2_USERNAME@$EC2_HOST "mkdir -p \$HOME/app/backend"
         
-        # Use the PEM key format for rsync
-        rsync -az --timeout=60 --delete \
-          -e "ssh -i ~/.ssh/ec2-key.pem" \
-          ./backend/ \
-          $EC2_USERNAME@$EC2_HOST:/home/$EC2_USERNAME/app/backend/
+        # Use scp instead of rsync
+        echo "Copying backend directory..."
+        scp -i ~/.ssh/ec2-key.pem -r ./backend/* $EC2_USERNAME@$EC2_HOST:$HOME/app/backend/
         
-        rsync -az --timeout=60 \
-          -e "ssh -i ~/.ssh/ec2-key.pem" \
-          ./docker-compose.yml \
-          $EC2_USERNAME@$EC2_HOST:/home/$EC2_USERNAME/app/
+        echo "Copying docker-compose.yml..."
+        scp -i ~/.ssh/ec2-key.pem ./docker-compose.yml $EC2_USERNAME@$EC2_HOST:$HOME/app/
         
-        rsync -az --timeout=60 \
-          -e "ssh -i ~/.ssh/ec2-key.pem" \
-          ./Dockerfile \
-          $EC2_USERNAME@$EC2_HOST:/home/$EC2_USERNAME/app/
+        echo "Copying Dockerfile..."
+        scp -i ~/.ssh/ec2-key.pem ./Dockerfile $EC2_USERNAME@$EC2_HOST:$HOME/app/
+
+    - name: Install Docker and Docker Compose
+      env:
+        EC2_HOST: ${{ secrets.EC2_HOST }}
+        EC2_USERNAME: ${{ secrets.EC2_USERNAME }}
+      run: |
+        ssh -i ~/.ssh/ec2-key.pem $EC2_USERNAME@$EC2_HOST "
+          # Install Docker if not already installed
+          if ! command -v docker &> /dev/null; then
+            echo 'Installing Docker...'
+            sudo apt-get update
+            sudo apt-get install -y apt-transport-https ca-certificates curl software-properties-common
+            curl -fsSL https://download.docker.com/linux/debian/gpg | sudo apt-key add -
+            sudo add-apt-repository 'deb [arch=amd64] https://download.docker.com/linux/debian buster stable'
+            sudo apt-get update
+            sudo apt-get install -y docker-ce docker-ce-cli containerd.io
+            sudo systemctl start docker
+            sudo systemctl enable docker
+            sudo usermod -aG docker \$USER
+            echo 'Docker installation completed'
+          else
+            echo 'Docker is already installed'
+          fi
+          
+          # Install Docker Compose v2
+          if ! command -v docker-compose &> /dev/null; then
+            echo 'Installing Docker Compose...'
+            DOCKER_COMPOSE_VERSION=\$(curl -s https://api.github.com/repos/docker/compose/releases/latest | grep 'tag_name' | cut -d\" -f4)
+            sudo mkdir -p /usr/local/lib/docker/cli-plugins
+            sudo curl -SL https://github.com/docker/compose/releases/download/\${DOCKER_COMPOSE_VERSION}/docker-compose-linux-x86_64 -o /usr/local/lib/docker/cli-plugins/docker-compose
+            sudo chmod +x /usr/local/lib/docker/cli-plugins/docker-compose
+            sudo ln -sf /usr/local/lib/docker/cli-plugins/docker-compose /usr/local/bin/docker-compose
+            echo 'Docker Compose installation completed'
+          else
+            echo 'Docker Compose is already installed'
+          fi
+        "
 
     - name: Deploy with Docker Compose
       env:
@@ -92,9 +99,11 @@ jobs:
         SECRET_KEY: ${{ secrets.SECRET_KEY }}
       run: |
         ssh -i ~/.ssh/ec2-key.pem $EC2_USERNAME@$EC2_HOST "
-          cd /home/$EC2_USERNAME/app && 
+          cd \$HOME/app && 
           echo \"DATABASE_URL=$DATABASE_URL\" > .env &&
           echo \"SECRET_KEY=$SECRET_KEY\" >> .env &&
-          docker-compose down &&
+          
+          # Run docker-compose
+          docker-compose down || echo 'No existing containers to stop'
           docker-compose up -d --build
         "
