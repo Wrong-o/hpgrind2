@@ -27,6 +27,20 @@ jobs:
         echo "Host *
           StrictHostKeyChecking no
           UserKnownHostsFile=/dev/null" > ~/.ssh/config
+          
+    - name: Check network and connectivity
+      env:
+        EC2_HOST: ${{ secrets.EC2_HOST }}
+      run: |
+        echo "GitHub Actions Runner IP address:"
+        curl -s ifconfig.me
+        echo ""
+        echo "DNS lookup for EC2 host:"
+        nslookup $EC2_HOST || echo "Could not resolve hostname"
+        echo "Attempting to telnet to port 22:"
+        timeout 5 telnet $EC2_HOST 22 || echo "Telnet failed - port might be blocked"
+        echo "Traceroute to EC2 host:"
+        traceroute $EC2_HOST || echo "Traceroute failed"
 
     - name: Debug SSH connection
       env:
@@ -34,8 +48,8 @@ jobs:
         EC2_USERNAME: ${{ secrets.EC2_USERNAME }}
       run: |
         echo "Testing connection to $EC2_HOST..."
-        # Use the same command structure as your local script
-        ssh -v -i ~/.ssh/ec2-key.pem $EC2_USERNAME@$EC2_HOST 'echo SSH connection successful'
+        # Try with maximum verbosity and longer timeout
+        ssh -vvv -o ConnectTimeout=60 -i ~/.ssh/ec2-key.pem $EC2_USERNAME@$EC2_HOST 'echo SSH connection successful'
       continue-on-error: true
 
     - name: Check EC2 connectivity
