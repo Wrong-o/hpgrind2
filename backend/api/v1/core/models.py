@@ -65,6 +65,7 @@ class Token(Base):
 
 class PasswordResetToken(Base):
     """Token used for password reset"""
+    "TODO when postmark verifies us, use this"
     __tablename__ = "password_reset_tokens"
     created: Mapped[datetime] = mapped_column(
         DateTime,
