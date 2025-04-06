@@ -28,7 +28,16 @@ def get_user_achievements(db: Session = Depends(get_db), current_user: User = De
 @router.get("/user_stats", status_code=200)
 def get_user_stats(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     """
-    Get the user's stats
+    Get the user's statistics and information
+    
+    This endpoint retrieves user statistics including progress, achievements, and other user data.
+    It's used to populate the user dashboard with relevant information.
+    
+    Returns:
+        str: Success message (to be expanded with actual statistics)
+    
+    Raises:
+        HTTPException: 404 if user is not logged in
     """
     user = db.query(User).filter(User.id == current_user.id).first()
     if not user:
