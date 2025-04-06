@@ -121,6 +121,10 @@ def logout(
 def read_user_me(
     current_user: User = Depends(get_current_user),
 ):
+    """
+    Get the current user's information
+    This endpoint returns the current user's information
+    """
     return current_user
 
 @router.post("/password-reset-request", status_code=status.HTTP_200_OK)
@@ -129,7 +133,7 @@ def request_password_reset(
     db: Session = Depends(get_db),
 ):
     """
-    Request a password reset emial
+    Request a password reset email
     This endpoint sends a password reset link to the user email
     """
     user = get_user_by_email(session=db, email=reset_request.email)

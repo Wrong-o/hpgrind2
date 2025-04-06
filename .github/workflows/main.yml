@@ -48,35 +48,33 @@ jobs:
 
     - name: Create docker-compose.yml
       run: |
-        echo "Creating docker-compose.yml file"
-        echo 'version: "3"
-
-services:
-  backend:
-    build: .
-    restart: always
-    ports:
-      - "8000:8000"
-    env_file:
-      - .env
-    volumes:
-      - ./backend:/app/backend' > docker-compose.yml
+        echo 'version: "3"' > docker-compose.yml
+        echo '' >> docker-compose.yml
+        echo 'services:' >> docker-compose.yml
+        echo '  backend:' >> docker-compose.yml
+        echo '    build: .' >> docker-compose.yml
+        echo '    restart: always' >> docker-compose.yml
+        echo '    ports:' >> docker-compose.yml
+        echo '      - "8000:8000"' >> docker-compose.yml
+        echo '    env_file:' >> docker-compose.yml
+        echo '      - .env' >> docker-compose.yml
+        echo '    volumes:' >> docker-compose.yml
+        echo '      - ./backend:/app/backend' >> docker-compose.yml
 
     - name: Create Dockerfile
       run: |
-        echo "Creating Dockerfile"
-        echo 'FROM python:3.9-slim
-
-WORKDIR /app
-
-COPY backend/requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
-COPY backend /app/backend
-
-WORKDIR /app/backend
-
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]' > Dockerfile
+        echo 'FROM python:3.9-slim' > Dockerfile
+        echo '' >> Dockerfile
+        echo 'WORKDIR /app' >> Dockerfile
+        echo '' >> Dockerfile
+        echo 'COPY backend/requirements.txt .' >> Dockerfile
+        echo 'RUN pip install --no-cache-dir -r requirements.txt' >> Dockerfile
+        echo '' >> Dockerfile
+        echo 'COPY backend /app/backend' >> Dockerfile
+        echo '' >> Dockerfile
+        echo 'WORKDIR /app/backend' >> Dockerfile
+        echo '' >> Dockerfile
+        echo 'CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]' >> Dockerfile
 
     - name: Copy files to EC2 using SCP
       env:
@@ -141,18 +139,16 @@ CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]' > Dockerfile
         ssh -i ~/.ssh/ec2-key.pem $EC2_USERNAME@$EC2_HOST "
           if [ ! -f $REMOTE_HOME/app/backend/requirements.txt ]; then
             echo 'Creating requirements.txt'
-            cat > $REMOTE_HOME/app/backend/requirements.txt << EOL
-fastapi>=0.68.0
-uvicorn>=0.15.0
-sqlalchemy>=1.4.23
-psycopg2-binary>=2.9.1
-python-jose>=3.3.0
-passlib>=1.7.4
-python-multipart>=0.0.5
-pydantic>=1.8.2
-bcrypt>=3.2.0
-python-dotenv>=0.19.0
-EOL
+            echo 'fastapi>=0.68.0' > $REMOTE_HOME/app/backend/requirements.txt
+            echo 'uvicorn>=0.15.0' >> $REMOTE_HOME/app/backend/requirements.txt
+            echo 'sqlalchemy>=1.4.23' >> $REMOTE_HOME/app/backend/requirements.txt
+            echo 'psycopg2-binary>=2.9.1' >> $REMOTE_HOME/app/backend/requirements.txt
+            echo 'python-jose>=3.3.0' >> $REMOTE_HOME/app/backend/requirements.txt
+            echo 'passlib>=1.7.4' >> $REMOTE_HOME/app/backend/requirements.txt
+            echo 'python-multipart>=0.0.5' >> $REMOTE_HOME/app/backend/requirements.txt
+            echo 'pydantic>=1.8.2' >> $REMOTE_HOME/app/backend/requirements.txt
+            echo 'bcrypt>=3.2.0' >> $REMOTE_HOME/app/backend/requirements.txt
+            echo 'python-dotenv>=0.19.0' >> $REMOTE_HOME/app/backend/requirements.txt
           fi
         "
 
