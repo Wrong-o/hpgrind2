@@ -64,10 +64,13 @@ jobs:
         echo '    restart: always' >> docker-compose.yml
         echo '    ports:' >> docker-compose.yml
         echo '      - "8000:8000"' >> docker-compose.yml
+        echo '      - "443:443"' >> docker-compose.yml
         echo '    env_file:' >> docker-compose.yml
         echo '      - .env' >> docker-compose.yml
         echo '    volumes:' >> docker-compose.yml
         echo '      - ./backend:/app/backend' >> docker-compose.yml
+        echo '      - ./certs:/app/certs' >> docker-compose.yml
+        echo '    command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--ssl-keyfile", "/app/certs/key.pem", "--ssl-certfile", "/app/certs/cert.pem"]' >> docker-compose.yml
 
     - name: Create Dockerfile
       run: |
@@ -160,17 +163,36 @@ jobs:
           fi
         "
 
+    - name: Generate SSL certificates
+      env:
+        EC2_HOST: ${{ secrets.EC2_HOST }}
+        EC2_USERNAME: ${{ secrets.EC2_USERNAME }}
+      run: |
+        ssh -i ~/.ssh/ec2-key.pem $EC2_USERNAME@$EC2_HOST "
+          cd $REMOTE_HOME/app &&
+          mkdir -p certs &&
+          cd certs &&
+          openssl req -x509 -newkey rsa:4096 -nodes -out cert.pem -keyout key.pem -days 365 -subj '/CN=localhost'
+        "
+
     - name: Deploy with Docker Compose
       env:
         EC2_HOST: ${{ secrets.EC2_HOST }}
         EC2_USERNAME: ${{ secrets.EC2_USERNAME }}
         DATABASE_URL: ${{ secrets.DATABASE_URL }}
         SECRET_KEY: ${{ secrets.SECRET_KEY }}
+        POSTMARK_TOKEN: ${{ secrets.POSTMARK_TOKEN }}
+        FRONTEND_BASE_URL: ${{ secrets.FRONTEND_BASE_URL }}
+        ENVIRONMENT: "production"
       run: |
         ssh -i ~/.ssh/ec2-key.pem $EC2_USERNAME@$EC2_HOST "
           cd $REMOTE_HOME/app && 
-          echo "DATABASE_URL=$DATABASE_URL" > .env &&
+          echo "DB_URL=$DATABASE_URL" > .env &&
           echo "SECRET_KEY=$SECRET_KEY" >> .env &&
+          echo "POSTMARK_TOKEN=$POSTMARK_TOKEN" >> .env &&
+          echo "FRONTEND_BASE_URL=$FRONTEND_BASE_URL" >> .env &&
+          echo "ENV=$ENVIRONMENT" >> .env &&
+          echo "CORS_ORIGINS=https://www.hpggrind.se" >> .env &&
           
           # Use Docker Compose v2 command
           docker compose down || echo 'No existing containers to stop'

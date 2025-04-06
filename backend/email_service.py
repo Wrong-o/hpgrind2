@@ -9,8 +9,8 @@ from sqlalchemy.orm import Session
 
 def get_user_by_email(session: Session, email: str) -> User:
     """
-    Get a user by email
-    
+    Get a user by their email address
+
     """
     return session.scalars(select(User).where(User.email == email)).first()
     
