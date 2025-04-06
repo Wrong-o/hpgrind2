@@ -12,7 +12,14 @@ class Settings(BaseSettings):
     
     # Service settings
     POSTMARK_TOKEN: str = "dummy-token"  # Default value for development
-    FRONTEND_BASE_URL: str = "http://localhost:5173"
+    FRONTEND_BASE_URL: str = "https://www.hpggrind.se"  # Update this with your Vercel domain
+    
+    # CORS settings
+    CORS_ORIGINS: list[str] = [
+        "http://localhost:3000",  # Local development
+        "http://localhost:5173",  # Vite dev server
+        "https://www.hpggrind.se",  # Production Vercel domain
+    ]
     
     # Environment
     ENV: str = "development"

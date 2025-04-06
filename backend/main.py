@@ -12,6 +12,8 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from typing import Optional
 from pydantic import BaseModel
 from api.v1.core.endpoints import question_director, authentication, general
+import os
+from settings import settings
 
 async def lifespan(app: FastAPI):
     # Initialize database with all tables
@@ -28,14 +30,14 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan=lifespan)
 app.include_router(router, prefix="/api/v1")
 
-# CORS Configuration - updated to allow all required endpoints
+# CORS Configuration - updated for production security
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production, replace with actual frontend origins
+    allow_origins=settings.CORS_ORIGINS,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-    expose_headers=["*"]
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type"],
+    expose_headers=["Authorization"]
 )
 
 app.include_router(question_director.router, prefix="/api/v1/question_generator", tags=["question_generator"])
