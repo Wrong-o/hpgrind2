@@ -50,7 +50,7 @@ export default function RegisterForm() {
 
     try {
       const response = await fetch(
-        "http://localhost:8000/api/v1/auth/user/create",
+        `${import.meta.env.VITE_API_URL}/api/v1/auth/user/create`,
         {
           method: "POST",
           headers: {
