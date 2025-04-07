@@ -117,4 +117,9 @@ jobs:
           echo \"ENV=$ENVIRONMENT\" >> ./backend/.env &&
           echo \"CORS_ORIGINS=https://www.hpgrind.se\" >> ./backend/.env 
          " 
-        
+        ssh -i ~/.ssh/ec2-key.pem $EC2_USERNAME@$EC2_HOST "
+          cd $REMOTE_HOME/app && 
+          docker-compose down &&
+          docker-compose build --no-cache &&
+          docker-compose up -d
+        "
