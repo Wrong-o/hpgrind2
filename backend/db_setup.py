@@ -9,7 +9,6 @@ from settings import settings
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
-#
 # Connection timeout settings
 CONNECT_TIMEOUT = 10  # seconds
 MAX_OVERFLOW = 10     # Maximum overflow pool size

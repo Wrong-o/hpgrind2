@@ -40,35 +40,35 @@ jobs:
 
     - name: Create docker-compose.yml on Runner
       run: |
-        cat << EOF > docker-compose.yml
-version: "3"
-services:
-  backend:
-    build: .
-    restart: on-failure:5
-    ports:
-      - "8000:8000"
-    env_file:
-      - .env
-    volumes:
-      - ./backend:/app/backend
-      - ./certs:/app/certs
-    command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--ssl-keyfile", "/app/certs/key.pem", "--ssl-certfile", "/app/certs/cert.pem"]
-EOF
+        cat > docker-compose.yml <<-'EOF'
+          version: "3"
+          services:
+            backend:
+              build: .
+              restart: on-failure:5
+              ports:
+                - "8000:8000"
+              env_file:
+                - .env
+              volumes:
+                - ./backend:/app/backend
+                - ./certs:/app/certs
+              command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--ssl-keyfile", "/app/certs/key.pem", "--ssl-certfile", "/app/certs/cert.pem"]
+        EOF
 
     - name: Create Dockerfile on Runner
       run: |
-        cat << EOF > Dockerfile
-FROM python:3.13-slim
-WORKDIR /app
-RUN apt-get update && apt-get install -y --no-install-recommends build-essential gcc libcairo2-dev pkg-config && rm -rf /var/lib/apt/lists/*
-COPY backend/requirements.txt .
-RUN python -m pip install --upgrade pip
-RUN pip install --no-cache-dir -r requirements.txt
-COPY backend /app/backend
-WORKDIR /app/backend
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
-EOF
+        cat > Dockerfile <<-'EOF'
+          FROM python:3.13-slim
+          WORKDIR /app
+          RUN apt-get update && apt-get install -y --no-install-recommends build-essential gcc libcairo2-dev pkg-config && rm -rf /var/lib/apt/lists/*
+          COPY backend/requirements.txt .
+          RUN python -m pip install --upgrade pip
+          RUN pip install --no-cache-dir -r requirements.txt
+          COPY backend /app/backend
+          WORKDIR /app/backend
+          CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+        EOF
 
     - name: Sync Files to EC2
       env:
