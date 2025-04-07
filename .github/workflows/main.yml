@@ -45,7 +45,7 @@ jobs:
         echo 'services:' >> docker-compose.yml
         echo '  backend:' >> docker-compose.yml
         echo '    build: .' >> docker-compose.yml
-        echo '    restart: always' >> docker-compose.yml
+        echo '    restart: on-failure:5' >> docker-compose.yml
         echo '    ports:' >> docker-compose.yml
         echo '      - "8000:8000"' >> docker-compose.yml
         echo '    env_file:' >> docker-compose.yml
@@ -175,13 +175,7 @@ jobs:
           echo \"POSTMARK_TOKEN=$POSTMARK_TOKEN\" >> .env &&
           echo \"FRONTEND_BASE_URL=$FRONTEND_BASE_URL\" >> .env &&
           echo \"ENV=$ENVIRONMENT\" >> .env &&
-          echo \"CORS_ORIGINS=https://www.hpgrind.se\" >> .env &&
-          
-          # Modify docker-compose to use restart-on-failure instead of always restarting
-          if grep -q 'restart: always' docker-compose.yml; then
-            sed -i 's/restart: always/restart: on-failure:5/' docker-compose.yml
-            echo 'Modified restart policy to prevent infinite restart loops'
-          fi
+          echo \"CORS_ORIGINS=https://www.hpggrind.se\" >> .env &&
           
           # Use Docker Compose v2 command
           docker compose down || echo 'No existing containers to stop'
@@ -213,9 +207,6 @@ jobs:
           
           echo 'Checking container status...'
           docker ps -a
-          
-          echo 'Checking Docker events...'
-          docker events --since 5m --until 0m --filter container=\$(docker ps -aq --filter name=backend) || echo 'No recent events'
         "
 
     - name: Verify Database Settings
@@ -229,26 +220,62 @@ jobs:
           echo 'Waiting for the backend service to start up...'
           sleep 15
           
-          # Run database diagnostics for detailed troubleshooting
-          echo 'Running database diagnostics...'
-          docker compose exec -T backend python -m db_diagnostic || echo 'Database diagnostics failed. Proceeding with verification...'
-          
           # Verify database settings
           echo 'Verifying database settings...'
-          docker compose exec -T backend python -m verify_db_settings || {
-            # If verification fails, print DB_URL for debugging (without password)
-            echo 'Database settings verification failed. Checking environment variables...'
-            docker compose exec -T backend bash -c 'echo \"DB_URL: \${DB_URL//:/\\:*@/:***@}\"'
-            
-            # Let's check if we need to add the IP to pg_hba.conf (common issue)
-            echo 'Checking if this is a pg_hba.conf issue...'
-            CONTAINER_IP=\$(docker compose exec -T backend hostname -i 2>/dev/null || echo 'unknown')
-            echo \"Container IP address: \$CONTAINER_IP\"
-            echo \"If you're seeing 'no pg_hba.conf entry' errors, make sure this IP is allowed to connect to your database\"
-            echo \"You may need to add a line like this to pg_hba.conf on your PostgreSQL server:\"
-            echo \"host    database    username    \$CONTAINER_IP/32    md5\"
-            
-            echo 'Please check your database connection settings in GitHub Secrets.'
+          docker compose exec -T backend python -c '
+import os
+import sys
+from urllib.parse import urlparse
+import socket
+
+# Get DB_URL
+db_url = os.environ.get(\"DB_URL\", \"\")
+if not db_url:
+    print(\"ERROR: DB_URL environment variable is not set\")
+    sys.exit(1)
+
+print(\"DB_URL is set ✓\")
+
+# Parse it
+try:
+    parsed = urlparse(db_url)
+    username = parsed.username
+    password = \"******\" if parsed.password else \"No password\"
+    hostname = parsed.hostname
+    port = parsed.port or 5432
+    database = parsed.path.lstrip(\"/\")
+    
+    print(f\"\\nDatabase Configuration:\")
+    print(f\"  Username: {username}\")
+    print(f\"  Password: {password}\")
+    print(f\"  Host: {hostname}\")
+    print(f\"  Port: {port}\")
+    print(f\"  Database: {database}\")
+    
+    # Test network connectivity
+    print(\"\\nTesting network connectivity...\")
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.settimeout(5)
+    result = sock.connect_ex((hostname, port))
+    sock.close()
+    
+    if result == 0:
+        print(f\"  Network connection successful ✓\")
+    else:
+        print(f\"  ERROR: Could not connect to {hostname}:{port}\")
+        print(\"  Check firewall settings and database server\")
+        sys.exit(1)
+        
+    print(\"\\n✅ Database settings check passed!\")
+except Exception as e:
+    print(f\"Error checking database settings: {str(e)}\")
+    sys.exit(1)
+' || {
+            # If verification fails, print DB_URL info
+            echo 'Database settings verification failed.'
+            CONTAINER_IP=$(docker compose exec -T backend hostname -i 2>/dev/null || echo 'unknown')
+            echo "Container IP address: $CONTAINER_IP"
+            echo "Check your database connection settings in GitHub Secrets."
           }
         "
 
@@ -279,84 +306,54 @@ jobs:
           }
         "
 
-    - name: Fix Database Credentials (If Needed)
+    - name: Fix Database Credentials
       env:
         EC2_HOST: ${{ secrets.EC2_HOST }}
         EC2_USERNAME: ${{ secrets.EC2_USERNAME }}
       run: |
         ssh -i ~/.ssh/ec2-key.pem $EC2_USERNAME@$EC2_HOST "
           cd $REMOTE_HOME/app && 
-          echo 'Creating a script to attempt database connection with alternate credentials...'
-          # Create a Python script to attempt connection with different credentials
-          cat > fix_credentials.py << 'EOF'
+          # Create a simple diagnostic script
+          docker compose exec -T backend python -c '
 import os
 import sys
-from urllib.parse import urlparse, urlunparse
+from urllib.parse import urlparse
 import psycopg2
 
-# Get current DB_URL
-db_url = os.environ.get('DB_URL', '')
-print(f'Current DB_URL (sanitized): {db_url.split(\":\")[0]}:***@{db_url.split(\"@\")[1] if \"@\" in db_url else \"\"}')
-
-# Parse it
-try:
-    parsed = urlparse(db_url)
-    username = parsed.username
-    password = parsed.password
-    hostname = parsed.hostname
-    port = parsed.port or 5432
-    database = parsed.path.lstrip('/')
-    
-    # Try connection with original credentials
-    print('\\nAttempting connection with current credentials...')
-    try:
-        conn = psycopg2.connect(
-            dbname=database,
-            user=username,
-            password=password,
-            host=hostname,
-            port=port,
-            connect_timeout=10
-        )
-        print('SUCCESS! Connection worked with current credentials.')
-        conn.close()
-    except Exception as e:
-        print(f'ERROR: Connection failed: {str(e)}')
-        
-        # Try with modified credentials (common patterns)
-        print('\\nAttempting connection with alternate credentials...')
-        for test_user, test_password in [
-            (username, password),  # Original
-            (username, password + '='),  # Sometimes passwords have trailing = from base64
-            (username, password.rstrip('=')),  # Or without trailing =
-            (username, password.replace('-', '+').replace('_', '/')),  # URL-safe base64 correction
-            ('postgres', 'postgres'),  # Default credentials
-        ]:
-            try:
-                print(f'Trying with user={test_user}, password={test_password[:2]}***')
-                conn = psycopg2.connect(
-                    dbname=database,
-                    user=test_user,
-                    password=test_password,
-                    host=hostname,
-                    port=port,
-                    connect_timeout=5
-                )
-                print(f'SUCCESS! Connection worked with user={test_user}, password={test_password[:2]}***')
-                # Print the working connection string (censored)
-                working_url = f'postgresql://{test_user}:***@{hostname}:{port}/{database}'
-                print(f'Working connection string: {working_url}')
-                print('Please update your DB_URL in GitHub Secrets with the password that worked')
-                conn.close()
-                break
-            except Exception as e:
-                print(f'  Failed: {str(e)}')
-except Exception as e:
-    print(f'Error parsing DB_URL: {str(e)}')
+# Get DB_URL
+db_url = os.environ.get(\"DB_URL\", \"\")
+if not db_url:
+    print(\"ERROR: DB_URL environment variable is not set\")
     sys.exit(1)
-EOF
-          
-          # Run the script
-          echo 'Running credential fix script...'
-          docker compose exec -T backend python fix_credentials.py || echo 'Credential fix script failed'
+
+# Parse database URL
+parsed = urlparse(db_url)
+username = parsed.username
+password = parsed.password
+hostname = parsed.hostname
+port = parsed.port or 5432
+database = parsed.path.lstrip(\"/\")
+
+# Try connection with current credentials
+print(f\"Testing connection to {hostname}:{port} as {username}...\")
+try:
+    conn = psycopg2.connect(
+        dbname=database,
+        user=username,
+        password=password,
+        host=hostname,
+        port=port,
+        connect_timeout=10
+    )
+    print(\"SUCCESS! Connection worked with current credentials.\")
+    conn.close()
+except Exception as e:
+    print(f\"ERROR: Connection failed: {str(e)}\")
+    print(\"\\nPossible issues:\")
+    print(\"1. Database credentials are incorrect\")
+    print(\"2. Database server is not accessible\")
+    print(\"3. PostgreSQL pg_hba.conf doesn't allow connections from this IP\")
+    print(\"4. Database server firewall is blocking connections\")
+    print(\"\\nPlease check your DB_URL and database server configuration.\")
+' || echo 'Database credential check failed'
         "

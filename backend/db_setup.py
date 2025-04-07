@@ -3,7 +3,6 @@ from sqlalchemy.orm import Session
 from sqlalchemy.exc import OperationalError
 import time
 import logging
-#
 from api.v1.core.models import Base
 from settings import settings
 
