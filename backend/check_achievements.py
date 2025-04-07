@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 """
-Script to check achievements in the database
+Script to check achievements in the databas
 """
 
 from sqlalchemy import create_engine, select
