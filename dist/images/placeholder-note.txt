@@ -1,8 +1,0 @@
-You should place your video poster images in this directory.
-
-Recommended poster image sizes:
-- Main hero video: 1280x720px
-- Feature videos: 640x360px
-- Testimonial video: 1280x720px
-
-Image formats supported: JPG, PNG, WebP 
