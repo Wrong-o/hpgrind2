@@ -16,6 +16,7 @@ POOL_SIZE = 5         # Connection pool size
 POOL_RECYCLE = 3600   # Recycle connections after 1 hour
 POOL_TIMEOUT = 30     # Timeout for getting connection from pool
 POOL_PRE_PING = True  # Pre-ping connections to ensure they're alive
+
 # Create engine with enhanced parameters for production
 try:
     logger.info(f"Connecting to database with URL: {settings.DB_URL.split('@')[0]}:***@{settings.DB_URL.split('@')[1] if '@' in settings.DB_URL else '(invalid URL)'}")

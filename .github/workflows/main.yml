@@ -287,76 +287,75 @@ jobs:
         ssh -i ~/.ssh/ec2-key.pem $EC2_USERNAME@$EC2_HOST "
           cd $REMOTE_HOME/app && 
           echo 'Creating a script to attempt database connection with alternate credentials...'
-          # Create a Python script to attempt connection with different credentials
-          cat > fix_credentials.py << 'EOL'
-import os
-import sys
-from urllib.parse import urlparse, urlunparse
-import psycopg2
+          # Use the robust heredoc syntax
+          cat > fix_credentials.py <<-'EOF'
+            import os
+            import sys
+            from urllib.parse import urlparse
+            import psycopg2
+            import traceback
 
-# Get current DB_URL
-db_url = os.environ.get('DB_URL', '')
-print(f'Current DB_URL (sanitized): {db_url.split(":")[0]}:***@{db_url.split("@")[1] if "@" in db_url else ""}')
-
-# Parse it
-try:
-    parsed = urlparse(db_url)
-    username = parsed.username
-    password = parsed.password
-    hostname = parsed.hostname
-    port = parsed.port or 5432
-    database = parsed.path.lstrip('/')
-    
-    # Try connection with original credentials
-    print('\\nAttempting connection with current credentials...')
-    try:
-        conn = psycopg2.connect(
-            dbname=database,
-            user=username,
-            password=password,
-            host=hostname,
-            port=port,
-            connect_timeout=10
-        )
-        print('SUCCESS! Connection worked with current credentials.')
-        conn.close()
-    except Exception as e:
-        print(f'ERROR: Connection failed: {str(e)}')
-        
-        # Try with modified credentials (common patterns)
-        print('\\nAttempting connection with alternate credentials...')
-        for test_user, test_password in [
-            (username, password),  # Original
-            (username, password + '='),  # Sometimes passwords have trailing = from base64
-            (username, password.rstrip('=')),  # Or without trailing =
-            (username, password.replace('-', '+').replace('_', '/')),  # URL-safe base64 correction
-            ('postgres', 'postgres'),  # Default credentials
-        ]:
+            # Get current DB_URL
+            db_url = os.environ.get('DB_URL', '')
+            if not db_url:
+              print(\"ERROR: DB_URL environment variable is not set\")
+              sys.exit(1)
+            
+            # Mask password for printing
+            sanitized_url = db_url
             try:
-                print(f'Trying with user={test_user}, password={test_password[:2]}***')
-                conn = psycopg2.connect(
-                    dbname=database,
-                    user=test_user,
-                    password=test_password,
-                    host=hostname,
-                    port=port,
-                    connect_timeout=5
-                )
-                print(f'SUCCESS! Connection worked with user={test_user}, password={test_password[:2]}***')
-                # Print the working connection string (censored)
-                working_url = f'postgresql://{test_user}:***@{hostname}:{port}/{database}'
-                print(f'Working connection string: {working_url}')
-                print('Please update your DB_URL in GitHub Secrets with the password that worked')
-                conn.close()
-                break
+                parsed_for_print = urlparse(db_url)
+                if parsed_for_print.password:
+                    sanitized_url = db_url.replace(parsed_for_print.password, '***')
+            except: pass # Ignore parsing errors for printing
+            print(f'Current DB_URL (sanitized): {sanitized_url}')
+
+            # Parse the URL
+            try:
+                parsed = urlparse(db_url)
+                username = parsed.username
+                password = parsed.password
+                hostname = parsed.hostname
+                port = parsed.port or 5432
+                database = parsed.path.lstrip('/')
+                
+                if not all([username, password, hostname, database]):
+                  print(\"ERROR: Could not parse all required components from DB_URL\")
+                  sys.exit(1)
+
+                # Try connection with original credentials
+                print('\\nAttempting connection with current credentials...')
+                try:
+                    conn = psycopg2.connect(
+                        dbname=database,
+                        user=username,
+                        password=password,
+                        host=hostname,
+                        port=port,
+                        connect_timeout=10
+                    )
+                    print('SUCCESS! Connection worked with current credentials.')
+                    conn.close()
+                    sys.exit(0) # Exit successfully if this works
+                except Exception as e:
+                    print(f'ERROR: Connection failed: {str(e)}')
+                    # Optional: print full traceback for detailed debugging
+                    # traceback.print_exc()
+
             except Exception as e:
-                print(f'  Failed: {str(e)}')
-except Exception as e:
-    print(f'Error parsing DB_URL: {str(e)}')
-    sys.exit(1)
-EOL
+                print(f'Error parsing DB_URL or connecting: {str(e)}')
+                traceback.print_exc()
+                sys.exit(1)
+          EOF
           
           # Run the script
           echo 'Running credential fix script...'
-          docker compose exec -T backend python fix_credentials.py || echo 'Credential fix script failed'
+          # Ensure the backend service name is correct (e.g., 'backend')
+          if docker compose exec -T backend python fix_credentials.py; then
+             echo \"Credential check script ran successfully.\"
+          else 
+             echo \"Credential check script failed or connection error occurred. See script output above.\"
+          fi
+          # Clean up the script
+          # rm fix_credentials.py 
         "
