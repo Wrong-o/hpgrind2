@@ -14,7 +14,7 @@ import time
 import os
 import sys
 from settings import settings
-
+#
 def test_connection():
     """
     Test the database connection and print diagnostics

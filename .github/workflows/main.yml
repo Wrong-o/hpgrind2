@@ -222,11 +222,11 @@ jobs:
             
             # Let's check if we need to add the IP to pg_hba.conf (common issue)
             echo 'Checking if this is a pg_hba.conf issue...'
-            CONTAINER_IP=$(docker compose exec -T backend hostname -i 2>/dev/null || echo 'unknown')
-            echo "Container IP address: $CONTAINER_IP"
-            echo "If you're seeing 'no pg_hba.conf entry' errors, make sure this IP is allowed to connect to your database"
-            echo "You may need to add a line like this to pg_hba.conf on your PostgreSQL server:"
-            echo "host    database    username    $CONTAINER_IP/32    md5"
+            CONTAINER_IP=\$(docker compose exec -T backend hostname -i 2>/dev/null || echo 'unknown')
+            echo \"Container IP address: \$CONTAINER_IP\"
+            echo \"If you're seeing 'no pg_hba.conf entry' errors, make sure this IP is allowed to connect to your database\"
+            echo \"You may need to add a line like this to pg_hba.conf on your PostgreSQL server:\"
+            echo \"host    database    username    \$CONTAINER_IP/32    md5\"
             
             echo 'Please check your database connection settings in GitHub Secrets.'
           }
