@@ -144,7 +144,7 @@ jobs:
           else
             echo 'Docker Compose v2 plugin is already installed'
           fi
-        "
+        
 
     - name: Deploy with Docker Compose
       env:
