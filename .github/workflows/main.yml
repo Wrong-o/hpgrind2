@@ -116,5 +116,5 @@ jobs:
           echo \"FRONTEND_BASE_URL=$FRONTEND_BASE_URL\" >> ./backend/.env &&
           echo \"ENV=$ENVIRONMENT\" >> ./backend/.env &&
           echo \"CORS_ORIGINS=https://www.hpgrind.se\" >> ./backend/.env 
-          
+         " 
         
