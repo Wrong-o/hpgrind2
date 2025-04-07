@@ -6,7 +6,6 @@ services:
     restart: always
     ports:
       - "8000:8000"
-      - "443:443"
     environment:
       - DB_URL=${DB_URL}
       - SECRET_KEY=${SECRET_KEY}
