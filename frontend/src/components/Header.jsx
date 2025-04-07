@@ -92,7 +92,7 @@ const Header = () => {
   const navItems = !isLoggedIn ? (
     <>
       <li className="mb-2 md:mb-0">
-        <span className="text-red-600 font-bold">DEMOLÄGE</span>
+        <span className="text-red-600 font-bold">DEN HÄR HEMSIDAN ÄR UNDER UTVECKLING</span>
       </li>
       <li className="mb-2 md:mb-0">
         <button

@@ -65,12 +65,10 @@ export default function RegisterForm() {
         console.log("Användare skapades");
         navigate("/login");
       } else {
-        console.log("Nåt gick fel");
         console.log(data);
         setError(data.detail);
       }
     } catch (error) {
-      console.log(error);
       setError("Ett fel uppstod vid registrering");
     }
   }
