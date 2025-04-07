@@ -179,7 +179,7 @@ jobs:
       env:
         EC2_HOST: ${{ secrets.EC2_HOST }}
         EC2_USERNAME: ${{ secrets.EC2_USERNAME }}
-        DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        DB_URL: ${{ secrets.DB_URL }}
         SECRET_KEY: ${{ secrets.SECRET_KEY }}
         POSTMARK_TOKEN: ${{ secrets.POSTMARK_TOKEN }}
         FRONTEND_BASE_URL: ${{ secrets.FRONTEND_BASE_URL }}

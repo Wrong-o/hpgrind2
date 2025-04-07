@@ -8,7 +8,7 @@ from sqlalchemy.exc import IntegrityError
 from security import get_current_user
 from typing import List, Dict, Any
 router = APIRouter()
-#
+##
 
 @router.get("/user_achievements", status_code=200, response_model=list[UserAchievementsOut])
 def get_user_achievements(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
