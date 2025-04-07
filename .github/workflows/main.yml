@@ -187,7 +187,7 @@ jobs:
       run: |
         ssh -i ~/.ssh/ec2-key.pem $EC2_USERNAME@$EC2_HOST "
           cd $REMOTE_HOME/app && 
-          echo "DB_URL=$DATABASE_URL" > .env &&
+          echo "DB_URL=$DB_URL" > .env &&
           echo "SECRET_KEY=$SECRET_KEY" >> .env &&
           echo "POSTMARK_TOKEN=$POSTMARK_TOKEN" >> .env &&
           echo "FRONTEND_BASE_URL=$FRONTEND_BASE_URL" >> .env &&
