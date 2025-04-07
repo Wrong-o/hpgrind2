@@ -14,7 +14,7 @@ from pydantic import BaseModel
 from api.v1.core.endpoints import question_director, authentication, general
 import os
 from settings import settings
-
+#
 async def lifespan(app: FastAPI):
     # Initialize database with all tables
     try:
