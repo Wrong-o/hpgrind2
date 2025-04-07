@@ -198,7 +198,7 @@ jobs:
           docker compose up -d --build
         "
 
-    - name: Initialize Database
+    - name: Verify Database Settings
       env:
         EC2_HOST: ${{ secrets.EC2_HOST }}
         EC2_USERNAME: ${{ secrets.EC2_USERNAME }}
@@ -209,6 +209,36 @@ jobs:
           echo 'Waiting for the backend service to start up...'
           sleep 15
           
+          # Run database diagnostics for detailed troubleshooting
+          echo 'Running database diagnostics...'
+          docker compose exec -T backend python -m db_diagnostic || echo 'Database diagnostics failed. Proceeding with verification...'
+          
+          # Verify database settings
+          echo 'Verifying database settings...'
+          docker compose exec -T backend python -m verify_db_settings || {
+            # If verification fails, print DB_URL for debugging (without password)
+            echo 'Database settings verification failed. Checking environment variables...'
+            docker compose exec -T backend bash -c 'echo \"DB_URL: \${DB_URL//:/\\:*@/:***@}\"'
+            
+            # Let's check if we need to add the IP to pg_hba.conf (common issue)
+            echo 'Checking if this is a pg_hba.conf issue...'
+            CONTAINER_IP=$(docker compose exec -T backend hostname -i 2>/dev/null || echo 'unknown')
+            echo "Container IP address: $CONTAINER_IP"
+            echo "If you're seeing 'no pg_hba.conf entry' errors, make sure this IP is allowed to connect to your database"
+            echo "You may need to add a line like this to pg_hba.conf on your PostgreSQL server:"
+            echo "host    database    username    $CONTAINER_IP/32    md5"
+            
+            echo 'Please check your database connection settings in GitHub Secrets.'
+          }
+        "
+
+    - name: Initialize Database
+      env:
+        EC2_HOST: ${{ secrets.EC2_HOST }}
+        EC2_USERNAME: ${{ secrets.EC2_USERNAME }}
+      run: |
+        ssh -i ~/.ssh/ec2-key.pem $EC2_USERNAME@$EC2_HOST "
+          cd $REMOTE_HOME/app && 
           # Execute the database initialization script within the container
           echo 'Initializing database...'
           if ! docker compose exec -T backend python -m init_db; then
@@ -224,5 +254,7 @@ jobs:
           
           # Verify database tables exist
           echo 'Verifying database initialization...'
-          docker compose exec -T backend python -c 'from api.v1.core.models import User; from db_setup import get_db; db = next(get_db()); print(f\"User table exists with {db.query(User).count()} users\")'
+          docker compose exec -T backend python -c 'from api.v1.core.models import User; from db_setup import get_db; db = next(get_db()); print(f\"User table exists with {db.query(User).count()} users\")' || {
+            echo 'Database verification failed. Please check the logs above for errors.'
+          }
         "
