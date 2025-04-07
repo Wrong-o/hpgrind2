@@ -38,22 +38,6 @@ jobs:
         echo "REMOTE_HOME=$REMOTE_HOME" >> $GITHUB_ENV
         echo "Remote home directory: $REMOTE_HOME"
 
-    - name: Debug SSH connection
-      env:
-        EC2_HOST: ${{ secrets.EC2_HOST }}
-        EC2_USERNAME: ${{ secrets.EC2_USERNAME }}
-      run: |
-        echo "Testing connection to $EC2_HOST as user $EC2_USERNAME..."
-        ssh -i ~/.ssh/ec2-key.pem $EC2_USERNAME@$EC2_HOST 'echo SSH connection successful; echo User home: $HOME; ls -la $HOME'
-
-    - name: Install rsync on EC2
-      env:
-        EC2_HOST: ${{ secrets.EC2_HOST }}
-        EC2_USERNAME: ${{ secrets.EC2_USERNAME }}
-      run: |
-        echo "Installing rsync on EC2 instance..."
-        ssh -i ~/.ssh/ec2-key.pem $EC2_USERNAME@$EC2_HOST "sudo apt-get update && sudo apt-get install -y rsync"
-
     - name: Create docker-compose.yml
       run: |
         echo 'version: "3"' > docker-compose.yml
@@ -191,7 +175,7 @@ jobs:
           echo \"POSTMARK_TOKEN=$POSTMARK_TOKEN\" >> .env &&
           echo \"FRONTEND_BASE_URL=$FRONTEND_BASE_URL\" >> .env &&
           echo \"ENV=$ENVIRONMENT\" >> .env &&
-          echo \"CORS_ORIGINS=https://www.hpggrind.se\" >> .env &&
+          echo \"CORS_ORIGINS=https://www.hpgrind.se\" >> .env &&
           
           # Modify docker-compose to use restart-on-failure instead of always restarting
           if grep -q 'restart: always' docker-compose.yml; then
@@ -304,7 +288,7 @@ jobs:
           cd $REMOTE_HOME/app && 
           echo 'Creating a script to attempt database connection with alternate credentials...'
           # Create a Python script to attempt connection with different credentials
-          cat > fix_credentials.py << 'EOL'
+          cat > fix_credentials.py << 'EOF'
 import os
 import sys
 from urllib.parse import urlparse, urlunparse
@@ -312,7 +296,7 @@ import psycopg2
 
 # Get current DB_URL
 db_url = os.environ.get('DB_URL', '')
-print(f'Current DB_URL (sanitized): {db_url.split(":")[0]}:***@{db_url.split("@")[1] if "@" in db_url else ""}')
+print(f'Current DB_URL (sanitized): {db_url.split(\":\")[0]}:***@{db_url.split(\"@\")[1] if \"@\" in db_url else \"\"}')
 
 # Parse it
 try:
@@ -370,7 +354,7 @@ try:
 except Exception as e:
     print(f'Error parsing DB_URL: {str(e)}')
     sys.exit(1)
-EOL
+EOF
           
           # Run the script
           echo 'Running credential fix script...'
