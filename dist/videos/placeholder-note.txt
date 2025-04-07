@@ -1,0 +1,21 @@
+Place your MP4 video files in this directory.
+
+Required videos:
+- intro.mp4 - Main introduction video for the hero section
+- feature1.mp4 - Video showcasing the personalized training plan
+- feature2.mp4 - Video showcasing detailed feedback
+- feature3.mp4 - Video showcasing realistic test simulations
+- testimonial.mp4 - User testimonial video
+
+Recommended video specifications:
+- Format: MP4 (H.264 codec)
+- Resolution: 1280x720 (720p) or 1920x1080 (1080p)
+- Aspect ratio: 16:9
+- Bitrate: 2-5 Mbps for 720p, 5-8 Mbps for 1080p
+- Audio: AAC, 128-256 Kbps (note: videos are muted by default)
+- Duration: Short, looping videos (15-30 seconds) work best
+
+Important: All videos will autoplay, loop, and are muted by default.
+They do not have playback controls to maintain a clean, non-interactive design.
+
+For optimal performance, keep videos under 10MB each. 
