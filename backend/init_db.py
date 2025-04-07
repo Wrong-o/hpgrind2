@@ -42,7 +42,7 @@ def test_connection():
         print("4. Database server firewall is blocking connections")
         print("\nPlease check your DB_URL environment variable and database server configuration.")
         return False
-
+#
 def initialize_database(max_retries=3, retry_delay=5):
     """
     Initialize the database by creating all tables based on SQLAlchemy models.
