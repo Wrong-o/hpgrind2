@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import authStore from '../store/authStore';
 import { Link } from 'react-router-dom';
 import Popup from './Popup';
-
+//TODO: Add a loading state
 export const LoginPage = () => {
   const navigate = useNavigate();
 
