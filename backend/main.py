@@ -4,7 +4,7 @@ from api.v1.core.models import Base
 from api.v1.core.schemas import User
 from db_setup import get_db, engine
 from api.v1.routers import router
-from sqlalchemy import delete, insert, select, update, text
+from sqlalchemy import delete, insert, select, update, text, inspect
 from sqlalchemy.orm import Session, joinedload, selectinload
 from fastapi.middleware.cors import CORSMiddleware
 import sqlalchemy.exc
@@ -19,8 +19,24 @@ async def lifespan(app: FastAPI):
     # Initialize database with all tables
     try:
         print("Initializing database schema...")
+        # Ensure the database exists and is accessible
+        inspector = inspect(engine)
+        tables_exist = len(inspector.get_table_names()) > 0
+
+        # Create all tables if they don't exist
         Base.metadata.create_all(bind=engine)
         print("Database schema initialized successfully.")
+        
+        # Check if we need to add basic seed data (if tables were just created)
+        if not tables_exist:
+            print("No tables found before initialization, adding seed data...")
+            try:
+                from init_db import initialize_database
+                initialize_database()
+                print("Seed data added successfully.")
+            except Exception as seed_error:
+                print(f"Warning: Could not add seed data: {str(seed_error)}")
+        
         print(f"Running in {settings.ENV} mode")
         print(f"CORS origins: {settings.cors_origins}")
     except Exception as e:

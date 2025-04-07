@@ -197,3 +197,32 @@ jobs:
           docker compose down || echo 'No existing containers to stop'
           docker compose up -d --build
         "
+
+    - name: Initialize Database
+      env:
+        EC2_HOST: ${{ secrets.EC2_HOST }}
+        EC2_USERNAME: ${{ secrets.EC2_USERNAME }}
+      run: |
+        ssh -i ~/.ssh/ec2-key.pem $EC2_USERNAME@$EC2_HOST "
+          cd $REMOTE_HOME/app && 
+          # Wait for the backend service to start up
+          echo 'Waiting for the backend service to start up...'
+          sleep 15
+          
+          # Execute the database initialization script within the container
+          echo 'Initializing database...'
+          if ! docker compose exec -T backend python -m init_db; then
+            echo 'First attempt failed, waiting longer and trying again...'
+            sleep 15
+            if ! docker compose exec -T backend python -m init_db; then
+              echo 'Second attempt also failed. Trying to run initialization from inside the container directly...'
+              docker compose exec -T backend bash -c 'cd /app/backend && python -m init_db'
+            fi
+          fi
+          
+          echo 'Database initialization completed.'
+          
+          # Verify database tables exist
+          echo 'Verifying database initialization...'
+          docker compose exec -T backend python -c 'from api.v1.core.models import User; from db_setup import get_db; db = next(get_db()); print(f\"User table exists with {db.query(User).count()} users\")'
+        "
