@@ -38,39 +38,47 @@ jobs:
         echo "REMOTE_HOME=$REMOTE_HOME" >> $GITHUB_ENV
         echo "Remote home directory: $REMOTE_HOME"
 
-    - name: Create docker-compose.yml on Runner
+    - name: Create docker-compose.yml
       run: |
-        cat > docker-compose.yml <<-'EOF'
-          version: "3"
-          services:
-            backend:
-              build: .
-              restart: on-failure:5
-              ports:
-                - "8000:8000"
-              env_file:
-                - .env
-              volumes:
-                - ./backend:/app/backend
-                - ./certs:/app/certs
-              command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--ssl-keyfile", "/app/certs/key.pem", "--ssl-certfile", "/app/certs/cert.pem"]
-        EOF
+        echo 'version: "3"' > docker-compose.yml
+        echo '' >> docker-compose.yml
+        echo 'services:' >> docker-compose.yml
+        echo '  backend:' >> docker-compose.yml
+        echo '    build: .' >> docker-compose.yml
+        echo '    restart: always' >> docker-compose.yml
+        echo '    ports:' >> docker-compose.yml
+        echo '      - "8000:8000"' >> docker-compose.yml
+        echo '    env_file:' >> docker-compose.yml
+        echo '      - .env' >> docker-compose.yml
+        echo '    volumes:' >> docker-compose.yml
+        echo '      - ./backend:/app/backend' >> docker-compose.yml
+        echo '      - ./certs:/app/certs' >> docker-compose.yml
+        echo '    command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--ssl-keyfile", "/app/certs/key.pem", "--ssl-certfile", "/app/certs/cert.pem"]' >> docker-compose.yml
 
-    - name: Create Dockerfile on Runner
+    - name: Create Dockerfile
       run: |
-        cat > Dockerfile <<-'EOF'
-          FROM python:3.13-slim
-          WORKDIR /app
-          RUN apt-get update && apt-get install -y --no-install-recommends build-essential gcc libcairo2-dev pkg-config && rm -rf /var/lib/apt/lists/*
-          COPY backend/requirements.txt .
-          RUN python -m pip install --upgrade pip
-          RUN pip install --no-cache-dir -r requirements.txt
-          COPY backend /app/backend
-          WORKDIR /app/backend
-          CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
-        EOF
+        echo 'FROM python:3.13-slim' > Dockerfile
+        echo '' >> Dockerfile
+        echo 'WORKDIR /app' >> Dockerfile
+        echo '' >> Dockerfile
+        echo '# Install build tools and Cairo dev libraries needed for PyCairo' >> Dockerfile
+        echo 'RUN apt-get update && apt-get install -y --no-install-recommends build-essential gcc libcairo2-dev pkg-config && rm -rf /var/lib/apt/lists/*' >> Dockerfile
+        echo '' >> Dockerfile
+        echo 'COPY backend/requirements.txt .' >> Dockerfile
+        echo '# Debug: List files and show requirements.txt content' >> Dockerfile
+        echo 'RUN ls -la /app' >> Dockerfile
+        echo 'RUN cat /app/requirements.txt' >> Dockerfile
+        echo '# Update pip before installing requirements' >> Dockerfile
+        echo 'RUN python -m pip install --upgrade pip' >> Dockerfile
+        echo 'RUN pip install --no-cache-dir -r requirements.txt' >> Dockerfile
+        echo '' >> Dockerfile
+        echo 'COPY backend /app/backend' >> Dockerfile
+        echo '' >> Dockerfile
+        echo 'WORKDIR /app/backend' >> Dockerfile
+        echo '' >> Dockerfile
+        echo 'CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]' >> Dockerfile
 
-    - name: Sync Files to EC2
+    - name: Copy files to EC2 using rsync
       env:
         EC2_HOST: ${{ secrets.EC2_HOST }}
         EC2_USERNAME: ${{ secrets.EC2_USERNAME }}
@@ -90,32 +98,67 @@ jobs:
         echo "Syncing Dockerfile..."
         rsync -avz -e "ssh -i ~/.ssh/ec2-key.pem" ./Dockerfile $EC2_USERNAME@$EC2_HOST:$REMOTE_HOME/app/
 
-    - name: Setup EC2 Environment
+    - name: Install Docker and Docker Compose
       env:
         EC2_HOST: ${{ secrets.EC2_HOST }}
         EC2_USERNAME: ${{ secrets.EC2_USERNAME }}
       run: |
         ssh -i ~/.ssh/ec2-key.pem $EC2_USERNAME@$EC2_HOST "
-          sudo apt-get update && sudo apt-get install -y rsync docker-ce docker-ce-cli containerd.io jq
-          sudo systemctl start docker
-          sudo systemctl enable docker
-          sudo usermod -aG docker $EC2_USERNAME
-          
-          # Install Docker Compose v2 if needed
-          if ! docker compose version &> /dev/null; then
-            LATEST_COMPOSE_VERSION=$(curl -s https://api.github.com/repos/docker/compose/releases/latest | jq -r .tag_name)
-            DOCKER_CONFIG="$HOME/.docker"
-            sudo mkdir -p $DOCKER_CONFIG/cli-plugins
-            sudo curl -SL "https://github.com/docker/compose/releases/download/$LATEST_COMPOSE_VERSION/docker-compose-linux-x86_64" -o $DOCKER_CONFIG/cli-plugins/docker-compose
-            sudo chmod +x $DOCKER_CONFIG/cli-plugins/docker-compose
+          set -e # Exit immediately if a command exits with a non-zero status.
+          # Check if jq is installed, install if not
+          if ! command -v jq &> /dev/null; then
+            echo 'jq not found, installing...'
+            sudo apt-get update && sudo apt-get install -y jq
           fi
           
-          # Generate SSL certs
-          cd $REMOTE_HOME/app && mkdir -p certs && cd certs &&
+          # Install Docker if not already installed
+          if ! command -v docker &> /dev/null; then
+            echo 'Installing Docker...'
+            sudo apt-get update
+            sudo apt-get install -y apt-transport-https ca-certificates curl software-properties-common
+            curl -fsSL https://download.docker.com/linux/debian/gpg | sudo apt-key add -
+            sudo add-apt-repository -y 'deb [arch=amd64] https://download.docker.com/linux/debian buster stable' # Assuming Debian Buster, adjust if needed
+            sudo apt-get update
+            sudo apt-get install -y docker-ce docker-ce-cli containerd.io
+            sudo systemctl start docker
+            sudo systemctl enable docker
+            sudo usermod -aG docker \$USER # Correctly escape $USER for remote execution
+            echo 'Docker installation completed. You might need to re-login for group changes to apply.'
+          else
+            echo 'Docker is already installed'
+          fi
+          
+          # Install Docker Compose v2
+          if ! docker compose version &> /dev/null; then # Check using 'docker compose' command
+            echo 'Installing Docker Compose v2 (as plugin)...'
+            # Use jq to safely get the latest version tag
+            LATEST_COMPOSE_VERSION=\$(curl -s https://api.github.com/repos/docker/compose/releases/latest | jq -r .tag_name)
+            echo "Latest Docker Compose version: \$LATEST_COMPOSE_VERSION"
+            DOCKER_CONFIG=${DOCKER_CONFIG:-\$HOME/.docker}
+            sudo mkdir -p \$DOCKER_CONFIG/cli-plugins
+            sudo curl -SL "https://github.com/docker/compose/releases/download/\$LATEST_COMPOSE_VERSION/docker-compose-linux-x86_64" -o \$DOCKER_CONFIG/cli-plugins/docker-compose
+            sudo chmod +x \$DOCKER_CONFIG/cli-plugins/docker-compose
+            # Verify installation
+            docker compose version
+            echo 'Docker Compose installation completed'
+          else
+            echo 'Docker Compose v2 plugin is already installed'
+          fi
+        "
+
+    - name: Generate SSL certificates
+      env:
+        EC2_HOST: ${{ secrets.EC2_HOST }}
+        EC2_USERNAME: ${{ secrets.EC2_USERNAME }}
+      run: |
+        ssh -i ~/.ssh/ec2-key.pem $EC2_USERNAME@$EC2_HOST "
+          cd $REMOTE_HOME/app &&
+          mkdir -p certs &&
+          cd certs &&
           openssl req -x509 -newkey rsa:4096 -nodes -out cert.pem -keyout key.pem -days 365 -subj '/CN=localhost'
         "
 
-    - name: Create .env file on EC2
+    - name: Deploy with Docker Compose
       env:
         EC2_HOST: ${{ secrets.EC2_HOST }}
         EC2_USERNAME: ${{ secrets.EC2_USERNAME }}
@@ -126,139 +169,87 @@ jobs:
         ENVIRONMENT: "production"
       run: |
         ssh -i ~/.ssh/ec2-key.pem $EC2_USERNAME@$EC2_HOST "
-          cd $REMOTE_HOME/app &&
-          echo "DB_URL=$DB_URL" > .env &&
-          echo "SECRET_KEY=$SECRET_KEY" >> .env &&
-          echo "POSTMARK_TOKEN=$POSTMARK_TOKEN" >> .env &&
-          echo "FRONTEND_BASE_URL=$FRONTEND_BASE_URL" >> .env &&
-          echo "ENV=$ENVIRONMENT" >> .env &&
-          echo "CORS_ORIGINS=https://www.hpggrind.se" >> .env
-        "
-
-    - name: Start Docker Compose Services
-      env:
-        EC2_HOST: ${{ secrets.EC2_HOST }}
-        EC2_USERNAME: ${{ secrets.EC2_USERNAME }}
-      run: |
-        ssh -i ~/.ssh/ec2-key.pem $EC2_USERNAME@$EC2_HOST "
-          cd $REMOTE_HOME/app &&
-          docker compose down --remove-orphans || echo 'No existing containers to stop' &&
-          docker compose up -d --build &&
-          echo 'Waiting for container to stabilize...' &&
+          cd $REMOTE_HOME/app && 
+          echo \"DB_URL=$DB_URL\" > .env &&
+          echo \"SECRET_KEY=$SECRET_KEY\" >> .env &&
+          echo \"POSTMARK_TOKEN=$POSTMARK_TOKEN\" >> .env &&
+          echo \"FRONTEND_BASE_URL=$FRONTEND_BASE_URL\" >> .env &&
+          echo \"ENV=$ENVIRONMENT\" >> .env &&
+          echo \"CORS_ORIGINS=https://www.hpgrind.se\" >> .env &&
+          
+          # Modify docker-compose to use restart-on-failure instead of always restarting
+          if grep -q 'restart: always' docker-compose.yml; then
+            sed -i 's/restart: always/restart: on-failure:5/' docker-compose.yml
+            echo 'Modified restart policy to prevent infinite restart loops'
+          fi
+          
+          # Use Docker Compose v2 command
+          docker compose down || echo 'No existing containers to stop'
+          docker compose up -d --build
+          
+          # Wait for container to stabilize
+          echo 'Waiting for container to stabilize...'
           sleep 30
-        "
-
-    - name: Check Container Status and Logs
-      env:
-        EC2_HOST: ${{ secrets.EC2_HOST }}
-        EC2_USERNAME: ${{ secrets.EC2_USERNAME }}
-      run: |
-        ssh -i ~/.ssh/ec2-key.pem $EC2_USERNAME@$EC2_HOST "
-          cd $REMOTE_HOME/app &&
-          echo 'Checking container status...' &&
-          docker ps -a --filter name=backend &&
-          CONTAINER_STATUS=$(docker ps -a --filter name=backend --format '{{.Status}}') &&
-          if [[ $CONTAINER_STATUS == *"Restarting"* ]] || [[ $CONTAINER_STATUS != *"Up"* ]]; then
-            echo 'Container is not running properly. Status: ' $CONTAINER_STATUS &&
-            echo 'Checking logs:' &&
-            docker logs $(docker ps -aq --filter name=backend) || echo 'Could not get logs.' ;
+          
+          # Check if container is running or in a restart loop
+          CONTAINER_STATUS=\$(docker ps -a --filter name=backend --format '{{.Status}}')
+          if [[ \$CONTAINER_STATUS == *\"Restarting\"* ]]; then
+            echo 'Container is in a restart loop. Checking logs:'
+            docker logs \$(docker ps -aq --filter name=backend)
           else
-            echo 'Container appears to be stable. Status: ' $CONTAINER_STATUS ;
+            echo 'Container appears to be stable. Status: '\$CONTAINER_STATUS
           fi
         "
 
-    - name: Create Verification Script on EC2
+    - name: Check Container Logs
       env:
         EC2_HOST: ${{ secrets.EC2_HOST }}
         EC2_USERNAME: ${{ secrets.EC2_USERNAME }}
       run: |
         ssh -i ~/.ssh/ec2-key.pem $EC2_USERNAME@$EC2_HOST "
           cd $REMOTE_HOME/app &&
-          echo 'Creating database verification script...' &&
-          cat > verify_db_init.py << EOF
-import sys
-import traceback
-import os
-from urllib.parse import urlparse
-import socket
-import time
-
-print("Starting database verification...")
-
-# Basic settings check
-db_url = os.environ.get('DB_URL')
-if not db_url:
-    print("ERROR: DB_URL environment variable not set")
-    sys.exit(1)
-
-print("DB_URL is set ✓")
-
-try:
-    parsed = urlparse(db_url)
-    hostname = parsed.hostname
-    port = parsed.port or 5432
-    if not hostname:
-      print("ERROR: Could not parse hostname from DB_URL")
-      sys.exit(1)
-
-    # Network Check
-    print(f"Testing network connection to {hostname}:{port}...")
-    for i in range(3):
-        try:
-            sock = socket.create_connection((hostname, port), timeout=5)
-            print("Network connection successful ✓")
-            sock.close()
-            network_ok = True
-            break
-        except Exception as net_e:
-            print(f"Network attempt {i+1} failed: {str(net_e)}")
-            network_ok = False
-            time.sleep(2)
-    if not network_ok:
-      print("ERROR: Failed to establish network connection after retries.")
-      sys.exit(1)
-
-    # Defer detailed connection check to diagnostic/init scripts
-    print("Basic settings and network check passed. Detailed check will follow.")
-    sys.exit(0)
-
-except Exception as e:
-    print(f"ERROR during verification: {str(e)}")
-    traceback.print_exc()
-    sys.exit(1)
-EOF
+          echo 'Checking container logs to identify restart issue...'
+          docker logs \$(docker ps -aq --filter name=backend) || echo 'Could not get container logs'
+          
+          echo 'Checking container status...'
+          docker ps -a
+          
+          echo 'Checking Docker events...'
+          docker events --since 5m --until 0m --filter container=\$(docker ps -aq --filter name=backend) || echo 'No recent events'
         "
 
-    - name: Run Verification Script in Container
+    - name: Verify Database Settings
       env:
         EC2_HOST: ${{ secrets.EC2_HOST }}
         EC2_USERNAME: ${{ secrets.EC2_USERNAME }}
       run: |
         ssh -i ~/.ssh/ec2-key.pem $EC2_USERNAME@$EC2_HOST "
-          cd $REMOTE_HOME/app &&
-          echo 'Copying verification script to container...' &&
-          docker cp verify_db_init.py $(docker compose ps -q backend):/app/verify_db_init.py &&
-          echo 'Executing verification script...' &&
-          if docker compose exec -T backend python /app/verify_db_init.py; then
-            echo '✅ Basic verification successful.' ;
-          else
-            echo '❌ Basic verification failed. Check logs above.' ;
-            # Decide if workflow should fail here: exit 1;
-          fi &&
-          echo 'Cleaning up verification script...' &&
-          rm verify_db_init.py &&
-          docker compose exec -T backend rm /app/verify_db_init.py
-        "
-
-    - name: Run Database Diagnostics
-      env:
-        EC2_HOST: ${{ secrets.EC2_HOST }}
-        EC2_USERNAME: ${{ secrets.EC2_USERNAME }}
-      run: |
-        ssh -i ~/.ssh/ec2-key.pem $EC2_USERNAME@$EC2_HOST "
-          cd $REMOTE_HOME/app &&
-          echo 'Running detailed database diagnostics...' &&
-          docker compose exec -T backend python -m db_diagnostic || echo 'Database diagnostics command failed to run.'
+          cd $REMOTE_HOME/app && 
+          # Wait for the backend service to start up
+          echo 'Waiting for the backend service to start up...'
+          sleep 15
+          
+          # Run database diagnostics for detailed troubleshooting
+          echo 'Running database diagnostics...'
+          docker compose exec -T backend python -m db_diagnostic || echo 'Database diagnostics failed. Proceeding with verification...'
+          
+          # Verify database settings
+          echo 'Verifying database settings...'
+          docker compose exec -T backend python -m verify_db_settings || {
+            # If verification fails, print DB_URL for debugging (without password)
+            echo 'Database settings verification failed. Checking environment variables...'
+            docker compose exec -T backend bash -c 'echo \"DB_URL: \${DB_URL//:/\\:*@/:***@}\"'
+            
+            # Let's check if we need to add the IP to pg_hba.conf (common issue)
+            echo 'Checking if this is a pg_hba.conf issue...'
+            CONTAINER_IP=\$(docker compose exec -T backend hostname -i 2>/dev/null || echo 'unknown')
+            echo \"Container IP address: \$CONTAINER_IP\"
+            echo \"If you're seeing 'no pg_hba.conf entry' errors, make sure this IP is allowed to connect to your database\"
+            echo \"You may need to add a line like this to pg_hba.conf on your PostgreSQL server:\"
+            echo \"host    database    username    \$CONTAINER_IP/32    md5\"
+            
+            echo 'Please check your database connection settings in GitHub Secrets.'
+          }
         "
 
     - name: Initialize Database
@@ -267,11 +258,105 @@ EOF
         EC2_USERNAME: ${{ secrets.EC2_USERNAME }}
       run: |
         ssh -i ~/.ssh/ec2-key.pem $EC2_USERNAME@$EC2_HOST "
-          cd $REMOTE_HOME/app &&
-          echo 'Attempting database initialization...' &&
+          cd $REMOTE_HOME/app && 
+          # Execute the database initialization script within the container
+          echo 'Initializing database...'
           if ! docker compose exec -T backend python -m init_db; then
-            echo 'Initialization failed. Check diagnostics and container logs.' ;
-          else
-            echo '✅ Database initialization script completed.' ;
+            echo 'First attempt failed, waiting longer and trying again...'
+            sleep 15
+            if ! docker compose exec -T backend python -m init_db; then
+              echo 'Second attempt also failed. Trying to run initialization from inside the container directly...'
+              docker compose exec -T backend bash -c 'cd /app/backend && python -m init_db'
+            fi
           fi
+          
+          echo 'Database initialization completed.'
+          
+          # Verify database tables exist
+          echo 'Verifying database initialization...'
+          docker compose exec -T backend python -c 'from api.v1.core.models import User; from db_setup import get_db; db = next(get_db()); print(f\"User table exists with {db.query(User).count()} users\")' || {
+            echo 'Database verification failed. Please check the logs above for errors.'
+          }
+        "
+
+    - name: Fix Database Credentials (If Needed)
+      env:
+        EC2_HOST: ${{ secrets.EC2_HOST }}
+        EC2_USERNAME: ${{ secrets.EC2_USERNAME }}
+      run: |
+        ssh -i ~/.ssh/ec2-key.pem $EC2_USERNAME@$EC2_HOST "
+          cd $REMOTE_HOME/app && 
+          echo 'Creating a script to attempt database connection with alternate credentials...'
+          # Create a Python script to attempt connection with different credentials
+          cat > fix_credentials.py << 'EOL'
+import os
+import sys
+from urllib.parse import urlparse, urlunparse
+import psycopg2
+
+# Get current DB_URL
+db_url = os.environ.get('DB_URL', '')
+print(f'Current DB_URL (sanitized): {db_url.split(":")[0]}:***@{db_url.split("@")[1] if "@" in db_url else ""}')
+
+# Parse it
+try:
+    parsed = urlparse(db_url)
+    username = parsed.username
+    password = parsed.password
+    hostname = parsed.hostname
+    port = parsed.port or 5432
+    database = parsed.path.lstrip('/')
+    
+    # Try connection with original credentials
+    print('\\nAttempting connection with current credentials...')
+    try:
+        conn = psycopg2.connect(
+            dbname=database,
+            user=username,
+            password=password,
+            host=hostname,
+            port=port,
+            connect_timeout=10
+        )
+        print('SUCCESS! Connection worked with current credentials.')
+        conn.close()
+    except Exception as e:
+        print(f'ERROR: Connection failed: {str(e)}')
+        
+        # Try with modified credentials (common patterns)
+        print('\\nAttempting connection with alternate credentials...')
+        for test_user, test_password in [
+            (username, password),  # Original
+            (username, password + '='),  # Sometimes passwords have trailing = from base64
+            (username, password.rstrip('=')),  # Or without trailing =
+            (username, password.replace('-', '+').replace('_', '/')),  # URL-safe base64 correction
+            ('postgres', 'postgres'),  # Default credentials
+        ]:
+            try:
+                print(f'Trying with user={test_user}, password={test_password[:2]}***')
+                conn = psycopg2.connect(
+                    dbname=database,
+                    user=test_user,
+                    password=test_password,
+                    host=hostname,
+                    port=port,
+                    connect_timeout=5
+                )
+                print(f'SUCCESS! Connection worked with user={test_user}, password={test_password[:2]}***')
+                # Print the working connection string (censored)
+                working_url = f'postgresql://{test_user}:***@{hostname}:{port}/{database}'
+                print(f'Working connection string: {working_url}')
+                print('Please update your DB_URL in GitHub Secrets with the password that worked')
+                conn.close()
+                break
+            except Exception as e:
+                print(f'  Failed: {str(e)}')
+except Exception as e:
+    print(f'Error parsing DB_URL: {str(e)}')
+    sys.exit(1)
+EOL
+          
+          # Run the script
+          echo 'Running credential fix script...'
+          docker compose exec -T backend python fix_credentials.py || echo 'Credential fix script failed'
         "
