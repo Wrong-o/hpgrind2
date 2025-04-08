@@ -18,7 +18,7 @@ const AnswerButton = ({
   
   if (isSelected && isCorrect) {
     // Selected and correct answer
-    stateClasses = "bg-green-100 hover:bg-green-200 border-green-500 text-green-800";
+    stateClasses = "bg-emerald-100 hover:bg-emerald-200 border-emerald-500 text-emerald-800";
   } else if (isSelected && !isCorrect) {
     // Selected but incorrect answer
     stateClasses = "bg-indigo-100 hover:bg-indigo-200 border-indigo-500 text-indigo-800";
@@ -27,7 +27,7 @@ const AnswerButton = ({
     stateClasses = "bg-green-50 hover:bg-green-100 border-green-300 text-green-700";
   } else {
     // Default state (neither selected nor revealed as correct)
-    stateClasses = "bg-white/10 hover:bg-white/20 border-white/20 text-black";
+    stateClasses = "text-gray-900 hover:text-white border-4 border-gray-800 hover:bg-gray-900 focus:ring-4 focus:outline-none focus:ring-gray-300 font-medium rounded-lg hover:shadow-[0_0_150px_rgba(17,24,39,0.5)] transition-shadow duration-300";
   }
   
   return (
