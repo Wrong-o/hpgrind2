@@ -15,7 +15,7 @@ from api.v1.core.endpoints import question_director, authentication, general
 import os
 from settings import settings
 import logging
-
+#
 logger = logging.getLogger(__name__)
 
 async def lifespan(app: FastAPI):
