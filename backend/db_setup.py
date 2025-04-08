@@ -5,7 +5,7 @@ import time
 import logging
 from api.v1.core.models import Base
 from settings import settings
-#
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO if settings.ENV == 'production' else logging.DEBUG,

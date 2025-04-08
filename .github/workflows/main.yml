@@ -140,11 +140,19 @@ jobs:
           echo 'POSTMARK_TOKEN=$POSTMARK_TOKEN' >> ./backend/.env &&
           echo 'FRONTEND_BASE_URL=$FRONTEND_BASE_URL' >> ./backend/.env &&
           echo 'ENV=$ENVIRONMENT' >> ./backend/.env &&
-          echo 'CORS_ORIGINS=https://www.hpgrind.se' >> ./backend/.env 
-         " 
-        ssh -i ~/.ssh/ec2-key.pem $EC2_USERNAME@$EC2_HOST "
-          cd $REMOTE_HOME/app && 
+          echo 'CORS_ORIGINS=https://www.hpgrind.se' >> ./backend/.env &&
+          
+          # Stop and remove all containers
           docker-compose down &&
+
+          # Remove unused containers, networks, images and build cache
+          docker system prune -af --volumes &&
+          
+          # Build and start the new containers
           docker-compose build --no-cache &&
-          docker-compose up -d
-        "
+          docker-compose up -d &&
+          
+          # Cleanup old images and containers after successful deployment
+          docker image prune -af &&
+          docker container prune -f
+         "
