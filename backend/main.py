@@ -14,8 +14,13 @@ from pydantic import BaseModel
 from api.v1.core.endpoints import question_director, authentication, general
 import os
 from settings import settings
-#
+import logging
+
+logger = logging.getLogger(__name__)
+
 async def lifespan(app: FastAPI):
+    logger.debug("Starting lifespan")
+    logger.debug(f"DB_URL: {settings.DB_URL}")
     # Initialize database with all tables
     try:
         print("Initializing database schema...")

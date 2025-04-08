@@ -7,7 +7,10 @@ from api.v1.core.models import Base
 from settings import settings
 
 # Configure logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logging.basicConfig(
+    level=logging.INFO if settings.ENV == 'production' else logging.DEBUG,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
 logger = logging.getLogger(__name__)
 # Connection timeout settings
 CONNECT_TIMEOUT = 10  # seconds
@@ -25,7 +28,7 @@ try:
     
     engine = create_engine(
         settings.DB_URL,
-        echo=settings.ENV != 'production',  # Enable echo only in non-production
+        echo=False,  # Disable echo in all environments as it's too verbose
         pool_size=POOL_SIZE,
         max_overflow=MAX_OVERFLOW,
         pool_timeout=POOL_TIMEOUT,
@@ -34,12 +37,11 @@ try:
         connect_args={'connect_timeout': CONNECT_TIMEOUT}
     )
     
-    # Log each connection checkout for debugging
-    if settings.ENV != 'production':
-        @event.listens_for(engine, "checkout")
-        def checkout(dbapi_connection, connection_record, connection_proxy):
-            logger.debug("Connection checked out")
-            
+    # Log each connection checkout in all environments
+    @event.listens_for(engine, "checkout")
+    def checkout(dbapi_connection, connection_record, connection_proxy):
+        logger.info("Database connection checked out")  # Changed from debug to info
+
     logger.info("Database engine created successfully")
 except Exception as e:
     logger.error(f"Error creating database engine: {str(e)}")
