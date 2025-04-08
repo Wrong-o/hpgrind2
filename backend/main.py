@@ -53,18 +53,16 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan=lifespan)
 app.include_router(router, prefix="/api/v1")
 
-# CORS Configuration
+# CORS Configuration - aligned with Nginx configuration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[settings.cors_origins] if isinstance(settings.cors_origins, str) else settings.cors_origins,
+    allow_origins=["https://hpgrind.se", "https://www.hpgrind.se"],
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allow_headers=["Authorization", "Content-Type", "X-Requested-With", "Accept", 
-                  "Origin", "Access-Control-Request-Method", 
-                  "Access-Control-Request-Headers", "DNT", 
-                  "User-Agent", "If-Modified-Since", "Cache-Control", "Range"],
+    allow_methods=["GET", "POST", "OPTIONS", "PUT", "DELETE"],
+    allow_headers=["DNT", "User-Agent", "X-Requested-With", "If-Modified-Since", 
+                  "Cache-Control", "Content-Type", "Range", "Authorization"],
     expose_headers=["Content-Length", "Content-Range"],
-    max_age=86400  # Cache preflight requests for 24 hours
+    max_age=1728000  # Matching Nginx's Access-Control-Max-Age
 )
 
 app.include_router(question_director.router, prefix="/api/v1/question_generator", tags=["question_generator"])
