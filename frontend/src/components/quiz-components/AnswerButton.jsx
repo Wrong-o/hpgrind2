@@ -27,7 +27,7 @@ const AnswerButton = ({
     stateClasses = "bg-green-50 hover:bg-green-100 border-green-300 text-green-700";
   } else {
     // Default state (neither selected nor revealed as correct)
-    stateClasses = "text-gray-900 hover:text-white border-4 border-gray-800 hover:bg-gray-900 focus:ring-4 focus:outline-none focus:ring-gray-300 font-medium rounded-lg hover:shadow-[0_0_150px_rgba(17,24,39,0.5)] transition-shadow duration-300";
+    stateClasses = "text-gray-900 hover:text-white border-4 border-gray-800 hover:bg-gray-900 focus:ring-4 focus:outline-none focus:ring-gray-300 font-medium rounded-lg hover:shadow-[0_0_50px_rgba(29,24,124,0.8)] transition-shadow duration-100";
   }
   
   return (

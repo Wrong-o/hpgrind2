@@ -196,9 +196,9 @@ const Quiz = () => {
   }
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-gradient-to-b from-blue-50 to-white p-4">
-      <div className="quiz-container w-full max-w-4xl flex flex-col gap-6 relative">
-        <div className="absolute top-0 right-0 z-10 flex gap-2">
+    <div className="min-h-screen w-full flex items-center justify-center p-4">
+      <div className="quiz-container w-full max-w-5xl flex flex-col gap-6 relative">
+        <div className="absolute top-4 right-0 z-10 flex gap-2">
           <QuizAssistant VideoName={currentQuestion.explanation} />
         </div>
         <div className="w-full bg-gray-200 rounded-full h-2.5 mb-4">
@@ -213,7 +213,7 @@ const Quiz = () => {
         </div>
         
         {/* Question Box - displayed prominently above answers */}
-        <div className="w-full bg-blue-200">
+        <div className="w-full bg-blue-200 rounded-lg">
           <QuestionBox latexString={currentQuestion.question} />
         </div>
         
