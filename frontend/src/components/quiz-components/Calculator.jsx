@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { useSound } from '../contexts/SoundContext';
+import { useSound } from '../../contexts/SoundContext';
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 export const Calculator = ({
   onClose
@@ -79,7 +79,7 @@ export const Calculator = ({
     setExpression('');
   };
   return /*#__PURE__*/_jsxs("div", {
-    className: "absolute right-4 top-20 bg-white/95 p-4 rounded-xl shadow-lg backdrop-blur-sm z-40 min-w-[240px]",
+    className: "bg-white/95 p-4 rounded-xl shadow-lg backdrop-blur-sm z-40 min-w-[240px]",
     onClick: e => e.stopPropagation(),
     children: [/*#__PURE__*/_jsx("div", {
       className: "bg-gray-100 p-2 rounded mb-1 text-right text-sm text-gray-600",

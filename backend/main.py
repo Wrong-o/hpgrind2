@@ -56,7 +56,7 @@ app.include_router(router, prefix="/api/v1")
 # CORS Configuration - aligned with Nginx configuration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://hpgrind.se", "https://www.hpgrind.se"],
+    allow_origins=settings.cors_origins,
     allow_credentials=True,
     allow_methods=["GET", "POST", "OPTIONS", "PUT", "DELETE"],
     allow_headers=["DNT", "User-Agent", "X-Requested-With", "If-Modified-Since", 

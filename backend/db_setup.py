@@ -47,7 +47,7 @@ except Exception as e:
     logger.error(f"Error creating database engine: {str(e)}")
     raise
 
-def get_db(retries=3, retry_delay=1):
+def get_db(retries:int =3, retry_delay:int =1):
     """
     Generator function that yields a database session.
     Used for dependency injection in FastAPI endpoints.
@@ -56,8 +56,8 @@ def get_db(retries=3, retry_delay=1):
         retries: Number of connection retries
         retry_delay: Delay between retries in seconds
     """
-    attempt = 0
-    last_error = None
+    attempt:int = 0
+    last_error:Exception = None
     
     while attempt < retries:
         print(f"Attempt {attempt} of {retries}")

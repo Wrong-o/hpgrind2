@@ -4,35 +4,24 @@ from api.v1.core.services.wrong_answer_generator import generate_fraction_choice
 
 
 def explanation(operator):
+    """
+    Returns the video file name for the given operator
+    """
     if operator == "-":
 
-        return r"""
-        \text{1. Se till att bråken har samma nämnare (siffran där nere)} \\
-        \text{2. Gångra det över och under sträcket med andra bråkets nämnare på båda sidor}
-        \text{3. Ta täljaren på det första bråket minus täljaren på det andra}
-        """
+        return "FractionSubtraction.mp4"
 
     if operator == "+":
 
-        return r"""
-        \text{1. Se till att bråken har samma nämnare (siffran där nere)} \\
-        \text{2. Gångra det över och under sträcket med andra bråkets nämnare på båda sidor}
-        \text{3. Ta täljaren på det första bråket plus täljaren på det andra}
-        """
+        return "FractionAddition.mp4"
 
     if operator == "/":
 
-        return r"""
-        \text{1. Byt plats på de två siffrorna i nedre bråket} \\
-        \text{2. Lyft upp det nedre bråket bredvid det övre bråket}
-        \text{3. Gångra täljarna med varandra och nämnarna med varandra}
-        """
+        return "FractionDivision.mp4"
 
     if operator == "*":
 
-        return r"""
-        \text{1. Gångra täljarna med varandra och nämnarna med varandra}
-        """
+        return "FractionMultiplication.mp4"
 
 
 def fraction_equations(difficulty: int):
@@ -75,6 +64,7 @@ def fraction_equations(difficulty: int):
                 fraction2["numerator"] * fraction1["denominator"],
                 "question": f"\\frac{{{fraction1['numerator']}}}{{{fraction1['denominator']}}} + \\frac{{{fraction2['numerator']}}}{{{fraction2['denominator']}}}"
             })
+        question_data["explanation"] = explanation(operator=operator)
 
     elif difficulty == 2:
         fraction1 = random_fraction(max_numerator=10, max_denominator=10)

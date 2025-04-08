@@ -2,20 +2,17 @@ version: "3"
 
 services:
   backend:
-    build: .
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
     restart: always
     ports:
       - "8000:8000"
-    environment:
-      - DB_URL=${DB_URL}
-      - SECRET_KEY=${SECRET_KEY}
-      - POSTMARK_TOKEN=${POSTMARK_TOKEN}
-      - FRONTEND_BASE_URL=${FRONTEND_BASE_URL}
-      - ENV=production
+    env_file:
+      - ./backend/.env
     volumes:
-      - ./backend:/app/backend
-      - ./certs:/app/certs
-    command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--log-level", "debug"]
+      - ./backend:/app
+    command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
 
   db:
     image: postgres:15

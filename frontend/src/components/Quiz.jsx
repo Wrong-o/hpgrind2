@@ -4,6 +4,8 @@ import AnswerButton from './quiz-components/AnswerButton';
 import LoadingScreen from './quiz-components/LoadingScreen';
 import authStore from '../store/authStore';
 import SkipButton from './quiz-components/SkipButton';
+import { VideoPlayer } from './VideoPlayer';
+import { Calculator } from './quiz-components/Calculator';
 
 const Quiz = () => {
   const [selectedAnswer, setSelectedAnswer] = useState(null);
@@ -15,6 +17,9 @@ const Quiz = () => {
   const [skipped, setSkipped] = useState(false);
   const fetchedRef = useRef(false);
   const startTimeRef = useRef(Date.now());
+  const [videoShowing, setVideoShowing] = useState(false);
+  const [videoError, setVideoError] = useState(null);
+  const [calculatorShowing, setCalculatorShowing] = useState(false);
   
   useEffect(() => {
     // Only run if not already fetched - prevents duplicate calls in StrictMode
@@ -38,8 +43,8 @@ const Quiz = () => {
       
       console.log("Fetching questions from batch endpoint...");
       const requestBody = {
-        moment: "operations_order",
-        difficulty: 1,
+        moment: "fraction_equation",
+        difficulty: 2,
         count: questionCount
       };
       console.log("Request body:", requestBody);
@@ -197,7 +202,82 @@ const Quiz = () => {
 
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-gradient-to-b from-blue-50 to-white p-4">
-      <div className="quiz-container w-full max-w-4xl flex flex-col gap-6">
+      <div className="quiz-container w-full max-w-4xl flex flex-col gap-6 relative">
+        {/* Video and Calculator toggle buttons */}
+        <div className="absolute top-0 right-0 z-10 flex gap-2">
+          <button
+            onClick={() => setCalculatorShowing(!calculatorShowing)}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2"
+          >
+            {calculatorShowing ? (
+              <>
+                <span>Stäng kalkylator</span>
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                </svg>
+              </>
+            ) : (
+              <>
+                <span>Kalkylator</span>
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V4a2 2 0 00-2-2H6zm1 2a1 1 0 000 2h6a1 1 0 100-2H7zm6 7a1 1 0 011 1v3a1 1 0 11-2 0v-3a1 1 0 011-1zm-3 3a1 1 0 100 2h.01a1 1 0 100-2H10zm-4 1a1 1 0 011-1h.01a1 1 0 110 2H7a1 1 0 01-1-1zm1-4a1 1 0 100 2h.01a1 1 0 100-2H7zm2 1a1 1 0 011-1h.01a1 1 0 110 2H10a1 1 0 01-1-1zm4-4a1 1 0 100 2h.01a1 1 0 100-2H13zM9 9a1 1 0 011-1h.01a1 1 0 110 2H10a1 1 0 01-1-1zM7 8a1 1 0 000 2h.01a1 1 0 000-2H7z" clipRule="evenodd" />
+                </svg>
+              </>
+            )}
+          </button>
+          <button
+            onClick={() => setVideoShowing(!videoShowing)}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2"
+          >
+            {videoShowing ? (
+              <>
+                <span>Stäng video</span>
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                </svg>
+              </>
+            ) : (
+              <>
+                <span>Video exempel</span>
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zm12.553 1.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z" />
+                </svg>
+              </>
+            )}
+          </button>
+        </div>
+
+        {/* Calculator container */}
+        {calculatorShowing && (
+          <div className="absolute top-14 right-0 w-[300px] rounded-lg overflow-hidden shadow-lg z-20">
+            <Calculator />
+          </div>
+        )}
+
+        {/* Video player container */}
+        {videoShowing && currentQuestion.explanation && (
+          <div className="absolute top-14 right-0 w-64 aspect-video rounded-lg overflow-hidden shadow-lg z-10">
+            <VideoPlayer
+              autoPlay={true}
+              loop={true}
+              controls={true}
+              src={`${import.meta.env.BASE_URL}videos/${currentQuestion.explanation}`}
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                console.error("Video playback error:", e);
+                console.error("Video element:", e.target);
+                console.error("Video source:", e.target.src);
+                setVideoError(`Failed to load video: ${e.target.src}`);
+              }}
+            />
+            {videoError && (
+              <div className="absolute bottom-0 left-0 right-0 bg-red-500 text-white text-xs p-1">
+                {videoError}
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Progress indicator */}
         <div className="w-full bg-gray-200 rounded-full h-2.5 mb-4">
           <div 
