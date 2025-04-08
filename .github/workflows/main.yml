@@ -133,11 +133,11 @@ jobs:
       run: |
         ssh -i ~/.ssh/ec2-key.pem $EC2_USERNAME@$EC2_HOST "
           cd $REMOTE_HOME/app && 
-          echo \"DB_URL=$DB_URL\" > .env &&
-          echo \"SECRET_KEY=$SECRET_KEY\" >> ./backend/.env &&
-          echo \"POSTMARK_TOKEN=$POSTMARK_TOKEN\" >> ./backend/.env &&
-          echo \"FRONTEND_BASE_URL=$FRONTEND_BASE_URL\" >> ./backend/.env &&
-          echo \"ENV=$ENVIRONMENT\" >> ./backend/.env &&
+          echo \"$DB_URL\" > ./backend/.env &&
+          echo \"$SECRET_KEY\" >> ./backend/.env &&
+          echo \"$POSTMARK_TOKEN\" >> ./backend/.env &&
+          echo \"$FRONTEND_BASE_URL\" >> ./backend/.env &&
+          echo \"$ENVIRONMENT\" >> ./backend/.env &&
           echo \"CORS_ORIGINS=https://www.hpgrind.se\" >> ./backend/.env 
          " 
         ssh -i ~/.ssh/ec2-key.pem $EC2_USERNAME@$EC2_HOST "
