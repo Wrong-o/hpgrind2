@@ -34,10 +34,6 @@ def login(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
     db: Session = Depends(get_db),
 ) -> TokenSchema:
-    """
-    Login a user
-    This endpoint validates the user's credentials and returns an access token
-    """
     user = (
         db.execute(
             select(User).where(User.email == form_data.username),
@@ -69,47 +65,52 @@ def register_user(
     Register a new user
     This endpoint creates a new user in the database
     """
-    # Check if email already exists
-    existing_user = db.execute(
-        select(User).where(User.email == user.email)
-    ).scalars().first()
+    try:
+        # Check if email already exists
+        existing_user = db.execute(
+            select(User).where(User.email == user.email)
+        ).scalars().first()
 
-    if existing_user:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Email already registered"
-        )
+        if existing_user:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Email already registered"
+            )
 
-    # Validate password requirements
-    if len(user.password) < 8:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Lösenordet måste vara minst 8 tecken långt"
-        )
-    if not any(c.islower() for c in user.password):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Lösenordet måste innehålla minst en liten bokstav"
-        )
-    if not any(c.isupper() for c in user.password):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Lösenordet måste innehålla minst en stor bokstav"
-        )
-    if not any(c.isdigit() for c in user.password):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Lösenordet måste innehålla minst en siffra"
-        )
+        # Validate password requirements
+        if len(user.password) < 8:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Lösenordet måste vara minst 8 tecken långt"
+            )
+        if not any(c.islower() for c in user.password):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Lösenordet måste innehålla minst en liten bokstav"
+            )
+        if not any(c.isupper() for c in user.password):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Lösenordet måste innehålla minst en stor bokstav"
+            )
+        if not any(c.isdigit() for c in user.password):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Lösenordet måste innehålla minst en siffra"
+            )
 
-    hashed_password = hash_password(user.password)
-    new_user = User(
-        **user.model_dump(exclude={"password"}), hashed_password=hashed_password
-    )
-    db.add(new_user)
-    db.commit()
-    return new_user
-
+        hashed_password = hash_password(user.password)
+        new_user = User(
+            **user.model_dump(exclude={"password"}), hashed_password=hashed_password
+        )
+        db.add(new_user)
+        db.commit()
+        return new_user
+    except:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Ett oväntat fel uppstod"
+        )
 
 @router.delete("/logout", status_code=status.HTTP_204_NO_CONTENT)
 def logout(
@@ -132,7 +133,6 @@ def read_user_me(
     """
     Get the current user's information
     This endpoint returns the current user's information
-    
     """
     return current_user
 
