@@ -53,14 +53,17 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan=lifespan)
 app.include_router(router, prefix="/api/v1")
 
-# CORS Configuration - updated with all necessary headers
+# CORS Configuration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Temporarily allow all origins for debugging
+    allow_origins=[settings.cors_origins] if isinstance(settings.cors_origins, str) else settings.cors_origins,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-    expose_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type", "X-Requested-With", "Accept", 
+                  "Origin", "Access-Control-Request-Method", 
+                  "Access-Control-Request-Headers", "DNT", 
+                  "User-Agent", "If-Modified-Since", "Cache-Control", "Range"],
+    expose_headers=["Content-Length", "Content-Range"],
     max_age=86400  # Cache preflight requests for 24 hours
 )
 
