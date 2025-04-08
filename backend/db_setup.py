@@ -17,6 +17,8 @@ POOL_RECYCLE = 3600   # Recycle connections after 1 hour
 POOL_TIMEOUT = 30     # Timeout for getting connection from pool
 POOL_PRE_PING = True  # Pre-ping connections to ensure they're alive
 
+print(f"db_setup.py: {settings.DB_URL}")
+logger.info(f"db_setup.py: {settings.DB_URL}")
 # Create engine with enhanced parameters for production
 try:
     logger.info(f"Connecting to database with URL: {settings.DB_URL.split('@')[0]}:***@{settings.DB_URL.split('@')[1] if '@' in settings.DB_URL else '(invalid URL)'}")
@@ -56,6 +58,7 @@ def get_db(retries=3, retry_delay=1):
     last_error = None
     
     while attempt < retries:
+        print(f"Attempt {attempt} of {retries}")
         try:
             with Session(engine, expire_on_commit=False) as session:
                 yield session
