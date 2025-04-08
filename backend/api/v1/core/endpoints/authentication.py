@@ -25,10 +25,11 @@ from pydantic import ValidationError
 from sqlalchemy.orm import Session
 from sqlalchemy import delete, select
 from sqlalchemy.exc import IntegrityError
+import logging
 
 router = APIRouter()
 
-
+logger = logging.getLogger(__name__)
 @router.post("/token")
 def login(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
@@ -65,6 +66,7 @@ def register_user(
     Register a new user
     This endpoint creates a new user in the database
     """
+    logger.debug(f"Registering user: {user}")
     try:
         # Check if email already exists
         existing_user = db.execute(
