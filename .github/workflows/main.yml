@@ -49,7 +49,7 @@ jobs:
         echo '    ports:' >> docker-compose.yml
         echo '      - "8000:8000"' >> docker-compose.yml
         echo '    env_file:' >> docker-compose.yml
-        echo '      - .env' >> docker-compose.yml
+        echo '      - ./backend/.env' >> docker-compose.yml
         echo '    volumes:' >> docker-compose.yml
         echo '      - ./backend:/app/backend' >> docker-compose.yml
         echo '      - ./certs:/app/certs' >> docker-compose.yml
