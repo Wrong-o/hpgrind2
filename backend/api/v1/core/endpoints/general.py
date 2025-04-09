@@ -94,34 +94,72 @@ def get_user_history(db: Session = Depends(get_db), current_user: User = Depends
     Returns:
         List[UserHistoryOut]: A list of the user's question history
     """
+    print("hello")
     try:
         user_history = (
             db.query(UserHistory)
             .filter(UserHistory.user_id == current_user.id)
-            .order_by(UserHistory.created_at.desc())  # Sort by newest first
+            .order_by(UserHistory.timestamp.desc())  # Changed from created_at to timestamp
             .all()
         )
-        
+        print(user_history)
         if not user_history:
             return []
         
         return user_history
     except Exception as e:
-        # Log the error but return an empty list rather than throwing an exception
         print(f"Error fetching user history: {str(e)}")
         return []
     
-@router.post("/submit_quiz_answer", status_code=200)
+@router.post("/submit_quiz_answer", status_code=201)
 def submit_quiz_answer(answer: UserAnswerIn, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     """
-    Submit a user's answer to a question
+    Submit a user's answer to a question and save it to their history.
     
     Args:
-        answer (UserAnswerIn): The user's answer to a question
+        answer (UserAnswerIn): The user's answer details.
+        db (Session): Database session dependency.
+        current_user (User): The authenticated user dependency.
         
     Returns:
-        dict: A status and message about the operation
+        dict: A status message indicating success.
+        
+    Raises:
+        HTTPException: 500 if there is a database error during saving.
     """
-    user = get_current_user(token=answer.token, db=db)
-    return user.id
+    try:
+        # Create a new UserHistory record
+        new_history_entry = UserHistory(
+            user_id=current_user.id, # Use the authenticated user's ID
+            subject=answer.subject,
+            category=answer.category,
+            moment=answer.moment,
+            difficulty=answer.difficulty,
+            skipped=answer.skipped,
+            time_spent=answer.time_spent,
+            correct=answer.correct,
+            # timestamp is set automatically by default=func.now()
+        )
+        
+        # Add to session and commit
+        db.add(new_history_entry)
+        db.commit()
+        db.refresh(new_history_entry) # Optional: refresh to get the generated ID/timestamp
+        
+        return {"status": "success", "message": "Answer submitted successfully."}
+
+    except IntegrityError as e:
+        db.rollback() # Rollback the transaction on error
+        print(f"Database Integrity Error submitting answer: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Could not save answer due to a database integrity issue."
+        )
+    except Exception as e:
+        db.rollback()
+        print(f"Error submitting answer: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An unexpected error occurred while submitting the answer."
+        )
 

@@ -1,4 +1,4 @@
-from models.database_models import Base
+from .api.v1.core.models import Base
 from services.user_service import create_user
 
 from models.database_models import DBUser

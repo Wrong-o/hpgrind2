@@ -37,15 +37,18 @@ class Premium(Base):
 class UserHistory(Base):
     __tablename__ = "user_history"
 
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    
     user_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("users.id"),
-        primary_key=True)
+        primary_key=True
+    )
     timestamp: Mapped[datetime] = mapped_column(DateTime, default=func.now())
     subject: Mapped[str] = mapped_column(String)
     category: Mapped[str] = mapped_column(String)
     moment: Mapped[str] = mapped_column(Text)
-    difficulty: Mapped[str] = mapped_column(String)
+    difficulty: Mapped[int] = mapped_column(Integer)
     skipped: Mapped[bool] = mapped_column(Boolean, default=False)
     time_spent: Mapped[int] = mapped_column(Integer)
     correct: Mapped[bool] = mapped_column(Boolean, default=False)

@@ -102,7 +102,7 @@ class UserAchievementsOut(BaseModel):
         from_attributes = True
 
 class UserAnswerIn(BaseModel):
-    token: str
+    # token: str # Removed - token should come from Authorization header
     category: str
     subject: str
     moment: str
@@ -119,5 +119,8 @@ class UserHistoryOut(BaseModel):
     moment: str
     difficulty: int 
     skipped: bool
-    time: int
+    time_spent: int # Changed from 'time' to 'time_spent' to match model
     correct: bool
+
+    # Add Config to allow ORM mode if not already present
+    model_config = ConfigDict(from_attributes=True)
