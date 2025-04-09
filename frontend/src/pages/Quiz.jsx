@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-import QuestionBox from './quiz-components/QuestionBox';
-import AnswerButton from './quiz-components/AnswerButton';
-import LoadingScreen from './quiz-components/LoadingScreen';
+import QuestionBox from '../components/quiz-components/QuestionBox';
+import AnswerButton from '../components/quiz-components/AnswerButton';
+import LoadingScreen from '../components/quiz-components/LoadingScreen';
 import authStore from '../store/authStore';
-import SkipButton from './quiz-components/SkipButton';
-import QuizAssistant from './QuizAssistant';
+import SkipButton from '../components/quiz-components/SkipButton';
+import QuizAssistant from '../components/quiz-components/QuizAssistant';
 const Quiz = () => {
   const [selectedAnswer, setSelectedAnswer] = useState(null);
   const [showAnswer, setShowAnswer] = useState(false);
@@ -36,13 +36,11 @@ const Quiz = () => {
       // Number of questions to fetch
       const questionCount = 5;
       
-      console.log("Fetching questions from batch endpoint...");
       const requestBody = {
         moment: "fraction_equation",
         difficulty: 2,
         count: questionCount
       };
-      console.log("Request body:", requestBody);
       
       // Single API call to fetch multiple questions - batch endpoint is faster!
       const response = await fetch(`${import.meta.env.VITE_API_URL}/api/v1/question_generator/batch`, {
@@ -53,18 +51,14 @@ const Quiz = () => {
         body: JSON.stringify(requestBody)
       });
       
-      console.log("Response status:", response.status);
-      console.log("Response headers:", Object.fromEntries([...response.headers.entries()]));
       
       if (!response.ok) {
         const errorText = await response.text();
-        console.error("Error response:", errorText);
         throw new Error(`HTTP error! Status: ${response.status}. Details: ${errorText}`);
       }
       
       // Parse all questions at once
       const questionsData = await response.json();
-      console.log("Received questions data:", questionsData);
       
       // Format the questions
       const formattedQuestions = questionsData.map((data, i) => ({
@@ -82,12 +76,10 @@ const Quiz = () => {
         moment: data.moment || "operations_order" // Ensure moment is available
       }));
       
-      console.log("Formatted questions:", formattedQuestions);
       setQuestions(formattedQuestions);
       setLoading(false);
       fetchedRef.current = true;
     } catch (err) {
-      console.error("Failed to fetch questions:", err);
       setError("Failed to load questions. Please try again.");
       setLoading(false);
     }
@@ -103,7 +95,6 @@ const Quiz = () => {
     
     // Don't submit answers if not logged in
     if (!authStore.getState().isLoggedIn) {
-      console.log("User not logged in. Answer not submitted.");
       return;
     }
     
@@ -129,7 +120,6 @@ const Quiz = () => {
         correct: selectedOption.isCorrect,
       };
       
-      console.log("Submitting answer:", answerData);
       
       // Submit the answer
       const response = await fetch(`${import.meta.env.VITE_API_URL}/api/v1/general/submit_quiz_answer`, {
@@ -142,9 +132,7 @@ const Quiz = () => {
       });
       
       const result = await response.json();
-      console.log("Answer submission result:", result);
     } catch (error) {
-      console.error("Error submitting answer:", error);
     }
   };
   const handleSkip = () => {
@@ -160,7 +148,6 @@ const Quiz = () => {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
     } else {
       // If this is the last question, handle completion
-      console.log("Quiz completed!");
       // You could redirect to a results page or show a completion message
     }
   };

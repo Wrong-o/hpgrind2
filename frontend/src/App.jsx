@@ -11,8 +11,9 @@ import PasswordResetRequestPage from './components/PasswordResetRequestPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import MainMenu from './components/MainMenu';
 import UserStatsPage from './components/UserStatsPage';
-import Quiz from './components/Quiz';
+import Quiz from './pages/Quiz';
 import MomentTree from './components/MomentTree';
+import WhoAreWe from './pages/WhoAreWe';
 function App() {
   const isLoggedIn = authStore((state) => state.isLoggedIn);
   return (
@@ -68,6 +69,7 @@ function App() {
                     <MomentTree />
                   </ProtectedRoute>
                 } />
+                <Route path="/vilka-vi-ar" element={<WhoAreWe />} />
               </Routes>
             </main>
           </div>

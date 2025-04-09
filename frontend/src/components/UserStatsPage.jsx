@@ -25,7 +25,7 @@ const UserStatsPage = () => {
                 
                 // If no cache or it's stale, fetch fresh data
                 console.log('Fetching user history from API...');
-                const response = await fetch(`${import.meta.env.VITE_API_URL}/api/v1/general/user_history`, {
+                const response = await fetch(`${import.meta.env.VITE_API_URL}/api/v1/general/category_stats`, {
                     headers: {
                         'Authorization': `Bearer ${token}`,
                     },
@@ -36,7 +36,6 @@ const UserStatsPage = () => {
                 }
                 
                 const data = await response.json();
-                console.log('User history fetched successfully:', data);
                 
                 // Cache the fetched data
                 cacheUserHistory(data);
@@ -65,8 +64,7 @@ const UserStatsPage = () => {
             const currentTime = new Date().getTime();
             
             // Cache is valid for 1 hour (3600000 ms)
-            if (currentTime - cacheTimestamp > 3600000) {
-                console.log('User history cache is stale, will fetch fresh data');
+            if (currentTime - cacheTimestamp > 60000) {
                 return null;
             }
             
@@ -202,7 +200,7 @@ const UserStatsPage = () => {
             setAchievements(achievementsData);
             
             // Refresh user history
-            const historyResponse = await fetch(`${import.meta.env.VITE_API_URL}/api/v1/general/user_history`, {
+            const historyResponse = await fetch(`${import.meta.env.VITE_API_URL}/api/v1/general/category_stats`, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                 },
@@ -343,31 +341,18 @@ const UserStatsPage = () => {
                                     <thead>
                                         <tr className="bg-blue-100 text-blue-700">
                                             <th className="py-2 px-4 text-left">Kategori</th>
-                                            <th className="py-2 px-4 text-left">Fråga</th>
-                                            <th className="py-2 px-4 text-center">Korrekt</th>
-                                            <th className="py-2 px-4 text-left">Datum</th>
+                                            <th className="py-2 px-4 text-left">Svårighetsgrad</th>
+                                            <th className="py-2 px-4 text-left">Antal svar</th>
+                                            <th className="py-2 px-4 text-left">Antal korrekt</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {userHistory.slice(0, 10).map((item, index) => (
                                             <tr key={index} className={index % 2 === 0 ? "bg-white" : "bg-blue-50"}>
-                                                <td className="py-2 px-4">{item.category || "Okänd"}</td>
-                                                <td className="py-2 px-4">{item.question_text ? 
-                                                    (item.question_text.length > 30 ? 
-                                                        `${item.question_text.substring(0, 30)}...` : 
-                                                        item.question_text) : 
-                                                    "Ingen frågetext"}
-                                                </td>
-                                                <td className="py-2 px-4 text-center">
-                                                    {item.correct ? (
-                                                        <span className="text-green-500">✓</span>
-                                                    ) : (
-                                                        <span className="text-red-500">✗</span>
-                                                    )}
-                                                </td>
-                                                <td className="py-2 px-4">
-                                                    {new Date(item.created_at).toLocaleDateString('sv-SE')}
-                                                </td>
+                                                <td className="py-2 px-4">{item.moment || "Okänd"}</td>
+                                                <td className="py-2 px-4">{item.difficulty || "Okänd"}</td>
+                                                <td className="py-2 px-4">{item.total_answers || "Okänd"}</td>
+                                                <td className="py-2 px-4">{item.correct || "Okänd"}</td>
                                             </tr>
                                         ))}
                                     </tbody>

@@ -60,21 +60,23 @@ def get_category_stats(db: Session = Depends(get_db), current_user: User = Depen
     """
     category_stats = (
         db.query(
-            UserHistory.category,
+            UserHistory.moment,
+            UserHistory.difficulty,
             func.count(UserHistory.id).label("total_answers"),
             func.sum(case(
-                [(UserHistory.correct == True, 1)],
+                (UserHistory.correct == True, 1),
                 else_=0
             )).label("correct")
         )
         .filter(UserHistory.user_id == current_user.id)
-        .group_by(UserHistory.category)
+        .group_by(UserHistory.moment, UserHistory.difficulty)
         .all()
     )
     
     results = [
         {
-            "category": stat.category,
+            "moment": stat.moment,
+            "difficulty": stat.difficulty,
             "total_answers": stat.total_answers,
             "correct": stat.correct if stat.correct is not None else 0
         }
@@ -110,7 +112,9 @@ def get_user_history(db: Session = Depends(get_db), current_user: User = Depends
     except Exception as e:
         print(f"Error fetching user history: {str(e)}")
         return []
-    
+
+
+
 @router.post("/submit_quiz_answer", status_code=201)
 def submit_quiz_answer(answer: UserAnswerIn, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     """

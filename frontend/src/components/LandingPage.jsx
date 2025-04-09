@@ -177,7 +177,7 @@ function LandingPage() {
               </div>
             ) : (
               <VideoPlayer
-                src="/videos/feature3.mp4"
+                src="/videos/FractionDivision.mp4"
                 poster="/images/feature3-poster.jpg"
                 muted={true}
                 autoPlay={true}
@@ -236,44 +236,6 @@ function LandingPage() {
         </div>
       </section>
 
-      <section className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto bg-blue-50 rounded-lg">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-          <div className="rounded-lg overflow-hidden shadow-xl">
-            {videoError['testimonial'] ? (
-              <div className="w-full aspect-video bg-gray-100 flex items-center justify-center">
-                <p className="text-gray-500 text-center p-4">
-                  Användarberättelse kommer snart
-                </p>
-              </div>
-            ) : (
-              <VideoPlayer
-                src="/videos/testimonial.mp4"
-                poster="/images/testimonial-poster.jpg"
-                muted={true}
-                autoPlay={true}
-                loop={true}
-                controls={false}
-                className="w-full aspect-video"
-                onError={() => handleVideoError('testimonial')}
-              />
-            )}
-          </div>
-          <div className="space-y-6">
-            <h2 className="text-3xl font-bold text-gray-900">
-              Börja din resa mot ett bättre resultat
-            </h2>
-            <p className="text-xl text-gray-600">
-              Anslut dig till tusentals andra studenter som redan har förbättrat sina resultat med HPGrind.
-            </p>
-            <button
-              onClick={handleLoginClick}
-              className="px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              Kom igång nu
-            </button>
-          </div>
-        </div>
-      </section>
     </div>
   );
 }

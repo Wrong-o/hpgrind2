@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import Logo from '../assets/HPGLogo.svg?react';
+import Logo from '../assets/favicon.svg?react';
 import authStore from '../store/authStore';
 
 const Header = () => {
@@ -46,7 +46,11 @@ const Header = () => {
       }
     }
   };
-
+  const vilkaViArClick = () => {
+    if (location.pathname !== '/') {
+      navigate('/vilka-vi-ar');
+    }
+  };
   const handleHowItWorksClick = () => {
     if (location.pathname !== '/') {
       navigate('/');
@@ -93,6 +97,14 @@ const Header = () => {
     <>
       <li className="mb-2 md:mb-0">
         <span className="text-red-600 font-bold">DEN HÄR HEMSIDAN ÄR UNDER UTVECKLING</span>
+      </li>
+      <li className="mb-2 md:mb-0">
+        <Link
+          to="/vilka-vi-ar"
+          className="w-full md:w-auto px-4 py-2 bg-blue-500 hover:bg-blue-400 text-white rounded-lg transition-colors inline-block text-center"
+        >
+          Vilka vi är
+        </Link>
       </li>
       <li className="mb-2 md:mb-0">
         <button

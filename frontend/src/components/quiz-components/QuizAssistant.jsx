@@ -1,17 +1,22 @@
 import React, { useState } from 'react';
-import { VideoPlayer } from './VideoPlayer';
-import { Calculator } from './quiz-components/Calculator';
+import { VideoPlayer } from '../VideoPlayer';
+import { Calculator } from './Calculator';
+import DrawingPad from './DrawingPad';
 
 const QuizAssistant = ({ VideoName }) => {
     const [videoShowing, setVideoShowing] = useState(false);
     const [calculatorShowing, setCalculatorShowing] = useState(false);
-
+    const [drawingPadShowing, setDrawingPadShowing] = useState(false);
     const handleVideoToggle = () => {
         setVideoShowing(!videoShowing);
     };
 
     const handleCalculatorToggle = () => {
         setCalculatorShowing(!calculatorShowing);
+    };
+
+    const handleDrawingPadToggle = () => {
+        setDrawingPadShowing(!drawingPadShowing);
     };
 
     return (
@@ -57,6 +62,26 @@ const QuizAssistant = ({ VideoName }) => {
                         </>
                     )}
                 </button>
+                <button
+                    onClick={handleDrawingPadToggle}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2"
+                >
+                    {drawingPadShowing ? (
+                        <>
+                            <span>Stäng ritning</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                            </svg>
+                        </>
+                    ) : (
+                        <>
+                            <span>Rita</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                            </svg>
+                        </>
+                    )}
+                </button>
             </div>
 
             {/* Video player container */}
@@ -76,6 +101,16 @@ const QuizAssistant = ({ VideoName }) => {
             {calculatorShowing && (
                 <div className="absolute top-14 right-0 w-[300px] rounded-lg overflow-hidden shadow-lg z-20">
                     <Calculator />
+                </div>
+            )}
+
+            {/* Drawing Pad container */}
+            {drawingPadShowing && (
+                <div 
+                    className="absolute top-14 right-0 rounded-lg overflow-hidden shadow-lg z-30"
+                    style={{ width: '400px', height: '600px' }}
+                >
+                    <DrawingPad />
                 </div>
             )}
         </div>
