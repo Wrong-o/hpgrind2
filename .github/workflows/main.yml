@@ -133,25 +133,49 @@ jobs:
         ENVIRONMENT: "production"
       run: |
         ssh -i ~/.ssh/ec2-key.pem $EC2_USERNAME@$EC2_HOST "
-          cd $REMOTE_HOME/app && 
-          echo 'DB_URL=$DB_URL' > ./backend/.env &&
-          echo 'SECRET_KEY=$SECRET_KEY' >> ./backend/.env &&
-          echo 'POSTMARK_TOKEN=$POSTMARK_TOKEN' >> ./backend/.env &&
-          echo 'FRONTEND_BASE_URL=$FRONTEND_BASE_URL' >> ./backend/.env &&
-          echo 'ENV=$ENVIRONMENT' >> ./backend/.env &&
-          echo 'CORS_ORIGINS=https://www.hpgrind.se' >> ./backend/.env &&
+          # Navigate to the app directory
+          cd $REMOTE_HOME/app
           
-          # Stop and remove all containers
-          docker-compose down &&
+          # Create the .env file for the backend
+          echo 'Creating .env file...'
+          echo 'DB_URL=$DB_URL' > ./backend/.env
+          echo 'SECRET_KEY=$SECRET_KEY' >> ./backend/.env
+          echo 'POSTMARK_TOKEN=$POSTMARK_TOKEN' >> ./backend/.env
+          echo 'FRONTEND_BASE_URL=$FRONTEND_BASE_URL' >> ./backend/.env
+          echo 'ENV=$ENVIRONMENT' >> ./backend/.env
+          echo 'CORS_ORIGINS=https://www.hpgrind.se' >> ./backend/.env
+          echo '.env file created.'
 
-          # Remove unused containers, networks, images and build cache
-          docker system prune -af --volumes &&
+          # Stop existing services (if any)
+          echo 'Stopping existing containers...'
+          docker-compose down
+          echo 'Existing containers stopped.'
+
           
-          # Build and start the new containers
-          docker-compose build --no-cache &&
-          docker-compose up -d &&
+          # Build the new images without cache
+          echo 'Building new images...'
+          docker-compose build --no-cache
+          echo 'Images built.'
+
+          # <<< Run Database Migrations >>>
+          echo 'Running database migrations...'
+          # Use docker-compose run to execute alembic in a temporary container
+          # based on the 'backend' service definition and newly built image.
+          # --rm ensures the container is removed after execution.
+          docker-compose run --rm backend alembic upgrade head
+          echo 'Database migrations completed.'
+          # <<< End Migrations >>>
+
+          # Start the new containers in detached mode
+          echo 'Starting new containers...'
+          docker-compose up -d
+          echo 'New containers started.'
           
-          # Cleanup old images and containers after successful deployment
-          docker image prune -af &&
+          # Optional: Cleanup old images/containers (consider if needed)
+          echo 'Cleaning up Docker images and containers...'
+          docker image prune -af
           docker container prune -f
+          echo 'Cleanup complete.'
+
+          echo 'Deployment finished.'
          "
