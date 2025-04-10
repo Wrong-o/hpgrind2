@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import Logo from '../assets/favicon.svg?react';
 import authStore from '../store/authStore';
-
+import SmallButton from './SmallButton';
+import { UserCircleIcon } from '@heroicons/react/24/outline';
 const Header = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -96,66 +97,50 @@ const Header = () => {
   const navItems = !isLoggedIn ? (
     <>
       <li className="mb-2 md:mb-0">
-        <span className="text-red-600 font-bold">DEN HÄR HEMSIDAN ÄR UNDER UTVECKLING</span>
-      </li>
-      <li className="mb-2 md:mb-0">
-        <Link
-          to="/vilka-vi-ar"
-          className="w-full md:w-auto px-4 py-2 bg-blue-500 hover:bg-blue-400 text-white rounded-lg transition-colors inline-block text-center"
-        >
-          Vilka vi är
-        </Link>
-      </li>
-      <li className="mb-2 md:mb-0">
-        <button
+        <SmallButton
+          text="Testa demo"
           onClick={handleDemoClick}
-          className="w-full md:w-auto px-4 py-2 bg-blue-500 hover:bg-blue-400 text-white rounded-lg transition-colors"
-        >
-          Testa demo
-        </button>
+          className="w-full md:w-auto bg-teal-600 hover:bg-gray-800 text-white hover:text-white"
+        />
       </li>
       <li className="mb-2 md:mb-0">
-        <button
+        <SmallButton
+          text="Hur fungerar HPGrind"
           onClick={handleHowItWorksClick}
-          className="w-full md:w-auto px-4 py-2 bg-transparent hover:bg-blue-500 text-white border border-white rounded-lg transition-colors"
-        >
-          Hur fungerar HPGrind
-        </button>
+          className="w-full md:w-auto bg-teal-600 hover:bg-gray-800 text-white hover:text-white"
+        />
       </li>
       <li className="mb-2 md:mb-0">
-        <Link
-          to="/login"
-          className="w-full md:w-auto px-4 py-2 bg-white text-blue-600 hover:bg-blue-50 rounded-lg font-medium transition-colors inline-block text-center"
-        >
-          Logga in
-        </Link>
+        <SmallButton
+          text="Logga in"
+          onClick={() => navigate('/login')}
+          className="w-full md:w-auto bg-purple-600 hover:bg-gray-800 text-white hover:text-white border border-white animate-pulse shadow-[0_0_150px_rgba(255,0,0,0.2)]"
+        />
       </li>
     </>
   ) : (
     <>
       <li className="mb-2 md:mb-0">
-        <button
+        <SmallButton
+          text="Huvudmeny"
           onClick={handleMainMenuClick}
-          className="w-full md:w-auto px-4 py-2 bg-transparent hover:bg-blue-500 text-white border border-white rounded-lg transition-colors"
-        >
-         Huvudmeny
-        </button>
+          className="w-full md:w-auto bg-white-500 hover:bg-gray-800 text-white hover:text-white"
+        />
       </li>
       <li className="mb-2 md:mb-0">
-        <button
+        <SmallButton
+          text="Din profil"
           onClick={handleUserStatsClick}
-          className="w-full md:w-auto px-4 py-2 bg-transparent hover:bg-blue-500 text-white border border-white rounded-lg transition-colors"
-        >
-          Användarstatistik
-        </button>
+          className="w-full md:w-auto bg-transparent hover:bg-blue-500 text-white border border-white"
+          icon={<UserCircleIcon className="w-5 h-5" />}
+        />
       </li>
       <li className="mb-2 md:mb-0">
-        <button
+        <SmallButton
+          text="Logga ut"
           onClick={logoutUser}
-          className="w-full md:w-auto px-4 py-2 bg-transparent hover:bg-blue-500 text-white border border-white rounded-lg transition-colors"
-        >
-          Logga ut
-        </button>
+          className="w-full md:w-auto bg-transparent hover:bg-blue-500 text-white border border-white"
+        />
       </li>
     </>
   );
@@ -177,17 +162,18 @@ const Header = () => {
               {navItems}
             </ul>
           </nav>
-          
           {/* Mobile Menu Toggle Button */}
-          <button 
+          <SmallButton
             onClick={toggleSidebar}
+            text="Meny"
             className="md:hidden p-2 rounded-lg hover:bg-blue-500 focus:outline-none"
             aria-label="Toggle menu"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={isSidebarOpen ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16M4 18h16"} />
-            </svg>
-          </button>
+            icon={
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={isSidebarOpen ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16M4 18h16"} />
+              </svg>
+            }
+          />
         </div>
       </header>
 

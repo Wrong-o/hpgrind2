@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import QuestionBox from '../components/quiz-components/QuestionBox';
 import AnswerButton from '../components/quiz-components/AnswerButton';
 import LoadingScreen from '../components/LoadingScreen';
@@ -8,6 +8,8 @@ import SkipButton from '../components/quiz-components/SkipButton';
 import QuizAssistant from '../components/quiz-components/QuizAssistant';
 import SmallButton from '../components/SmallButton';
 import { ChevronDoubleRightIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
+import { useSound } from '../contexts/SoundContext';
+
 const Quiz = () => {
   const [selectedAnswer, setSelectedAnswer] = useState(null);
   const [showAnswer, setShowAnswer] = useState(false);
@@ -20,6 +22,7 @@ const Quiz = () => {
   const [results, setResults] = useState([]);
   const fetchedRef = useRef(false);
   const startTimeRef = useRef(Date.now());
+  const { isMuted } = useSound();
   
   useEffect(() => {
     // Only run if not already fetched - prevents duplicate calls in StrictMode
@@ -128,7 +131,7 @@ const Quiz = () => {
         difficulty: question.difficulty,
         skipped: skipped,
         time_spent: timeSpent,
-        correct: selectedOption.isCorrect,
+        correct: selectedOption?.isCorrect || false, //default false in case of skipping
       };
       
       const response = await fetch(`${import.meta.env.VITE_API_URL}/api/v1/general/submit_quiz_answer`, {
@@ -144,10 +147,20 @@ const Quiz = () => {
     } catch (error) {
     }
   };
+
+  const playSkipSound = useCallback(() => {
+    if (isMuted) return;
+    const audio = new Audio('/sounds/skip.wav');
+    audio.volume = 0.3;
+    audio.play().catch(err => console.log('Audio playback failed:', err));
+  }, [isMuted]);
+
   const handleSkip = () => {
+    playSkipSound();
     setSkipped(true);
-    handleCheckAnswer();
+    handleNextQuestion();
   };
+
   const handleNextQuestion = () => {
     setSelectedAnswer(null);
     setShowAnswer(false);
