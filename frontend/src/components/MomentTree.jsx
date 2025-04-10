@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import authStore from '../store/authStore';
+import { VideoPlayer } from './VideoPlayer';
 
 const initialTree = {
   id: 'root',
@@ -36,12 +37,26 @@ const initialTree = {
           id: 'basics-fraktioner-addera',
           title: 'Addera',
           description: 'Addera en fraktion',
-          children: []
+          children: [],
+          videoUrl: 'FractionAddition.mp4'
+        }, {
+          id: 'basics-fraktioner-subtrahera',
+          title: 'Subtrahera',
+          description: 'Subtrahera en fraktion',
+          children: [],
+          videoUrl: 'FractionSubtraction.mp4'
         }, {
           id: 'basics-fraktioner-multiplicera',
           title: 'Multiplicera',
           description: 'Multiplicera en fraktion',
-          children: []
+          children: [],
+          videoUrl: 'FractionMultiplication.mp4'
+        }, {
+          id: 'basics-fraktioner-dividera',
+          title: 'Dividera',
+          description: 'Dividera en fraktion',
+          children: [],
+          videoUrl: 'FractionDivision.mp4'
         }]
       }, {
         id: 'basics-ekvationslösning',
@@ -385,6 +400,8 @@ const MomentTree = ({ onBack }) => {
   const [path, setPath] = useState([initialTree]);
   const [progress, setProgress] = useState({});
   const { token } = authStore();
+  const [showVideo, setShowVideo] = useState(false);
+  const [videoUrl, setVideoUrl] = useState('');
 
   useEffect(() => {
     // Fetch progress data from API
@@ -490,7 +507,7 @@ const MomentTree = ({ onBack }) => {
             <h3 className="font-medium text-gray-900">{node.title}</h3>
             <p className="text-sm text-gray-600">{node.description}</p>
           </div>
-          {hasChildren && (
+          {hasChildren ? (
             <div className="ml-4 text-blue-500">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
@@ -500,6 +517,31 @@ const MomentTree = ({ onBack }) => {
                   d="M9 5l7 7-7 7"
                 />
               </svg>
+            </div>
+          ) : (
+            <div className="flex items-center ml-4 space-x-2">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  console.log(`Start exercises for ${node.id}`);
+                }}
+                className="px-3 py-1 bg-green-500 text-white text-sm rounded-lg hover:bg-green-600 transition-colors flex-shrink-0"
+              >
+                Träna
+              </button>
+              {node.videoUrl && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    console.log(`Show video: ${node.videoUrl} for ${node.id}`);
+                    setVideoUrl(`/videos/${node.videoUrl}`); // Assuming videos are in public/videos/
+                    setShowVideo(true);
+                  }}
+                  className="px-3 py-1 bg-blue-500 text-white text-sm rounded-lg hover:bg-blue-600 transition-colors flex-shrink-0"
+                >
+                  Video
+                </button>
+              )}
             </div>
           )}
         </div>
@@ -582,10 +624,32 @@ const MomentTree = ({ onBack }) => {
             >
               Börja träna
             </button>
-
           </div>
         )}
       </div>
+
+      {/* Video Player Modal */}
+      {showVideo && (
+        <div 
+          className="fixed inset-0 bg-black/70 flex items-center justify-center z-50"
+          onClick={() => setShowVideo(false)} // Close on backdrop click
+        >
+          <div 
+            className="bg-white p-4 rounded-lg shadow-xl max-w-3xl w-full relative"
+            onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside the player box
+          >
+            <button 
+              onClick={() => setShowVideo(false)} 
+              className="absolute top-2 right-2 text-black bg-white/50 rounded-full p-1 hover:bg-white/80"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+            <VideoPlayer src={videoUrl} controls autoPlay />
+          </div>
+        </div>
+      )}
     </div>
   );
 };
