@@ -378,7 +378,7 @@ const ProgressColors = {
   YELLOW: '#feca57',
   GREEN: '#1dd1a1'
 };
-
+//TODO: Gör den här snygg
 const MomentTree = ({ onBack }) => {
   const [tree, setTree] = useState(initialTree);
   const [currentNode, setCurrentNode] = useState(initialTree);
@@ -390,7 +390,7 @@ const MomentTree = ({ onBack }) => {
     // Fetch progress data from API
     const fetchProgress = async () => {
       try {
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/progress`, {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/v1/general/category_stats`, {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Accept': 'application/json'

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import QuestionBox from '../components/quiz-components/QuestionBox';
 import AnswerButton from '../components/quiz-components/AnswerButton';
-import LoadingScreen from '../components/quiz-components/LoadingScreen';
+import LoadingScreen from '../components/LoadingScreen';
 import authStore from '../store/authStore';
 import SkipButton from '../components/quiz-components/SkipButton';
 import QuizAssistant from '../components/quiz-components/QuizAssistant';

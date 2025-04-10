@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import authStore from '../store/authStore';
 import { Link } from 'react-router-dom';
-import Popup from './Popup';
+import Popup from '../components/Popup';
 //TODO: Add a loading statess
 export const LoginPage = () => {
   const navigate = useNavigate();

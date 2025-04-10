@@ -1,19 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { LoginPage } from './components/LoginPage';
-import RegisterForm from './components/RegisterForm';
+import { LoginPage } from './pages/LoginPage';
+import RegisterForm from './pages/RegisterForm';
 import authStore from './store/authStore';
 import { SoundProvider } from './contexts/SoundContext';
 import { SecondChance } from './components/SecondChance';
 import Header from './components/Header';
-import LandingPage from './components/LandingPage';
-import PasswordResetRequestPage from './components/PasswordResetRequestPage';
+import LandingPage from './pages/LandingPage';
+import PasswordResetRequestPage from './pages/PasswordResetRequestPage';
 import ProtectedRoute from './components/ProtectedRoute';
-import MainMenu from './components/MainMenu';
-import UserStatsPage from './components/UserStatsPage';
+import MainMenu from './pages/MainMenu';
+import UserStatsPage from './pages/UserStatsPage';
 import Quiz from './pages/Quiz';
 import MomentTree from './components/MomentTree';
 import WhoAreWe from './pages/WhoAreWe';
+import { CategoryStats } from './pages/CategoryStats';
+
 function App() {
   const isLoggedIn = authStore((state) => state.isLoggedIn);
   return (
@@ -67,6 +69,11 @@ function App() {
                 <Route path="/moment-tree" element={
                   <ProtectedRoute isLoggedIn={!isLoggedIn} redirectTo="/">
                     <MomentTree />
+                  </ProtectedRoute>
+                } />
+                <Route path="/category-stats" element={
+                  <ProtectedRoute isLoggedIn={!isLoggedIn} redirectTo="/">
+                    <CategoryStats />
                   </ProtectedRoute>
                 } />
                 <Route path="/vilka-vi-ar" element={<WhoAreWe />} />

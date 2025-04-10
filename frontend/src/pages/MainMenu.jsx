@@ -1,21 +1,9 @@
 import React, { useState } from 'react';
-import authStore from '../store/authStore';
 import { useNavigate } from 'react-router-dom';
 
 function MainMenu() {
   const navigate = useNavigate();
-  const [showLogin, setShowLogin] = useState(false);
-  const [showStats, setShowStats] = useState(false);
-  const [showRoadMap, setShowRoadMap] = useState(false);
-  const [showDecisionTree, setShowDecisionTree] = useState(false);
-  const [showSecondChance, setShowSecondChance] = useState(false);
-  const [currentTest, setCurrentTest] = useState(null);
-  const [finalScore, setFinalScore] = useState(0);
-  const [question1Answered, setQuestion1Answered] = useState(false);
-  const [question2Answered, setQuestion2Answered] = useState(false);
-  const [userAchievements, setUserAchievements] = useState([]);
   const [nextRecommendedPath, setNextRecommendedPath] = useState('matematikbasic');
-  const isLoggedIn = authStore((state) => state.isLoggedIn);
 
   const handleRecommendedPath = () => {
     switch (nextRecommendedPath) {
@@ -63,10 +51,10 @@ function MainMenu() {
                               Börja öva
                             </button>
                             <button
-                              onClick={() => setShowSecondChance(true)}
+                              onClick={() => navigate('/category-stats')}
                               className="bg-teal-600 text-white px-6 py-3 rounded-lg hover:bg-teal-700 transition-colors flex items-center justify-center gap-2"
                             >
-                              Andra chansen
+                              Kuskapsöversikt
                             </button>
                           </div>
                           <button

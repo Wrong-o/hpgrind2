@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { VideoPlayer } from './VideoPlayer';
+import { VideoPlayer } from '../components/VideoPlayer';
 import authStore from '../store/authStore';
 import { useNavigate } from 'react-router-dom';
-import Sidebar from "./Sidebar";
+import Sidebar from "../components/Sidebar";
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 
 function LandingPage() {
