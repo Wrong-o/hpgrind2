@@ -4,7 +4,7 @@ from sqlalchemy import delete, insert, select, update
 from sqlalchemy.orm import Session, joinedload, selectinload
 from sqlalchemy.exc import IntegrityError
 from api.v1.core.services.kvantitativ.basics.operations_order import operations_order
-from api.v1.core.services.kvantitativ.basics.fraction_equation import fraction_equations
+from api.v1.core.services.kvantitativ.basics.fraction_equation import fraction_equation_division
 from api.v1.core.services.kvantitativ.basics.x_solve import x_solve
 from api.v1.core.services.kvantitativ.formula_cheet.mean import mean
 from typing import List, Optional
@@ -18,14 +18,19 @@ router = APIRouter()
 
 moment_functions = {
     "operations_order": operations_order,
-    "fraction_equation": fraction_equations,
+    #"basics_fraktioner_förlänga": fraction_equations,
+    #"basics_fraktioner_förkorta": fraction_equations,
+    #"basics_fraktioner_addera": fraction_equations,
+    #"basics_fraktioner_subtrahera": fraction_equations,
+    #"basics_fraktioner_multiplicera": fraction_equations,
+    "basics_fraktioner_dividera": fraction_equation_division,
     "x_solve": x_solve,
     "mean": mean
 }
 
 
 @router.get("/{moment}{difficulty}", status_code=200)
-async def get_question(moment: str, difficulty: int, db: Session = Depends(get_db)):
+async def get_question(moment: str, difficulty: int = 1, db: Session = Depends(get_db)):
     """_summary_
     This is the endpoint for getting a question data.
     It uses the moment and difficulty to generate a question and relevant 

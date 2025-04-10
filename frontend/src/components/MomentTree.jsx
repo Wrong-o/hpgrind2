@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import authStore from '../store/authStore';
+import React, { useState, useEffect, useMemo } from 'react';
 import { VideoPlayer } from './VideoPlayer';
+import { useDatabase } from '../contexts/DatabaseContext';
 
 const initialTree = {
   id: 'root',
@@ -393,194 +393,187 @@ const ProgressColors = {
   YELLOW: '#feca57',
   GREEN: '#1dd1a1'
 };
-//TODO: Gör den här snygg
-const MomentTree = ({ onBack }) => {
+
+const MomentTree = ({ stats, isLoading, error, onBack }) => {
   const [tree, setTree] = useState(initialTree);
   const [currentNode, setCurrentNode] = useState(initialTree);
   const [path, setPath] = useState([initialTree]);
-  const [progress, setProgress] = useState({});
-  const { token } = authStore();
-  const [showVideo, setShowVideo] = useState(false);
-  const [videoUrl, setVideoUrl] = useState('');
+  const [activeVideoInfo, setActiveVideoInfo] = useState({ nodeId: null, url: null });
 
-  useEffect(() => {
-    // Fetch progress data from API
-    const fetchProgress = async () => {
-      try {
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/v1/general/category_stats`, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Accept': 'application/json'
-          }
-        });
-        if (response.ok) {
-          const data = await response.json();
-          // Convert the data to a more usable format
-          const progressMap = {};
-          data.forEach(item => {
-            progressMap[item.node_id] = {
-              accuracy: item.accuracy,
-              attempts: item.attempts,
-              avgTime: item.avg_time
-            };
-          });
-          setProgress(progressMap);
-        }
-      } catch (error) {
-        console.error('Failed to fetch progress data:', error);
+  const progressMap = useMemo(() => {
+    if (!stats) return {};
+
+    const aggregatedStats = {};
+    stats.forEach(item => {
+      const nodeId = item.moment;
+      if (!nodeId) return;
+
+      if (!aggregatedStats[nodeId]) {
+        aggregatedStats[nodeId] = { total_answers: 0, correct: 0 };
       }
-    };
+      aggregatedStats[nodeId].total_answers += item.total_answers || 0;
+      aggregatedStats[nodeId].correct += item.correct || 0;
+    });
 
-    if (token) {
-      fetchProgress();
-    } else {
-      // Mock data for development
-      setProgress({
-        'root': { accuracy: 0.75, attempts: 100, avgTime: 45 },
-        'kvantitativ': { accuracy: 0.8, attempts: 80, avgTime: 40 },
-        'basics': { accuracy: 0.9, attempts: 40, avgTime: 30 },
-        'basics-fraktioner': { accuracy: 0.85, attempts: 20, avgTime: 35 },
-        'basics-fraktioner-förlänga': { accuracy: 0.7, attempts: 10, avgTime: 40 },
-        'verbal': { accuracy: 0.6, attempts: 20, avgTime: 60 }
-      });
+    const map = {};
+    for (const nodeId in aggregatedStats) {
+      const nodeStats = aggregatedStats[nodeId];
+      map[nodeId] = {
+        attempts: nodeStats.total_answers,
+        accuracy: nodeStats.total_answers > 0 ? (nodeStats.correct / nodeStats.total_answers) : 0,
+      };
     }
-  }, [token]);
+    return map;
+  }, [stats]);
 
   const getProgressColor = (nodeId) => {
-    const nodeProgress = progress[nodeId];
-    if (!nodeProgress) return 'transparent';
+    const nodeProgress = progressMap[nodeId];
+    if (!nodeProgress || nodeProgress.attempts === 0) return 'transparent';
 
-    if (nodeProgress.accuracy >= 0.75 && nodeProgress.avgTime <= 30) {
+    if (nodeProgress.accuracy >= 0.8) {
       return ProgressColors.GREEN;
-    } else if (nodeProgress.accuracy >= 0.75) {
+    } else if (nodeProgress.accuracy >= 0.5) {
       return ProgressColors.YELLOW;
     } else {
       return ProgressColors.RED;
     }
   };
 
-  const updateNodeProgress = (nodeId, progress) => {
-    // This would typically be called after completing exercises for a node
-    setProgress(prev => ({
-      ...prev,
-      [nodeId]: progress
-    }));
-  };
-
   const navigateToNode = (node) => {
     setCurrentNode(node);
     setPath(prev => [...prev, node]);
-  };
-
-  const navigateBack = () => {
-    if (path.length > 1) {
-      const newPath = [...path];
-      newPath.pop();
-      setPath(newPath);
-      setCurrentNode(newPath[newPath.length - 1]);
-    }
+    setActiveVideoInfo({ nodeId: null, url: null });
   };
 
   const navigateToRoot = () => {
     setCurrentNode(initialTree);
     setPath([initialTree]);
+    setActiveVideoInfo({ nodeId: null, url: null });
+  };
+
+  const handleVideoClick = (e, node) => {
+    e.stopPropagation();
+    if (activeVideoInfo.nodeId === node.id) {
+      setActiveVideoInfo({ nodeId: null, url: null });
+    } else {
+      console.log(`Show video: ${node.videoUrl} for ${node.id}`);
+      setActiveVideoInfo({ 
+          nodeId: node.id, 
+          url: `/videos/${node.videoUrl}`
+      });
+    }
   };
 
   const renderNode = (node, level = 0) => {
     const progressColor = getProgressColor(node.id);
     const hasChildren = node.children && node.children.length > 0;
     const isCurrentParent = currentNode.children && currentNode.children.includes(node);
+    const isVideoActive = activeVideoInfo.nodeId === node.id;
 
     return (
       <div
         key={node.id}
         className={`relative p-4 rounded-lg mb-3 transition-all duration-300 
                   ${isCurrentParent ? 'bg-white shadow-lg' : 'bg-gray-50 hover:bg-white/80 hover:shadow-md'}`}
-        onClick={() => hasChildren && navigateToNode(node)}
+        onClick={() => hasChildren && navigateToNode(node)} 
+        style={{ cursor: hasChildren ? 'pointer' : 'default' }}
       >
-        <div className="flex items-center">
+        <div className="flex items-center mb-2">
           <div
-            className="w-3 h-3 rounded-full mr-3"
+            className="w-3 h-3 rounded-full mr-3 flex-shrink-0"
             style={{ backgroundColor: progressColor }}
           />
-          <div className="flex-1">
-            <h3 className="font-medium text-gray-900">{node.title}</h3>
+          <div className="flex-1 min-w-0">
+            <h3 className="font-medium text-gray-900 truncate">{node.title}</h3>
             <p className="text-sm text-gray-600">{node.description}</p>
           </div>
-          {hasChildren ? (
-            <div className="ml-4 text-blue-500">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 5l7 7-7 7"
-                />
-              </svg>
-            </div>
-          ) : (
-            <div className="flex items-center ml-4 space-x-2">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  console.log(`Start exercises for ${node.id}`);
-                }}
-                className="px-3 py-1 bg-green-500 text-white text-sm rounded-lg hover:bg-green-600 transition-colors flex-shrink-0"
-              >
-                Träna
-              </button>
-              {node.videoUrl && (
+          <div className="flex items-center ml-4 flex-shrink-0 space-x-2">
+            {hasChildren ? (
+              <div className="text-blue-500">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </div>
+            ) : (
+              <>
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    console.log(`Show video: ${node.videoUrl} for ${node.id}`);
-                    setVideoUrl(`/videos/${node.videoUrl}`); // Assuming videos are in public/videos/
-                    setShowVideo(true);
+                    console.log(`Start exercises for ${node.id}`);
                   }}
-                  className="px-3 py-1 bg-blue-500 text-white text-sm rounded-lg hover:bg-blue-600 transition-colors flex-shrink-0"
+                  className="px-3 py-1 bg-green-500 text-white text-sm rounded-lg hover:bg-green-600 transition-colors"
+                  aria-label={`Träna ${node.title}`}
                 >
-                  Video
+                  Träna
                 </button>
-              )}
-            </div>
-          )}
+                {node.videoUrl && (
+                  <button
+                    onClick={(e) => handleVideoClick(e, node)}
+                    className={`px-3 py-1 text-white text-sm rounded-lg transition-colors flex-shrink-0 
+                               ${isVideoActive ? 'bg-red-500 hover:bg-red-600' : 'bg-blue-500 hover:bg-blue-600'}`}
+                    aria-label={`${isVideoActive ? 'Stäng' : 'Visa'} video för ${node.title}`}
+                  >
+                    {isVideoActive ? 'Stäng' : 'Video'}
+                  </button>
+                )}
+              </>
+            )}
+          </div>
         </div>
 
-        {progress[node.id] && (
-          <div className="mt-2 grid grid-cols-3 gap-2 text-xs text-gray-500">
+        {progressMap[node.id] && (
+          <div className="mt-1 grid grid-cols-3 gap-2 text-xs text-gray-500 pl-6">
             <div>
               <span className="font-medium">Accuracy: </span>
-              {Math.round(progress[node.id].accuracy * 100)}%
+              {progressMap[node.id].attempts > 0 ? `${Math.round(progressMap[node.id].accuracy * 100)}%` : 'N/A'}
             </div>
             <div>
               <span className="font-medium">Attempts: </span>
-              {progress[node.id].attempts}
+              {progressMap[node.id].attempts}
             </div>
-            <div>
-              <span className="font-medium">Avg Time: </span>
-              {progress[node.id].avgTime}s
-            </div>
+          </div>
+        )}
+
+        {isVideoActive && (
+          <div className="mt-3 pl-6 relative w-full max-w-sm">
           </div>
         )}
       </div>
     );
   };
 
+  if (isLoading) {
+    return (
+      <div className="w-full max-w-4xl mx-auto px-4 py-8 text-center">
+        Laddar statistik...
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="w-full max-w-4xl mx-auto px-4 py-8 text-center text-red-600">
+        Fel vid hämtning av statistik: {error}
+      </div>
+    );
+  }
+
   return (
     <div className="w-full max-w-4xl mx-auto px-4 py-8">
-      {/* Navigation */}
       <div className="flex items-center mb-6">
         <button
           onClick={onBack}
           className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors mr-4"
+          aria-label="Gå tillbaka"
         >
           Tillbaka
         </button>
 
-        <div className="flex items-center overflow-x-auto py-2 flex-1">
+        <div className="flex items-center overflow-x-auto py-2 flex-1 whitespace-nowrap">
           <button
             onClick={navigateToRoot}
             className="px-3 py-1 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors flex-shrink-0"
+            aria-label="Gå till Hem"
           >
             Hem
           </button>
@@ -593,8 +586,10 @@ const MomentTree = ({ onBack }) => {
                   const newPath = path.slice(0, index + 2);
                   setPath(newPath);
                   setCurrentNode(newPath[newPath.length - 1]);
+                  setActiveVideoInfo({ nodeId: null, url: null });
                 }}
                 className="px-3 py-1 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors"
+                aria-label={`Gå till ${pathNode.title}`}
               >
                 {pathNode.title}
               </button>
@@ -603,53 +598,52 @@ const MomentTree = ({ onBack }) => {
         </div>
       </div>
 
-      {/* Current Node Information */}
       <div className="mb-6">
         <h2 className="text-2xl font-bold mb-2">{currentNode.title}</h2>
         <p className="text-gray-600">{currentNode.description}</p>
       </div>
 
-      {/* Children Nodes */}
       <div className="space-y-2">
         {currentNode.children && currentNode.children.length > 0 ? (
           currentNode.children.map(childNode => renderNode(childNode))
         ) : (
-          <div className="p-6 bg-blue-50 rounded-lg text-center">
-            <p className="text-lg text-blue-700">
-              Du har nått en slutnod! Här kan du träna på specifika övningar.
+          <div className="p-6 bg-gray-100 rounded-lg text-center border border-gray-200">
+            <p className="text-lg text-gray-700">
+              Det här är en specifik skill.
             </p>
-            <button
-              onClick={() => console.log(`Start exercises for ${currentNode.id}`)}
-              className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              Börja träna
-            </button>
+            <div className="mt-4 flex justify-center space-x-3">
+              <button
+                  onClick={() => console.log(`Start exercises for ${currentNode.id}`)}
+                  className="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
+                  aria-label={`Träna ${currentNode.title}`}
+                >
+                  Börja träna
+              </button>
+              {currentNode.videoUrl && (
+                  <button
+                    onClick={(e) => handleVideoClick(e, currentNode)}
+                    className={`px-6 py-2 text-white rounded-lg transition-colors 
+                              ${activeVideoInfo.nodeId === currentNode.id ? 'bg-red-500 hover:bg-red-600' : 'bg-blue-500 hover:bg-blue-600'}`}
+                    aria-label={`${activeVideoInfo.nodeId === currentNode.id ? 'Stäng' : 'Visa'} video för ${currentNode.title}`}
+                  >
+                    {activeVideoInfo.nodeId === currentNode.id ? 'Stäng Video' : 'Visa Video'}
+                  </button>
+              )}
+            </div>
+            {activeVideoInfo.nodeId === currentNode.id && (
+                <div className="mt-4 inline-block relative w-full max-w-md mx-auto"> 
+                    <VideoPlayer 
+                      src={activeVideoInfo.url} 
+                      controls 
+                      autoPlay 
+                      width="100%" 
+                      className="rounded-md overflow-hidden shadow-lg"
+                    />
+                </div>
+            )}
           </div>
         )}
       </div>
-
-      {/* Video Player Modal */}
-      {showVideo && (
-        <div 
-          className="fixed inset-0 bg-black/70 flex items-center justify-center z-50"
-          onClick={() => setShowVideo(false)} // Close on backdrop click
-        >
-          <div 
-            className="bg-white p-4 rounded-lg shadow-xl max-w-3xl w-full relative"
-            onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside the player box
-          >
-            <button 
-              onClick={() => setShowVideo(false)} 
-              className="absolute top-2 right-2 text-black bg-white/50 rounded-full p-1 hover:bg-white/80"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-            <VideoPlayer src={videoUrl} controls autoPlay />
-          </div>
-        </div>
-      )}
     </div>
   );
 };

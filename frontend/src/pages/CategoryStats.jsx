@@ -1,34 +1,27 @@
-import React, { useEffect, useState } from 'react';
-import authStore from '../store/authStore';
+import React from 'react';
+import { useDatabase } from '../contexts/DatabaseContext';
 import MomentTree from '../components/MomentTree';
+import { useNavigate } from 'react-router-dom';
 
-export const CategoryStats = ({ onBack }) => {
-  const [stats, setStats] = useState([]);
-  const { token } = authStore();
+export const CategoryStats = () => {
+  const { categoryStats, isLoading, error } = useDatabase();
+  const navigate = useNavigate();
 
-  useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/v1/general/category_stats`, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Accept': 'application/json'
-          },
-          credentials: 'include'
-        });
-        if (response.ok) {
-          const data = await response.json();
-          setStats(data);
-        }
-      } catch (error) {
-        console.error('Failed to fetch category stats:', error);
-      }
-    };
+  if (isLoading) {
+    return (
+      <div className="w-full max-w-4xl px-4 py-8 relative flex justify-center items-center min-h-[200px]">
+        Laddar data...
+      </div>
+    );
+  }
 
-    if (token) {
-      fetchStats();
-    }
-  }, [token]);
+  if (error) {
+    return (
+      <div className="w-full max-w-4xl px-4 py-8 relative text-red-600 text-center">
+        {error}
+      </div>
+    );
+  }
 
   return (
     <div className="w-full max-w-4xl px-4 py-8 relative">
@@ -44,7 +37,12 @@ export const CategoryStats = ({ onBack }) => {
           Dina framsteg per kategori
         </h2>
 
-        <MomentTree />
+        <MomentTree 
+          stats={categoryStats} 
+          isLoading={isLoading}
+          error={error}
+          onBack={() => navigate('/main-menu')}
+        />
       </div>
     </div>
   );

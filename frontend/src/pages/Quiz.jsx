@@ -2,9 +2,12 @@ import React, { useState, useEffect, useRef } from 'react';
 import QuestionBox from '../components/quiz-components/QuestionBox';
 import AnswerButton from '../components/quiz-components/AnswerButton';
 import LoadingScreen from '../components/LoadingScreen';
+import ResultPage from '../components/quiz-components/ResultPage';
 import authStore from '../store/authStore';
 import SkipButton from '../components/quiz-components/SkipButton';
 import QuizAssistant from '../components/quiz-components/QuizAssistant';
+import SmallButton from '../components/SmallButton';
+import { ChevronDoubleRightIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 const Quiz = () => {
   const [selectedAnswer, setSelectedAnswer] = useState(null);
   const [showAnswer, setShowAnswer] = useState(false);
@@ -13,6 +16,8 @@ const Quiz = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [skipped, setSkipped] = useState(false);
+  const [quizCompleted, setQuizCompleted] = useState(false);
+  const [results, setResults] = useState([]);
   const fetchedRef = useRef(false);
   const startTimeRef = useRef(Date.now());
   
@@ -37,7 +42,7 @@ const Quiz = () => {
       const questionCount = 5;
       
       const requestBody = {
-        moment: "fraction_equation",
+        moment: "basics_fraktioner_dividera",
         difficulty: 2,
         count: questionCount
       };
@@ -93,23 +98,29 @@ const Quiz = () => {
   const handleCheckAnswer = async () => {
     setShowAnswer(true);
     
+    // Calculate time spent on this question
+    const timeSpent = Math.floor((Date.now() - startTimeRef.current) / 1000);
+    
+    // Get the current question data
+    const question = questions[currentQuestionIndex];
+    // Get the selected option
+    const selectedOption = question.options[selectedAnswer];
+    
+    const answerResult = {
+      correct: selectedOption.isCorrect,
+      timeSpent: timeSpent,
+      skipped: skipped
+    };
+    
+    setResults(prev => [...prev, answerResult]);
+    
     // Don't submit answers if not logged in
     if (!authStore.getState().isLoggedIn) {
       return;
     }
     
     try {
-      // Calculate time spent on this question
-      const timeSpent = Math.floor((Date.now() - startTimeRef.current) / 1000);
-      
-      // Get the current question data
-      const question = questions[currentQuestionIndex];
-      // Get the selected option
-      const selectedOption = question.options[selectedAnswer];
-      
-      // Create a customized answer object - only include what you need
       const answerData = {
-        // Essential fields for identifying the question
         token: authStore.getState().token,
         subject: question.subject,
         category: question.category,
@@ -120,8 +131,6 @@ const Quiz = () => {
         correct: selectedOption.isCorrect,
       };
       
-      
-      // Submit the answer
       const response = await fetch(`${import.meta.env.VITE_API_URL}/api/v1/general/submit_quiz_answer`, {
         method: 'POST',
         headers: {
@@ -143,12 +152,10 @@ const Quiz = () => {
     setSelectedAnswer(null);
     setShowAnswer(false);
     setSkipped(false);
-    // Move to next question if available
     if (currentQuestionIndex < questions.length - 1) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
     } else {
-      // If this is the last question, handle completion
-      // You could redirect to a results page or show a completion message
+      setQuizCompleted(true);
     }
   };
 
@@ -157,6 +164,10 @@ const Quiz = () => {
     question: "",
     options: []
   };
+
+  if (quizCompleted) {
+    return <ResultPage results={results} />;
+  }
 
   if (loading) {
     return (
@@ -183,70 +194,79 @@ const Quiz = () => {
   }
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center p-4">
-      <div className="quiz-container w-full max-w-5xl flex flex-col gap-6 relative">
-        <div className="absolute top-4 right-0 z-10 flex gap-2">
-          <QuizAssistant VideoName={currentQuestion.explanation} />
+    <div className="min-h-screen w-full p-4 bg-gray-50">
+      <div className="max-w-[1600px] mx-auto">
+        {/* Progress bar and question counter */}
+        <div className="mb-6">
+          <div className="w-full bg-gray-200 rounded-full h-2.5 mb-4">
+            <div 
+              className="bg-blue-600 h-2.5 rounded-full" 
+              style={{ width: `${((currentQuestionIndex + 1) / questions.length) * 100}%` }}
+            ></div>
+          </div>
+          <div className="text-gray-500 text-sm font-medium">
+            Fråga {currentQuestionIndex + 1} av {questions.length}
+          </div>
         </div>
-        <div className="w-full bg-gray-200 rounded-full h-2.5 mb-4">
-          <div 
-            className="bg-blue-600 h-2.5 rounded-full" 
-            style={{ width: `${((currentQuestionIndex + 1) / questions.length) * 100}%` }}
-          ></div>
-        </div>
-        
-        <div className="text-gray-500 text-sm font-medium">
-          Fråga {currentQuestionIndex + 1} av {questions.length}
-        </div>
-        
-        {/* Question Box - displayed prominently above answers */}
-        <div className="w-full bg-blue-200 rounded-lg">
-          <QuestionBox latexString={currentQuestion.question} />
-        </div>
-        
-        {/* Answer grid - responsive layout */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
-          {currentQuestion.options.map((option) => (
-            <AnswerButton 
-              key={option.id}
-              latexString={option.latex} 
-              isSelected={selectedAnswer === option.id}
-              isCorrect={showAnswer && option.isCorrect}
-              onClick={() => handleAnswerClick(option.id)}
-              className=""
-              textSize="text-5xl"
-            />
-          ))}
-        </div>
-        
-        {/* Controls */}
-        <div className="flex justify-center mt-4 gap-4">
-          {!showAnswer ? (
-            <>
-              <SkipButton 
-                onClick={handleSkip}
-                showAnswer={showAnswer} 
-              />
-              <button 
-                onClick={handleCheckAnswer}
-                disabled={selectedAnswer === null}
-                className={`px-6 py-2 rounded-lg font-medium ${
-                  selectedAnswer !== null
-                    ? "bg-blue-600 hover:bg-blue-700 text-white"
-                    : "bg-gray-300 text-gray-500 cursor-not-allowed"
-                }`}
-              >
-                Kolla svar
-              </button>
-            </>
-          ) : (
-            <button 
-              onClick={handleNextQuestion}
-              className="px-6 py-2 rounded-lg font-medium bg-green-600 hover:bg-green-700 text-white"
-            >
-              {currentQuestionIndex < questions.length - 1 ? "Nästa fråga" : "Avsluta quiz"}
-            </button>
-          )}
+
+        {/* Main content area with three-column layout */}
+        <div className="flex gap-6">
+          {/* Left column - Question and Answers */}
+          <div className="flex-1 min-w-[500px]">
+            {/* Question Box */}
+            <div className="bg-white rounded-lg p-6 shadow-sm mb-6">
+              <QuestionBox latexString={currentQuestion.question} />
+            </div>
+
+            {/* Answer grid */}
+            <div className="grid grid-cols-2 gap-4">
+              {currentQuestion.options.map((option) => (
+                <AnswerButton 
+                  key={option.id}
+                  latexString={option.latex} 
+                  isSelected={selectedAnswer === option.id}
+                  isCorrect={showAnswer && option.isCorrect}
+                  onClick={() => handleAnswerClick(option.id)}
+                  textSize="text-3xl"
+                />
+              ))}
+            </div>
+
+            {/* Controls */}
+            <div className="flex justify-center mt-6 gap-4">
+              {!showAnswer ? (
+                <>
+                  <SmallButton 
+                    text="Hoppa över"
+                    onClick={handleSkip}
+                    className="bg-gray-600 hover:bg-gray-700"
+                    icon={<ChevronDoubleRightIcon className="w-5 h-5" />}
+                  />
+                  <SmallButton 
+                    text="Svara"
+                    onClick={handleCheckAnswer}
+                    icon={<ChevronRightIcon className="w-5 h-5" />}
+                    className={
+                      selectedAnswer !== null
+                        ? "bg-blue-600 hover:bg-blue-700"
+                        : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                    }
+                  />
+                </>
+              ) : (
+                <SmallButton 
+                  text={currentQuestionIndex < questions.length - 1 ? "Nästa fråga" : "Avsluta quiz"}
+                  onClick={handleNextQuestion}
+                  className="bg-green-600 hover:bg-green-700"
+                />
+              )}
+            </div>
+          </div>
+
+          {/* Right column - Quiz Assistant */}
+          <div className="w-[450px]">
+            <QuizAssistant VideoName={currentQuestion.explanation} />
+          </div>
         </div>
       </div>
     </div>
