@@ -9,7 +9,6 @@ const QuizAssistant = ({ VideoName }) => {
     const [videoShowing, setVideoShowing] = useState(false);
     const [calculatorShowing, setCalculatorShowing] = useState(false);
     const [drawingPadShowing, setDrawingPadShowing] = useState(false);
-
     const handleVideoToggle = () => {
         setVideoShowing(!videoShowing);
     };
@@ -46,31 +45,33 @@ const QuizAssistant = ({ VideoName }) => {
                 />
             </div>
 
-            {/* Components */}
-            <div className="fixed top-28 right-10 flex flex-col gap-4 z-50">
-                {/* Video player */}
+            {/* Components stacked vertically */}
+            <div className="absolute top-28 right-0 flex flex-col gap-4">
+                {/* Video player container - top */}
                 {videoShowing && VideoName && (
-                    <VideoPlayer
-                        autoPlay={true}
-                        loop={true}
-                        controls={true}
-                        src={`${import.meta.env.BASE_URL}videos/${VideoName}`}
-                        className="w-[400px] aspect-video"
-                        isDraggable={true}
-                    />
+                    <div className="w-[400px] rounded-lg overflow-hidden shadow-lg mt-4">
+                        <VideoPlayer
+                            autoPlay={true}
+                            loop={true}
+                            controls={true}
+                            src={`${import.meta.env.BASE_URL}videos/${VideoName}`}
+                            className="w-full aspect-video"
+                            isDraggable={true}
+                        />
+                    </div>
                 )}
 
-                {/* Calculator */}
+                {/* Calculator container - middle */}
                 {calculatorShowing && (
-                    <div className="w-[300px] rounded-lg overflow-hidden shadow-lg">
+                    <div className="w-[300px] rounded-lg overflow-hidden shadow-lg mt-4">
                         <Calculator />
                     </div>
                 )}
 
-                {/* Drawing Pad */}
+                {/* Drawing Pad container - bottom */}
                 {drawingPadShowing && (
                     <div 
-                        className="rounded-lg overflow-hidden shadow-lg"
+                        className="rounded-lg overflow-hidden shadow-lg mt-4"
                         style={{ width: '400px', height: '400px' }}
                     >
                         <DrawingPad />
