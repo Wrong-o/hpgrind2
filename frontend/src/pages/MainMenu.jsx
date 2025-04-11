@@ -4,6 +4,7 @@ import { useDatabase } from '../contexts/DatabaseContext';
 import FocusPractice from '../components/FocusPractice';
 import MenuButton from '../components/MenuButton';
 import SmallButton from '../components/SmallButton';
+import Updates from '../components/Updates';
 import { 
   Cog6ToothIcon, 
   ChartBarIcon, 
@@ -71,11 +72,11 @@ function MainMenu() {
             />
           </div>
 
-          {/* Right Column - Moment Cards */}
-          <div className="w-1/2 border-l border-gray-200 p-8 bg-white">
-            <h2 className="text-3xl font-bold mb-6 text-gray-800 border-b-2 border-red-500 pb-2 inline-block">LOCK IN: Mest värde att öva på</h2>
+          {/* Middle Column - Moment Cards */}
+          <div className="w-1/3 border-l border-gray-200 p-8 bg-white">
+            <h2 className="text-3xl font-bold mb-6 text-gray-800 border-b-2 border-red-500 pb-2 inline-block">LOCK IN: Bäst värde</h2>
             {redMoments.length > 0 ? (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4">
                 {redMoments.map((moment) => (
                   <div
                     key={moment.moment}
@@ -100,9 +101,14 @@ function MainMenu() {
               </div>
             ) : (
               <div className="text-center text-gray-500 py-8">
-                <p>Inga moment behöver extra fokus just nu!</p>
+                <p>Gör kalibreringen för att få bättre rekommendationer!</p>
               </div>
             )}
+          </div>
+
+          {/* Right Column - Updates */}
+          <div className="w-1/3 border-l border-gray-200 p-8 bg-white">
+            <Updates />
           </div>
         </div>
       </div>
@@ -113,9 +119,8 @@ function MainMenu() {
           <div className="bg-white w-full h-full md:w-3/4 md:h-5/6 rounded-lg relative">
             <SmallButton
               onClick={() => setSelectedPracticeNode(null)}
-              className="bg-gray-900 absolute top-4 right-4 hover:bg-gray-900 text-gray-600 hover:text-gray-300 p-2"
+              className="absolute top-2 right-2 text-gray-400 hover:text-gray-600 p-1"
               icon={<XMarkIcon className="w-4 h-4" />}
-              text="Stäng"
             />
             <FocusPractice
               key={selectedPracticeNode.id}

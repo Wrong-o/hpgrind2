@@ -725,6 +725,7 @@ const MomentTree = ({ onBack, stats }) => {
               controls={true}
               autoPlay={true}
               loop={true}
+              isDraggable={true}
             />
             <button 
               onClick={() => setActiveVideoInfo({ nodeId: null, url: null })}
