@@ -1,16 +1,14 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import QuestionBox from '../components/quiz-components/QuestionBox';
 import AnswerButton from '../components/quiz-components/AnswerButton';
-import LoadingScreen from '../components/LoadingScreen';
-import ResultPage from '../components/quiz-components/ResultPage';
-import authStore from '../store/authStore';
-import SkipButton from '../components/quiz-components/SkipButton';
 import QuizAssistant from '../components/quiz-components/QuizAssistant';
 import SmallButton from '../components/SmallButton';
 import { ChevronDoubleRightIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 import { useSound } from '../contexts/SoundContext';
+import demoQuestions from '../contexts/DemoQuestions.json';
+import DemoStats from './quiz-components/DemoStats';
 
-const Quiz = () => {
+const Demo = () => {
   const [selectedAnswer, setSelectedAnswer] = useState(null);
   const [showAnswer, setShowAnswer] = useState(false);
   const [questions, setQuestions] = useState([]);
@@ -20,15 +18,52 @@ const Quiz = () => {
   const [skipped, setSkipped] = useState(false);
   const [quizCompleted, setQuizCompleted] = useState(false);
   const [results, setResults] = useState([]);
-  const fetchedRef = useRef(false);
   const startTimeRef = useRef(Date.now());
   const { isMuted } = useSound();
+  const [answeredMultiplication, setAnsweredMultiplication] = useState(0);
+  const [answeredDivision, setAnsweredDivision] = useState(0);
+  const [answeredAddition, setAnsweredAddition] = useState(0);
+  const [answeredSubtraction, setAnsweredSubtraction] = useState(0);
+  const [correctMultiplication, setCorrectMultiplication] = useState(0);
+  const [correctDivision, setCorrectDivision] = useState(0);
+  const [correctAddition, setCorrectAddition] = useState(0);
+  const [correctSubtraction, setCorrectSubtraction] = useState(0);
   
+  // Fisher-Yates shuffle algorithm
+  const shuffleArray = (array) => {
+    for (let i = array.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+  };
+
   useEffect(() => {
-    // Only run if not already fetched - prevents duplicate calls in StrictMode
-    if (fetchedRef.current) return;
-    
-    fetchQuestions();
+    try {
+      // Format and shuffle the demo questions
+      const formattedQuestions = demoQuestions.questions.map((data, i) => ({
+        id: i,
+        question: data.question,
+        options: shuffleArray([...data.answers.map((answer, index) => ({
+          id: index,
+          latex: answer.toString(),
+          isCorrect: answer === data.correct_answer
+        }))]),
+        explanation: data.explanation,
+        subject: data.subject,
+        category: data.category,
+        difficulty: data.difficulty,
+        moment: data.moment
+      }));
+
+      // Shuffle the questions themselves
+      setQuestions(shuffleArray([...formattedQuestions]));
+      setLoading(false);
+    } catch (err) {
+      console.error('Error loading demo questions:', err);
+      setError("Failed to load demo questions.");
+      setLoading(false);
+    }
   }, []);
   
   // Reset timer when moving to a new question
@@ -36,78 +71,9 @@ const Quiz = () => {
     startTimeRef.current = Date.now();
   }, [currentQuestionIndex]);
   
-  // Define fetchQuestions as async function
-  const fetchQuestions = async () => {
-    try {
-      setLoading(true);
-      
-      // Number of questions to fetch
-      const questionCount = 5;
-
-      // List of available moments
-      const moments = [
-        "basics_fraktioner_dividera",
-        "basics_fraktioner_multiplicera", 
-        "basics_fraktioner_addera",
-        "basics_fraktioner_subtrahera",
-      ];
-
-      // Pick random moment
-      const randomMoment = moments[Math.floor(Math.random() * moments.length)];
-      
-      const requestBody = {
-        moment: randomMoment,
-        difficulty: 2,
-        count: questionCount
-      };
-      
-      // Single API call to fetch multiple questions - batch endpoint is faster!
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/v1/question_generator/batch`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(requestBody)
-      });
-      
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`HTTP error! Status: ${response.status}. Details: ${errorText}`);
-      }
-      
-      // Parse all questions at once
-      const questionsData = await response.json();
-      
-      // Format the questions
-      const formattedQuestions = questionsData.map((data, i) => ({
-        id: i,
-        question: data.question,
-        options: data.answers.map((answer, index) => ({
-          id: index,
-          latex: answer.toString(),
-          isCorrect: answer.toString() === data.correct_answer
-        })),
-        explanation: data.explanation,
-        subject: data.subject,
-        category: data.category,
-        difficulty: data.difficulty,
-        moment: data.moment || "operations_order" // Ensure moment is available
-      }));
-      
-      setQuestions(formattedQuestions);
-      setLoading(false);
-      fetchedRef.current = true;
-    } catch (err) {
-      setError("Failed to load questions. Please try again.");
-      setLoading(false);
-    }
-  };
-  
   const handleAnswerClick = (id) => {
     setSelectedAnswer(id);
   };
-  
   
   const handleCheckAnswer = async () => {
     setShowAnswer(true);
@@ -115,55 +81,62 @@ const Quiz = () => {
     // Get the current question data
     const question = questions[currentQuestionIndex];
     // Get the selected option
-    const selectedOption = question.options[selectedAnswer];
+    const selectedOption = question.options.find(option => option.id === selectedAnswer);
     
-    // Play the appropriate sound
-    if (selectedOption.isCorrect) {
-      playCorrectSound();
-    } else {
-      playWrongSound();
+    // Debug logs
+    console.log('Selected Answer:', selectedAnswer);
+    console.log('Selected Option:', selectedOption);
+    console.log('Question Options:', question.options);
+    console.log('Correct Answer:', question.options.find(opt => opt.isCorrect));
+    
+    const isAnswerCorrect = selectedOption?.isCorrect || false;
+
+    // Update the stats based on the moment type
+    if (question.moment.includes('multiplicera')) {
+      setAnsweredMultiplication(prev => prev + 1);
+      if (isAnswerCorrect) {
+        setCorrectMultiplication(prev => prev + 1);
+        playCorrectSound();
+      } else {
+        playWrongSound();
+      }
+    } else if (question.moment.includes('dividera')) {
+      setAnsweredDivision(prev => prev + 1);
+      if (isAnswerCorrect) {
+        setCorrectDivision(prev => prev + 1);
+        playCorrectSound();
+      } else {
+        playWrongSound();
+      }
+    } else if (question.moment.includes('addera')) {
+      setAnsweredAddition(prev => prev + 1);
+      if (isAnswerCorrect) {
+        setCorrectAddition(prev => prev + 1);
+        playCorrectSound();
+      } else {
+        playWrongSound();
+      }
+    } else if (question.moment.includes('subtrahera')) {
+      setAnsweredSubtraction(prev => prev + 1);
+      if (isAnswerCorrect) {
+        setCorrectSubtraction(prev => prev + 1);
+        playCorrectSound();
+      } else {
+        playWrongSound();
+      }
     }
 
     // Calculate time spent on this question
     const timeSpent = Math.floor((Date.now() - startTimeRef.current) / 1000);
     
     const answerResult = {
-      correct: selectedOption.isCorrect,
+      correct: isAnswerCorrect,
       timeSpent: timeSpent,
-      skipped: skipped
+      skipped: skipped,
+      category: question.moment
     };
-    
+
     setResults(prev => [...prev, answerResult]);
-    
-    // Don't submit answers if not logged in
-    if (!authStore.getState().isLoggedIn) {
-      return;
-    }
-    
-    try {
-      const answerData = {
-        token: authStore.getState().token,
-        subject: question.subject,
-        category: question.category,
-        moment: question.moment,
-        difficulty: question.difficulty,
-        skipped: skipped,
-        time_spent: timeSpent,
-        correct: selectedOption.isCorrect,
-      };
-      
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/v1/general/submit_quiz_answer`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${authStore.getState().token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(answerData)
-      });
-      
-      const result = await response.json();
-    } catch (error) {
-    }
   };
 
   const playSkipSound = useCallback(() => {
@@ -228,14 +201,6 @@ const Quiz = () => {
     );
   }
 
-  if (loading) {
-    return (
-      <div className="min-h-screen w-full flex items-center justify-center bg-gradient-to-b from-blue-50 to-white">
-        <LoadingScreen />
-      </div>
-    );
-  }
-
   if (error) {
     return (
       <div className="min-h-screen w-full flex items-center justify-center bg-gradient-to-b from-blue-50 to-white">
@@ -253,8 +218,21 @@ const Quiz = () => {
   }
 
   return (
-    <div className="min-h-screen w-full p-4 bg-gray-100">
+    <div className="min-h-screen w-full p-4 bg-gray-50">
       <div className="max-w-[1600px] mx-auto">
+        {/* Stats Cards */}
+        <DemoStats 
+          answeredMultiplication={answeredMultiplication}
+          correctMultiplication={correctMultiplication}
+          answeredDivision={answeredDivision}
+          correctDivision={correctDivision}
+          answeredAddition={answeredAddition}
+          correctAddition={correctAddition}
+          answeredSubtraction={answeredSubtraction}
+          correctSubtraction={correctSubtraction}
+          results={results}
+        />
+
         {/* Progress bar and question counter */}
         <div className="mb-6">
           <div className="w-full bg-gray-200 rounded-full h-2.5 mb-4">
@@ -332,4 +310,4 @@ const Quiz = () => {
   );
 };
 
-export default Quiz;
+export default Demo;

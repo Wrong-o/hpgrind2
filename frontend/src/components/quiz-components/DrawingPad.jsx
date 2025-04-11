@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
+import SmallButton from '../SmallButton';
+import { TrashIcon } from '@heroicons/react/24/outline';
 
 const DrawingPad = () => {
   const canvasRef = useRef(null);
@@ -8,8 +10,8 @@ const DrawingPad = () => {
   useEffect(() => {
     const canvas = canvasRef.current;
     // Optional: Set canvas dimensions dynamically or fixed
-    canvas.width = 500; // Example width
-    canvas.height = 300; // Example height
+    canvas.width = 400; // Example width
+    canvas.height = 400; // Example height
 
     const context = canvas.getContext('2d');
     // Set background
@@ -22,6 +24,17 @@ const DrawingPad = () => {
     context.lineCap = 'round'; // Smoother lines
     contextRef.current = context;
   }, []);
+
+  const clearCanvas = () => {
+    const canvas = canvasRef.current;
+    const context = contextRef.current;
+    // Clear and reset to black background
+    context.fillStyle = 'black';
+    context.fillRect(0, 0, canvas.width, canvas.height);
+    // Reset drawing style
+    context.strokeStyle = 'white';
+    context.lineWidth = 2;
+  };
 
   const startDrawing = ({ nativeEvent }) => {
     const { offsetX, offsetY } = nativeEvent;
@@ -45,14 +58,24 @@ const DrawingPad = () => {
   };
 
   return (
-    <canvas
-      ref={canvasRef}
-      onMouseDown={startDrawing}
-      onMouseUp={stopDrawing}
-      onMouseMove={draw}
-      onMouseLeave={stopDrawing} // Stop drawing if mouse leaves canvas
-      style={{ border: '1px solid grey' }} // Optional: add border for visibility
-    />
+    <div className="relative">
+      <canvas
+        ref={canvasRef}
+        onMouseDown={startDrawing}
+        onMouseUp={stopDrawing}
+        onMouseMove={draw}
+        onMouseLeave={stopDrawing} // Stop drawing if mouse leaves canvas
+        style={{ border: '1px solid grey' }} // Optional: add border for visibility
+      />
+      <div className="absolute top-2 right-2">
+        <SmallButton
+          text="Rensa"
+          onClick={clearCanvas}
+          icon={<TrashIcon className="w-5 h-5" />}
+          className="bg-red-600 hover:bg-red-700"
+        />
+      </div>
+    </div>
   );
 };
 

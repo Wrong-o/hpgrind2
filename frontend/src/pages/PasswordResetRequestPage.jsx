@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import PasswordResetRequestForm from './PasswordResetRequestForm';
+import PasswordResetRequestForm from '../components/PasswordResetRequestForm';
 
 
 function PasswordResetRequestPage() {

@@ -5,7 +5,7 @@ const DatabaseContext = createContext();
 
 export const DatabaseProvider = ({ children }) => {
   const [recommendedPath, setRecommendedPath] = useState(null);
-  const [questionHistory, setQuestionHistory] = useState([]);
+  const [categoryStats, setCategoryStats] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   
@@ -18,7 +18,7 @@ export const DatabaseProvider = ({ children }) => {
     setError(null);
     
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/get-achievements`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/v1/general/user_achievements`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Accept': 'application/json'
@@ -40,15 +40,15 @@ export const DatabaseProvider = ({ children }) => {
     }
   };
   
-  // Fetch question history for the user
-  const fetchQuestionHistory = async () => {
+  // Fetch category stats for the user
+  const fetchCategoryStats = async () => {
     if (!token) return;
     
     setIsLoading(true);
     setError(null);
     
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/user-history`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/v1/general/category_stats`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Accept': 'application/json'
@@ -57,14 +57,14 @@ export const DatabaseProvider = ({ children }) => {
       });
       
       if (!response.ok) {
-        throw new Error('Failed to fetch question history');
+        throw new Error('Failed to fetch category stats');
       }
       
       const data = await response.json();
-      setQuestionHistory(data);
+      setCategoryStats(data);
     } catch (err) {
-      console.error('Error fetching question history:', err);
-      setError('Failed to load your question history');
+      console.error('Error fetching category stats:', err);
+      setError('Failed to load your category stats');
     } finally {
       setIsLoading(false);
     }
@@ -73,23 +73,23 @@ export const DatabaseProvider = ({ children }) => {
   // Refresh data when token changes
   useEffect(() => {
     if (token) {
-      fetchRecommendedPath();
-      fetchQuestionHistory();
+      fetchAchievements();
+      fetchCategoryStats();
     } else {
       // Clear data when user logs out
       setRecommendedPath(null);
-      setQuestionHistory([]);
+      setCategoryStats(null);
     }
   }, [token]);
   
   // Expose the context values
   const value = {
     recommendedPath,
-    questionHistory,
+    categoryStats,
     isLoading,
     error,
-    refreshRecommendedPath: fetchRecommendedPath,
-    refreshQuestionHistory: fetchQuestionHistory
+    refreshAchievements: fetchAchievements,
+    refreshCategoryStats: fetchCategoryStats
   };
   
   return (

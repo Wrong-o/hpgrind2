@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import 'katex/dist/katex.min.css';
 import Latex from '@matejmazur/react-katex';
+import { useSound } from '../../contexts/SoundContext';
 
 const AnswerButton = ({ 
   latexString, 
@@ -10,6 +11,15 @@ const AnswerButton = ({
   onClick = () => {},
   textSize = "text-lg"
 }) => {
+  const { isMuted } = useSound();
+  
+  const playHoverSound = useCallback(() => {
+    if (isMuted) return;
+    const audio = new Audio('/sounds/hover.wav');
+    audio.volume = 0.2;
+    audio.play().catch(err => console.log('Audio playback failed:', err));
+  }, [isMuted]);
+
   // Base classes that will always be applied
   const baseClasses = "transition-colors p-4 md:p-6 rounded-lg cursor-pointer border shadow-md flex items-center justify-center min-h-[100px] w-full";
   
@@ -34,6 +44,7 @@ const AnswerButton = ({
     <div 
       className={`${baseClasses} ${stateClasses} ${className}`}
       onClick={onClick}
+      onMouseEnter={playHoverSound}
     >
       <Latex className={`${textSize}`}>{latexString}</Latex>
     </div>

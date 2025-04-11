@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import authStore from '../store/authStore';
-import LoadingScreen from './quiz-components/LoadingScreen';
+import LoadingScreen from '../components/LoadingScreen';
 
 const UserStatsPage = () => {
     const token = authStore((state) => state.token);

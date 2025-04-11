@@ -1,21 +1,9 @@
 import React, { useState } from 'react';
-import authStore from '../store/authStore';
 import { useNavigate } from 'react-router-dom';
 
 function MainMenu() {
   const navigate = useNavigate();
-  const [showLogin, setShowLogin] = useState(false);
-  const [showStats, setShowStats] = useState(false);
-  const [showRoadMap, setShowRoadMap] = useState(false);
-  const [showDecisionTree, setShowDecisionTree] = useState(false);
-  const [showSecondChance, setShowSecondChance] = useState(false);
-  const [currentTest, setCurrentTest] = useState(null);
-  const [finalScore, setFinalScore] = useState(0);
-  const [question1Answered, setQuestion1Answered] = useState(false);
-  const [question2Answered, setQuestion2Answered] = useState(false);
-  const [userAchievements, setUserAchievements] = useState([]);
   const [nextRecommendedPath, setNextRecommendedPath] = useState('matematikbasic');
-  const isLoggedIn = authStore((state) => state.isLoggedIn);
 
   const handleRecommendedPath = () => {
     switch (nextRecommendedPath) {
@@ -52,7 +40,7 @@ function MainMenu() {
       <div className="flex">
         <main className="flex-1">
           <>
-                <div className="bg-gradient-to-b from-blue-50 to-teal-100 min-h-screen flex flex-col items-center justify-center relative overflow-hidden">
+                <div className="bg-gradient-to-b from-blue-50 to-teal-600 min-h-screen flex flex-col items-center justify-center relative overflow-hidden">
                   <div className="container mx-auto text-center z-10 max-w-4xl px-8">
                     <div className="mt-8 space-y-4">
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -63,18 +51,12 @@ function MainMenu() {
                               Börja öva
                             </button>
                             <button
-                              onClick={() => setShowSecondChance(true)}
+                              onClick={() => navigate('/category-stats')}
                               className="bg-teal-600 text-white px-6 py-3 rounded-lg hover:bg-teal-700 transition-colors flex items-center justify-center gap-2"
                             >
-                              Andra chansen
+                              Kuskapsöversikt
                             </button>
                           </div>
-                          <button
-                            onClick={() => setShowRoadMap(true)}
-                            className="text-blue-600 hover:text-blue-800 transition-colors"
-                          >
-                            Se din väg till målet
-                          </button>
                       
                     </div>
                   </div>

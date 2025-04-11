@@ -1,0 +1,308 @@
+{
+  "questions": [
+    {
+      "subject": "kvantitativ",
+      "category": "basics",
+      "question": "\\frac{\\frac{8}{9}}{\\frac{4}{2}}",
+      "answers": [
+        "\\frac{0}{1}",
+        "\\frac{31}{90}",
+        "\\frac{4}{9}",
+        "\\frac{26}{9}"
+      ],
+      "correct_answer": "\\frac{4}{9}",
+      "drawing": [],
+      "explanation": "FractionDivision.mp4",
+      "moment": "basics_fraktioner_dividera",
+      "difficulty": 1
+    },
+    {
+      "subject": "kvantitativ",
+      "category": "basics",
+      "question": "\\frac{\\frac{4}{3}}{\\frac{6}{2}}",
+      "answers": [
+        "\\frac{31}{90}",
+        "\\frac{13}{3}",
+        "\\frac{4}{1}",
+        "\\frac{4}{9}"
+      ],
+      "correct_answer": "\\frac{4}{9}",
+      "drawing": [],
+      "explanation": "FractionDivision.mp4",
+      "moment": "basics_fraktioner_dividera",
+      "difficulty": 1
+    },
+    {
+      "subject": "kvantitativ",
+      "category": "basics",
+      "question": "\\frac{\\frac{7}{4}}{\\frac{1}{6}}",
+      "answers": [
+        "\\frac{7}{24}",
+        "\\frac{0}{1}",
+        "\\frac{23}{12}",
+        "\\frac{21}{2}"
+      ],
+      "correct_answer": "\\frac{21}{2}",
+      "drawing": [],
+      "explanation": "FractionDivision.mp4",
+      "moment": "basics_fraktioner_dividera",
+      "difficulty": 1
+    },
+    {
+      "subject": "kvantitativ",
+      "category": "basics",
+      "question": "\\frac{\\frac{10}{3}}{\\frac{2}{1}}",
+      "answers": [
+        "\\frac{16}{3}",
+        "\\frac{20}{3}",
+        "\\frac{5}{3}",
+        "\\frac{3}{2}"
+      ],
+      "correct_answer": "\\frac{5}{3}",
+      "drawing": [],
+      "explanation": "FractionDivision.mp4",
+      "moment": "basics_fraktioner_dividera",
+      "difficulty": 1
+    },
+    {
+      "subject": "kvantitativ",
+      "category": "basics",
+      "question": "\\frac{8}{5} \\cdot \\frac{5}{2}",
+      "answers": [
+        "\\frac{4}{1}",
+        "\\frac{2}{1}",
+        "\\frac{41}{10}",
+        "\\frac{1}{1}"
+      ],
+      "correct_answer": "\\frac{4}{1}",
+      "drawing": [],
+      "explanation": "FractionMultiplication.mp4",
+      "moment": "basics_fraktioner_multiplicera",
+      "difficulty": 1
+    },
+    {
+      "subject": "kvantitativ",
+      "category": "basics",
+      "question": "\\frac{1}{2} \\cdot \\frac{6}{3}",
+      "answers": [
+        "\\frac{0}{1}",
+        "\\frac{11}{10}",
+        "\\frac{5}{2}",
+        "\\frac{1}{1}"
+      ],
+      "correct_answer": "\\frac{1}{1}",
+      "drawing": [],
+      "explanation": "FractionMultiplication.mp4",
+      "moment": "basics_fraktioner_multiplicera",
+      "difficulty": 1
+    },
+    {
+      "subject": "kvantitativ",
+      "category": "basics",
+      "question": "\\frac{8}{7} \\cdot \\frac{8}{7}",
+      "answers": [
+        "\\frac{689}{490}",
+        "\\frac{1}{1}",
+        "\\frac{64}{49}",
+        "\\frac{16}{7}"
+      ],
+      "correct_answer": "\\frac{64}{49}",
+      "drawing": [],
+      "explanation": "FractionMultiplication.mp4",
+      "moment": "basics_fraktioner_multiplicera",
+      "difficulty": 1
+    },
+    {
+      "subject": "kvantitativ",
+      "category": "basics",
+      "question": "\\frac{4}{6} \\cdot \\frac{1}{2}",
+      "answers": [
+        "\\frac{1}{3}",
+        "\\frac{7}{6}",
+        "\\frac{13}{30}",
+        "\\frac{0}{1}"
+      ],
+      "correct_answer": "\\frac{1}{3}",
+      "drawing": [],
+      "explanation": "FractionMultiplication.mp4",
+      "moment": "basics_fraktioner_multiplicera",
+      "difficulty": 1
+    },
+    {
+      "subject": "kvantitativ",
+      "category": "basics",
+      "question": "\\frac{4}{8} \\cdot \\frac{2}{6}",
+      "answers": [
+        "\\frac{0}{1}",
+        "\\frac{4}{15}",
+        "\\frac{5}{6}",
+        "\\frac{1}{6}"
+      ],
+      "correct_answer": "\\frac{1}{6}",
+      "drawing": [],
+      "explanation": "FractionMultiplication.mp4",
+      "moment": "basics_fraktioner_multiplicera",
+      "difficulty": 1
+    },
+    {
+      "subject": "kvantitativ",
+      "category": "basics",
+      "question": "\\frac{5}{4} + \\frac{9}{1}",
+      "answers": [
+        "\\frac{41}{4}",
+        "\\frac{45}{4}",
+        "\\frac{207}{20}",
+        "\\frac{10}{1}"
+      ],
+      "correct_answer": "\\frac{41}{4}",
+      "drawing": [],
+      "explanation": "FractionAddition.mp4",
+      "moment": "basics_fraktioner_addera",
+      "difficulty": 1
+    },
+    {
+      "subject": "kvantitativ",
+      "category": "basics",
+      "question": "\\frac{8}{2} + \\frac{1}{5}",
+      "answers": [
+        "\\frac{4}{5}",
+        "\\frac{43}{10}",
+        "\\frac{21}{5}",
+        "\\frac{4}{1}"
+      ],
+      "correct_answer": "\\frac{21}{5}",
+      "drawing": [],
+      "explanation": "FractionAddition.mp4",
+      "moment": "basics_fraktioner_addera",
+      "difficulty": 1
+    },
+    {
+      "subject": "kvantitativ",
+      "category": "basics",
+      "question": "\\frac{8}{9} + \\frac{5}{2}",
+      "answers": [
+        "\\frac{2}{1}",
+        "\\frac{61}{18}",
+        "\\frac{157}{45}",
+        "\\frac{20}{9}"
+      ],
+      "correct_answer": "\\frac{61}{18}",
+      "drawing": [],
+      "explanation": "FractionAddition.mp4",
+      "moment": "basics_fraktioner_addera",
+      "difficulty": 1
+    },
+    {
+      "subject": "kvantitativ",
+      "category": "basics",
+      "question": "\\frac{8}{3} + \\frac{10}{9}",
+      "answers": [
+        "\\frac{3}{1}",
+        "\\frac{349}{90}",
+        "\\frac{80}{27}",
+        "\\frac{102}{27}"
+      ],
+      "correct_answer": "\\frac{102}{27}",
+      "drawing": [],
+      "explanation": "FractionAddition.mp4",
+      "moment": "basics_fraktioner_addera",
+      "difficulty": 1
+    },
+    {
+      "subject": "kvantitativ",
+      "category": "basics",
+      "question": "\\frac{6}{4} + \\frac{10}{5}",
+      "answers": [
+        "\\frac{18}{5}",
+        "\\frac{3}{1}",
+        "\\frac{7}{2}",
+        "\\frac{7}{4}"
+      ],
+      "correct_answer": "\\frac{7}{2}",
+      "drawing": [],
+      "explanation": "FractionAddition.mp4",
+      "moment": "basics_fraktioner_addera",
+      "difficulty": 1
+    },
+    {
+      "subject": "kvantitativ",
+      "category": "basics",
+      "question": "\\frac{3}{4} - \\frac{7}{6}",
+      "answers": [
+        "\\frac{-5}{12}",
+        "\\frac{-31}{60}",
+        "\\frac{-1}{1}",
+        "\\frac{7}{8}"
+      ],
+      "correct_answer": "\\frac{-5}{12}",
+      "drawing": [],
+      "explanation": "FractionSubtraction.mp4",
+      "moment": "basics_fraktioner_subtrahera",
+      "difficulty": 1
+    },
+    {
+      "subject": "kvantitativ",
+      "category": "basics",
+      "question": "\\frac{6}{10} - \\frac{4}{6}",
+      "answers": [
+        "\\frac{-1}{15}",
+        "\\frac{2}{5}",
+        "\\frac{-1}{6}",
+        "\\frac{0}{1}"
+      ],
+      "correct_answer": "\\frac{-1}{15}",
+      "drawing": [],
+      "explanation": "FractionSubtraction.mp4",
+      "moment": "basics_fraktioner_subtrahera",
+      "difficulty": 1
+    },
+    {
+      "subject": "kvantitativ",
+      "category": "basics",
+      "question": "\\frac{2}{9} - \\frac{9}{3}",
+      "answers": [
+        "\\frac{-75}{27}",
+        "\\frac{2}{3}",
+        "\\frac{-259}{90}",
+        "\\frac{-3}{1}"
+      ],
+      "correct_answer": "\\frac{-75}{27}",
+      "drawing": [],
+      "explanation": "FractionSubtraction.mp4",
+      "moment": "basics_fraktioner_subtrahera",
+      "difficulty": 1
+    },
+    {
+      "subject": "kvantitativ",
+      "category": "basics",
+      "question": "\\frac{7}{5} - \\frac{2}{8}",
+      "answers": [
+        "\\frac{21}{20}",
+        "\\frac{23}{20}",
+        "\\frac{7}{20}",
+        "\\frac{1}{1}"
+      ],
+      "correct_answer": "\\frac{23}{20}",
+      "drawing": [],
+      "explanation": "FractionSubtraction.mp4",
+      "moment": "basics_fraktioner_subtrahera",
+      "difficulty": 1
+    },
+    {
+      "subject": "kvantitativ",
+      "category": "basics",
+      "question": "\\frac{1}{9} - \\frac{8}{2}",
+      "answers": [
+        "\\frac{-35}{9}",
+        "\\frac{-4}{1}",
+        "\\frac{4}{9}",
+        "\\frac{-359}{90}"
+      ],
+      "correct_answer": "\\frac{-35}{9}",
+      "drawing": [],
+      "explanation": "FractionSubtraction.mp4",
+      "moment": "basics_fraktioner_subtrahera",
+      "difficulty": 1
+    }
+  ]
+}
