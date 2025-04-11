@@ -4,7 +4,7 @@ import { useDatabase } from '../contexts/DatabaseContext';
 import FocusPractice from './FocusPractice';
 
 const MomentTree = ({ onBack, stats }) => {
-  const { isLoading, error } = useDatabase();
+  const { isLoading, error, ProgressColors, getProgressColor } = useDatabase();
   
   const initialTree = {
     id: 'root',
@@ -392,12 +392,6 @@ const MomentTree = ({ onBack, stats }) => {
     }]
   };
 
-  const ProgressColors = {
-    RED: '#ff6b6b',
-    YELLOW: '#feca57',
-    GREEN: '#1dd1a1'
-  };
-
   const [tree, setTree] = useState(initialTree);
   const [currentNode, setCurrentNode] = useState(initialTree);
   const [path, setPath] = useState([initialTree]);
@@ -422,25 +416,20 @@ const MomentTree = ({ onBack, stats }) => {
     const map = {};
     for (const nodeId in aggregatedStats) {
       const nodeStats = aggregatedStats[nodeId];
+      const accuracy = nodeStats.total_answers > 0 ? (nodeStats.correct / nodeStats.total_answers) : 0;
       map[nodeId] = {
         attempts: nodeStats.total_answers,
-        accuracy: nodeStats.total_answers > 0 ? (nodeStats.correct / nodeStats.total_answers) : 0,
+        accuracy: accuracy,
+        classification: getProgressColor(accuracy)
       };
     }
     return map;
-  }, [stats]);
+  }, [stats, getProgressColor]);
 
-  const getProgressColor = (nodeId) => {
+  const getNodeProgressColor = (nodeId) => {
     const nodeProgress = progressMap[nodeId];
     if (!nodeProgress || nodeProgress.attempts === 0) return 'transparent';
-
-    if (nodeProgress.accuracy >= 0.8) {
-      return ProgressColors.GREEN;
-    } else if (nodeProgress.accuracy >= 0.5) {
-      return ProgressColors.YELLOW;
-    } else {
-      return ProgressColors.RED;
-    }
+    return nodeProgress.classification;
   };
 
   const countChildColors = (node) => {
@@ -453,7 +442,7 @@ const MomentTree = ({ onBack, stats }) => {
 
     const countNodeColors = (currentNode) => {
       if (!currentNode.children || currentNode.children.length === 0) {
-        const color = getProgressColor(currentNode.id);
+        const color = getNodeProgressColor(currentNode.id);
         if (color === 'transparent') counts.gray++;
         else if (color === ProgressColors.RED) counts.red++;
         else if (color === ProgressColors.YELLOW) counts.yellow++;
@@ -497,7 +486,7 @@ const MomentTree = ({ onBack, stats }) => {
   };
 
   const renderNode = (node, level = 0) => {
-    const progressColor = getProgressColor(node.id);
+    const progressColor = getNodeProgressColor(node.id);
     const hasChildren = node.children && node.children.length > 0;
     const isCurrentParent = currentNode.children && currentNode.children.includes(node);
     const isVideoActive = activeVideoInfo.nodeId === node.id;

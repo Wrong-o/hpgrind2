@@ -5,7 +5,6 @@ import QuizAssistant from '../components/quiz-components/QuizAssistant';
 import SmallButton from '../components/SmallButton';
 import { ChevronDoubleRightIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 import { useSound } from '../contexts/SoundContext';
-import demoQuestions from '../contexts/DemoQuestions.json';
 
 const FocusPractice = ({ moment, onClose }) => {
   const [selectedAnswer, setSelectedAnswer] = useState(null);
@@ -50,7 +49,12 @@ const FocusPractice = ({ moment, onClose }) => {
       const questionCount = 3;
       
       const requestBody = {
-        moment: moment, // Use the provided moment
+        moments: [
+          {
+            moment: moment,
+            probability: 1.0
+          }
+        ],
         difficulty: 2,
         count: questionCount
       };
@@ -207,22 +211,54 @@ const FocusPractice = ({ moment, onClose }) => {
     question: "",
     options: []
   };
+
   if (quizCompleted) {
     return (
-      <div className="absolute inset-0 z-50 bg-gradient-to-b from-blue-300 to-white">
-        <ResultPage 
-          results={results} 
-          onReset={() => {
-            setQuizCompleted(false);
-            setCurrentQuestionIndex(0);
-            setResults([]);
-            setSelectedAnswer(null);
-            setShowAnswer(false);
-            setSkipped(false);
-            fetchQuestions();
-            startTimeRef.current = Date.now();
-          }}
-        />
+      <div className="absolute inset-0 z-50 bg-white p-8">
+        <div className="max-w-2xl mx-auto">
+          <h2 className="text-2xl font-bold mb-6 text-center">Resultat</h2>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <div className="bg-blue-50 p-6 rounded-lg text-center">
+              <p className="text-lg text-gray-600">Andel rätt</p>
+              <p className="text-4xl font-bold text-blue-600">
+                {Math.round((results.filter(r => r.correct).length / results.length) * 100)}%
+              </p>
+            </div>
+            
+            <div className="bg-blue-50 p-6 rounded-lg text-center">
+              <p className="text-lg text-gray-600">Rätt svar</p>
+              <p className="text-4xl font-bold text-blue-600">
+                {results.filter(r => r.correct).length}/{results.length}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <button
+              onClick={() => {
+                setQuizCompleted(false);
+                setCurrentQuestionIndex(0);
+                setResults([]);
+                setSelectedAnswer(null);
+                setShowAnswer(false);
+                setSkipped(false);
+                fetchQuestions();
+                startTimeRef.current = Date.now();
+                fetchedRef.current = false;
+              }}
+              className="px-8 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium"
+            >
+              Tre till
+            </button>
+            <button
+              onClick={onClose}
+              className="px-8 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors font-medium"
+            >
+              Avsluta
+            </button>
+          </div>
+        </div>
       </div>
     );
   }

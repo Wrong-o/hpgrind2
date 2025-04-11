@@ -1,7 +1,22 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
 import authStore from '../store/authStore';
 
 const DatabaseContext = createContext();
+
+// Progress classification thresholds and colors
+export const ProgressColors = {
+  RED: '#ff6b6b',
+  YELLOW: '#feca57',
+  GREEN: '#1dd1a1',
+  TRANSPARENT: 'transparent'
+};
+
+export const getProgressColor = (accuracy) => {
+  if (!accuracy || accuracy === 0) return ProgressColors.TRANSPARENT;
+  if (accuracy >= 0.8) return ProgressColors.GREEN;
+  if (accuracy >= 0.5) return ProgressColors.YELLOW;
+  return ProgressColors.RED;
+};
 
 export const DatabaseProvider = ({ children }) => {
   const [recommendedPath, setRecommendedPath] = useState(null);
@@ -10,6 +25,36 @@ export const DatabaseProvider = ({ children }) => {
   const [error, setError] = useState(null);
   
   const token = authStore((state) => state.token);
+
+  // Process category stats to include classification
+  const processedCategoryStats = useMemo(() => {
+    if (!categoryStats) return null;
+
+    // Group stats by moment
+    const aggregatedStats = {};
+    categoryStats.forEach(item => {
+      const nodeId = item.moment;
+      if (!nodeId) return;
+
+      if (!aggregatedStats[nodeId]) {
+        aggregatedStats[nodeId] = { total_answers: 0, correct: 0 };
+      }
+      aggregatedStats[nodeId].total_answers += item.total_answers || 0;
+      aggregatedStats[nodeId].correct += item.correct || 0;
+    });
+
+    // Calculate accuracy and classify each moment
+    return Object.entries(aggregatedStats).map(([moment, stats]) => {
+      const accuracy = stats.total_answers > 0 ? stats.correct / stats.total_answers : 0;
+      return {
+        moment,
+        total_answers: stats.total_answers,
+        correct: stats.correct,
+        accuracy,
+        classification: getProgressColor(accuracy)
+      };
+    });
+  }, [categoryStats]);
   
   const fetchAchievements = async () => {
     if (!token) return;
@@ -85,11 +130,14 @@ export const DatabaseProvider = ({ children }) => {
   // Expose the context values
   const value = {
     recommendedPath,
-    categoryStats,
+    categoryStats: processedCategoryStats, // Now includes classification
+    rawCategoryStats: categoryStats, // Original stats if needed
     isLoading,
     error,
     refreshAchievements: fetchAchievements,
-    refreshCategoryStats: fetchCategoryStats
+    refreshCategoryStats: fetchCategoryStats,
+    getProgressColor, // Expose the classification function
+    ProgressColors // Expose the color constants
   };
   
   return (

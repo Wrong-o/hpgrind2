@@ -11,9 +11,10 @@ from api.v1.core.services.kvantitativ.basics.fraction_equation import fraction_e
 from api.v1.core.services.kvantitativ.basics.x_solve import x_solve
 from api.v1.core.services.kvantitativ.formula_cheet.mean import mean
 from typing import List, Optional
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, validator
 import asyncio
 import logging
+import math
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -67,10 +68,21 @@ async def get_question(moment: str, difficulty: int = 1, db: Session = Depends(g
 
 
 # Define request model for batch questions
-class BatchQuestionRequest(BaseModel):
+class MomentProbability(BaseModel):
     moment: str
+    probability: float = Field(gt=0, le=1, description="Probability of selecting this moment (must be between 0 and 1)")
+
+class BatchQuestionRequest(BaseModel):
+    moments: list[MomentProbability]
     difficulty: int
     count: int = 10  # Default to 10 questions
+
+    @validator('moments')
+    def validate_probabilities(cls, v):
+        total_prob = sum(m.probability for m in v)
+        if not math.isclose(total_prob, 1.0, rel_tol=1e-9):
+            raise ValueError("Probabilities must sum to 1.0")
+        return v
 
 
 async def generate_question(moment: str, difficulty: int):
@@ -80,8 +92,6 @@ async def generate_question(moment: str, difficulty: int):
     """
     try:
         logger.info(f"Generating question for moment: {moment}, difficulty: {difficulty}")
-        # Since moment_functions are synchronous, run them in a thread pool
-        # to avoid blocking the event loop
         loop = asyncio.get_running_loop()
         question_data = await loop.run_in_executor(
             None, lambda: moment_functions[moment](difficulty=difficulty)
@@ -100,10 +110,13 @@ async def generate_question(moment: str, difficulty: int):
 async def get_batch_questions(request: BatchQuestionRequest, db: Session = Depends(get_db)):
     """
     Endpoint for efficiently fetching multiple questions concurrently.
-    Returns a batch of questions of the specified moment and difficulty.
+    Returns a batch of questions based on the specified moments and their probabilities.
     
     Args:
-        request: BatchQuestionRequest containing moment, difficulty, and count
+        request: BatchQuestionRequest containing:
+            - moments: List of moments and their probabilities
+            - difficulty: Difficulty level for all questions
+            - count: Number of questions to generate
         db: Database session
 
     Returns:
@@ -121,19 +134,33 @@ async def get_batch_questions(request: BatchQuestionRequest, db: Session = Depen
     try:
         logger.info(f"Received batch question request: {request}")
         
-        if request.moment not in moment_functions:
-            logger.warning(f"Moment not found: {request.moment}")
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail=f"Moment not found: {request.moment}"
-            )
+        # Validate all moments exist
+        for moment_prob in request.moments:
+            if moment_prob.moment not in moment_functions:
+                logger.warning(f"Moment not found: {moment_prob.moment}")
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND, 
+                    detail=f"Moment not found: {moment_prob.moment}"
+                )
         
-        logger.info(f"Generating {request.count} questions concurrently for moment: {request.moment}")
+        # Create a list of moments based on their probabilities
+        weighted_moments = []
+        for moment_prob in request.moments:
+            num_questions = round(request.count * moment_prob.probability)
+            weighted_moments.extend([moment_prob.moment] * num_questions)
+        
+        # Adjust the list length to match exactly request.count
+        while len(weighted_moments) < request.count:
+            weighted_moments.append(request.moments[0].moment)
+        while len(weighted_moments) > request.count:
+            weighted_moments.pop()
+        
+        logger.info(f"Generating {len(weighted_moments)} questions with distribution: {weighted_moments}")
         
         # Create tasks for concurrent execution
         tasks = []
-        for i in range(request.count):
-            # Create a task for each question
-            tasks.append(generate_question(request.moment, request.difficulty))
+        for moment in weighted_moments:
+            tasks.append(generate_question(moment, request.difficulty))
         
         # Wait for all tasks to complete concurrently
         questions = await asyncio.gather(*tasks, return_exceptions=True)

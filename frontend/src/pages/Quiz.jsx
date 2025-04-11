@@ -44,19 +44,28 @@ const Quiz = () => {
       // Number of questions to fetch
       const questionCount = 5;
 
-      // List of available moments
+      // List of available moments with equal probabilities
       const moments = [
-        "basics_fraktioner_dividera",
-        "basics_fraktioner_multiplicera", 
-        "basics_fraktioner_addera",
-        "basics_fraktioner_subtrahera",
+        {
+          moment: "basics_fraktioner_dividera",
+          probability: 0.25
+        },
+        {
+          moment: "basics_fraktioner_multiplicera",
+          probability: 0.25
+        },
+        {
+          moment: "basics_fraktioner_addera",
+          probability: 0.25
+        },
+        {
+          moment: "basics_fraktioner_subtrahera",
+          probability: 0.25
+        }
       ];
-
-      // Pick random moment
-      const randomMoment = moments[Math.floor(Math.random() * moments.length)];
       
       const requestBody = {
-        moment: randomMoment,
+        moments: moments,
         difficulty: 2,
         count: questionCount
       };
@@ -69,7 +78,6 @@ const Quiz = () => {
         },
         body: JSON.stringify(requestBody)
       });
-      
       
       if (!response.ok) {
         const errorText = await response.text();
@@ -92,7 +100,7 @@ const Quiz = () => {
         subject: data.subject,
         category: data.category,
         difficulty: data.difficulty,
-        moment: data.moment || "operations_order" // Ensure moment is available
+        moment: data.moment // Ensure moment is available
       }));
       
       setQuestions(formattedQuestions);
