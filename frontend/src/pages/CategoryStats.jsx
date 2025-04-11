@@ -28,9 +28,6 @@ export const CategoryStats = () => {
 
 
       <div className="space-y-4 mt-16">
-        <h2 className="text-xl font-bold text-blue-600 mb-4 text-center">
-          Dina framsteg per kategori
-        </h2>
 
         <MomentTree 
           stats={categoryStats} 

@@ -25,7 +25,7 @@ const ResultPage = ({ results, onReset }) => {
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
           <div className="bg-blue-50 p-6 rounded-lg text-center">
-            <p className="text-lg text-gray-600">Noggrannhet</p>
+            <p className="text-lg text-gray-600">Andel rätt</p>
             <p className="text-4xl font-bold text-blue-600">{accuracy.toFixed(1)}%</p>
           </div>
           
