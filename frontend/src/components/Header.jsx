@@ -57,13 +57,13 @@ const Header = () => {
       navigate('/');
       // Wait for navigation to complete before scrolling
       setTimeout(() => {
-        const howItWorksSection = document.querySelector('#how-it-works');
+        const howItWorksSection = document.querySelector('#features');
         if (howItWorksSection) {
           howItWorksSection.scrollIntoView({ behavior: 'smooth' });
         }
       }, 100);
     } else {
-      const howItWorksSection = document.querySelector('#how-it-works');
+      const howItWorksSection = document.querySelector('#features');
       if (howItWorksSection) {
         howItWorksSection.scrollIntoView({ behavior: 'smooth' });
       }
