@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import Sidebar from "../components/Sidebar";
 import Demo from '../components/Demo';
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
+import SmallButton from '../components/SmallButton';
 
 function LandingPage() {
   const [videoError, setVideoError] = useState({});
@@ -37,10 +38,6 @@ function LandingPage() {
     }
   };
 
-  const handleLoginClick = () => {
-    navigate('/login');
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
       <section className="relative py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
@@ -55,24 +52,12 @@ function LandingPage() {
               </p>
               <ul className="text-xl text-gray-600 list-none">
                 <li>- Genvägar på matten istället för långa genomgångar</li>
+                <li>- Tydliga delmoment för fokuserad träning</li>
                 <li>- Personligt anpassade uppgifter för att maximera resultat</li>
                 <li>- Förklaringar utan onödigt svåra ord</li>
               </ul>
             </div>
-            <div className="flex flex-col sm:flex-row gap-4">
-              <button
-                onClick={handleDemoClick}
-                className="px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                Testa demo
-              </button>
-              <button
-                onClick={handleHowItWorksClick}
-                className="px-6 py-3 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors"
-              >
-                Hur fungerar HPGrind
-              </button>
-            </div>
+
           </div>
           <div className="rounded-lg overflow-hidden shadow-xl">
             {videoError['intro'] ? (
@@ -100,10 +85,10 @@ function LandingPage() {
       <section id="features" className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto scroll-mt-20">
         <div className="text-center mb-16">
           <h2 className="text-3xl font-bold text-gray-900">
-            Hur HPGrind hjälper dig
+            Spara tid utan att tumma på resultatet
           </h2>
           <p className="mt-4 text-xl text-gray-600 max-w-3xl mx-auto">
-            Se hur våra verktyg och metoder kan hjälpa dig att nå dina mål på högskoleprovet.
+            HPGrind knäcker bland annat dom här tidstjuvar som inte ger bättre resultat, men tar upp mycket tid:
           </p>
         </div>
 
@@ -113,7 +98,7 @@ function LandingPage() {
             {videoError['feature1'] ? (
               <div className="w-full aspect-video bg-gray-100 flex items-center justify-center">
                 <p className="text-gray-500 text-center p-4">
-                  Video om personlig träningsplan
+                  Video om att träningsplan
                 </p>
               </div>
             ) : (
@@ -130,10 +115,10 @@ function LandingPage() {
             )}
             <div className="p-6">
               <h3 className="text-xl font-bold text-gray-900">
-                Personlig träningsplan
+                Lära dig vad du behöver lära dig
               </h3>
               <p className="mt-2 text-gray-600">
-                Få en skräddarsydd träningsplan baserad på dina styrkor och svagheter.
+                Med HPGrind behöver du inte leta på forum och fråga kompisar vad du ska lära dig, allt finns här. Lägg tiden på att faktiskt lära dig istället!
               </p>
             </div>
           </div>
@@ -143,7 +128,7 @@ function LandingPage() {
             {videoError['feature2'] ? (
               <div className="w-full aspect-video bg-gray-100 flex items-center justify-center">
                 <p className="text-gray-500 text-center p-4">
-                  Video om detaljerad feedback
+                  Video om att leta reda på material 
                 </p>
               </div>
             ) : (
@@ -160,10 +145,10 @@ function LandingPage() {
             )}
             <div className="p-6">
               <h3 className="text-xl font-bold text-gray-900">
-                Detaljerad feedback
+                Hitta RÄTT uppgifter
               </h3>
               <p className="mt-2 text-gray-600">
-                Få detaljerad feedback på dina svar för att förstå dina misstag och förbättra dig.
+                Det tar tid att ladda ner gamla prov, och träningen blir spretig. HPGrind genererar uppgifter skapta för det du tränar på, mindre tid för samma resultat.
               </p>
             </div>
           </div>
@@ -173,7 +158,7 @@ function LandingPage() {
             {videoError['feature3'] ? (
               <div className="w-full aspect-video bg-gray-100 flex items-center justify-center">
                 <p className="text-gray-500 text-center p-4">
-                  Video om provsimuleringar
+                  Video om verktyg 
                 </p>
               </div>
             ) : (
@@ -190,53 +175,23 @@ function LandingPage() {
             )}
             <div className="p-6">
               <h3 className="text-xl font-bold text-gray-900">
-                Realistiska provsimuleringar
+                Verktyg precis där dom behövs 
               </h3>
               <p className="mt-2 text-gray-600">
-                Öva under realistiska förhållanden med tidsbegränsade provsimuleringar.
+                Vid fokusträning ska du ha tillgång till rätt information och verktyg. När du tränar får du alltid relevanta verktyg direkt i provet.
               </p>
             </div>
           </div>
         </div>
       </section>
+      <div className="text-center py-12">
+        <h2 className="text-4xl font-bold text-gray-900">Demo</h2>
+        <p className="mt-4 text-xl text-gray-600 max-w-3xl mx-auto">
+          Här kan du testa en liten variant av HPGrind: Våra verktyg, våra uppgifter och en visualisering av hur HPGrind håller koll på dig och dina resultat.
+        </p>
+      </div>
 
-      <section id="how-it-works" className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto bg-white scroll-mt-20">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl font-bold text-gray-900">
-            Hur fungerar HPGrind?
-          </h2>
-          <p className="mt-4 text-xl text-gray-600 max-w-3xl mx-auto">
-            HPGrind använder avancerad teknik för att ge dig en personlig träningsupplevelse.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div className="bg-blue-50 p-6 rounded-lg">
-            <div className="w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center mb-4 text-xl font-bold">
-              1
-            </div>
-            <h3 className="text-xl font-bold mb-2">Diagnostisering</h3>
-            <p>Vi analyserar dina styrkor och svagheter genom anpassade övningar.</p>
-          </div>
-
-          <div className="bg-blue-50 p-6 rounded-lg">
-            <div className="w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center mb-4 text-xl font-bold">
-              2
-            </div>
-            <h3 className="text-xl font-bold mb-2">Personlig plan</h3>
-            <p>Baserat på din profil skapar vi en skräddarsydd träningsplan.</p>
-          </div>
-
-          <div className="bg-blue-50 p-6 rounded-lg">
-            <div className="w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center mb-4 text-xl font-bold">
-              3
-            </div>
-            <h3 className="text-xl font-bold mb-2">Kontinuerlig förbättring</h3>
-            <p>Systemet anpassar sig efter dina framsteg för att maximera resultatet.</p>
-          </div>
-        </div>
-      </section>
-      <section>
+      <section id="demo" className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
         <div className="max-w-7xl mx-auto">
           <Demo />
         </div>

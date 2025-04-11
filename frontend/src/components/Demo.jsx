@@ -73,18 +73,7 @@ const Demo = () => {
   
   const handleAnswerClick = (id) => {
     setSelectedAnswer(id);
-    if (question.subject === "multiplication") {
-      setAnsweredMultiplication(answeredMultiplication + 1);
-    } else if (question.subject === "division") {
-      setAnsweredDivision(answeredDivision + 1);
-    } else if (question.subject === "addition") {
-      setAnsweredAddition(answeredAddition + 1);
-    } else if (question.subject === "subtraction") {
-      setAnsweredSubtraction(answeredSubtraction + 1);
-    }
-    
   };
-  
   
   const handleCheckAnswer = async () => {
     setShowAnswer(true);
@@ -92,34 +81,62 @@ const Demo = () => {
     // Get the current question data
     const question = questions[currentQuestionIndex];
     // Get the selected option
-    const selectedOption = question.options[selectedAnswer];
+    const selectedOption = question.options.find(option => option.id === selectedAnswer);
     
-    // Play the appropriate sound
-    if (selectedOption.isCorrect) {
-      playCorrectSound();
-      if (question.subject === "multiplication") {
-        setCorrectMultiplication(correctMultiplication + 1);
-      } else if (question.subject === "division") {
-        setCorrectDivision(correctDivision + 1);
-      } else if (question.subject === "addition") {
-        setCorrectAddition(correctAddition + 1);
-      } else if (question.subject === "subtraction") {
-        setCorrectSubtraction(correctSubtraction + 1);
+    // Debug logs
+    console.log('Selected Answer:', selectedAnswer);
+    console.log('Selected Option:', selectedOption);
+    console.log('Question Options:', question.options);
+    console.log('Correct Answer:', question.options.find(opt => opt.isCorrect));
+    
+    const isAnswerCorrect = selectedOption?.isCorrect || false;
+
+    // Update the stats based on the moment type
+    if (question.moment.includes('multiplicera')) {
+      setAnsweredMultiplication(prev => prev + 1);
+      if (isAnswerCorrect) {
+        setCorrectMultiplication(prev => prev + 1);
+        playCorrectSound();
+      } else {
+        playWrongSound();
       }
-    } else {
-      playWrongSound();
+    } else if (question.moment.includes('dividera')) {
+      setAnsweredDivision(prev => prev + 1);
+      if (isAnswerCorrect) {
+        setCorrectDivision(prev => prev + 1);
+        playCorrectSound();
+      } else {
+        playWrongSound();
+      }
+    } else if (question.moment.includes('addera')) {
+      setAnsweredAddition(prev => prev + 1);
+      if (isAnswerCorrect) {
+        setCorrectAddition(prev => prev + 1);
+        playCorrectSound();
+      } else {
+        playWrongSound();
+      }
+    } else if (question.moment.includes('subtrahera')) {
+      setAnsweredSubtraction(prev => prev + 1);
+      if (isAnswerCorrect) {
+        setCorrectSubtraction(prev => prev + 1);
+        playCorrectSound();
+      } else {
+        playWrongSound();
+      }
     }
 
     // Calculate time spent on this question
     const timeSpent = Math.floor((Date.now() - startTimeRef.current) / 1000);
     
     const answerResult = {
-      correct: selectedOption.isCorrect,
+      correct: isAnswerCorrect,
       timeSpent: timeSpent,
-      skipped: skipped
+      skipped: skipped,
+      category: question.moment
     };
 
-    
+    setResults(prev => [...prev, answerResult]);
   };
 
   const playSkipSound = useCallback(() => {

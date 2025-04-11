@@ -83,7 +83,7 @@ export const Calculator = ({ onClose }) => {
 
   return (
     <div 
-      className="bg-green-300 p-4 rounded-xl shadow-lg backdrop-blur-sm z-40 min-w-[240px]"
+      className="bg-stone-400 p-4 rounded-xl shadow-lg backdrop-blur-sm z-40 min-w-[240px]"
       onClick={e => e.stopPropagation()}
     >
       <div className="bg-gray-200 p-2 rounded mb-1 text-right text- text-gray-600">

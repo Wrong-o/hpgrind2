@@ -43,9 +43,20 @@ const Quiz = () => {
       
       // Number of questions to fetch
       const questionCount = 5;
+
+      // List of available moments
+      const moments = [
+        "basics_fraktioner_dividera",
+        "basics_fraktioner_multiplicera", 
+        "basics_fraktioner_addera",
+        "basics_fraktioner_subtrahera",
+      ];
+
+      // Pick random moment
+      const randomMoment = moments[Math.floor(Math.random() * moments.length)];
       
       const requestBody = {
-        moment: "basics_fraktioner_dividera",
+        moment: randomMoment,
         difficulty: 2,
         count: questionCount
       };
@@ -242,7 +253,7 @@ const Quiz = () => {
   }
 
   return (
-    <div className="min-h-screen w-full p-4 bg-gray-50">
+    <div className="min-h-screen w-full p-4 bg-gray-100">
       <div className="max-w-[1600px] mx-auto">
         {/* Progress bar and question counter */}
         <div className="mb-6">

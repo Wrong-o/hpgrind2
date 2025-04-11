@@ -57,12 +57,6 @@ function MainMenu() {
                               Kuskapsöversikt
                             </button>
                           </div>
-                          <button
-                            onClick={() => setShowRoadMap(true)}
-                            className="text-blue-600 hover:text-blue-800 transition-colors"
-                          >
-                            Se din väg till målet
-                          </button>
                       
                     </div>
                   </div>

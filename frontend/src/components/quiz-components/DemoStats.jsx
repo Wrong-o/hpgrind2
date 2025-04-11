@@ -51,12 +51,15 @@ const DemoStats = ({
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 p-4">
-      <StatCard 
-        title="Multiplikation" 
-        totalAnswers={answeredMultiplication}
-        correctAnswers={correctMultiplication}
-        averageTime={getAverageTime('multiplication')}
+    <div>
+        <p className="text-gray-700 mb-4">Delmomenten har 3 olika färger: Rött: Du kan inte momentet tillräckligt bra. Gult: Du kan det, men är för långsam. Grönt: Du kan momentet tillräckligt snabbt</p>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 p-4">
+        <StatCard 
+          title="Multiplikation" 
+          totalAnswers={answeredMultiplication}
+          correctAnswers={correctMultiplication}
+          averageTime={getAverageTime('multiplication')}
       />
       <StatCard 
         title="Division" 
@@ -77,7 +80,8 @@ const DemoStats = ({
         averageTime={getAverageTime('subtraction')}
       />
     </div>
+    </div>
   );
 };
 
-export default DemoStats; 
+export default DemoStats;

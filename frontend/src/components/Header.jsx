@@ -41,7 +41,7 @@ const Header = () => {
         }
       }, 100);
     } else {
-      const featuresSection = document.querySelector('#features');
+      const featuresSection = document.querySelector('#demo');
       if (featuresSection) {
         featuresSection.scrollIntoView({ behavior: 'smooth' });
       }

@@ -49,7 +49,7 @@ const QuizAssistant = ({ VideoName }) => {
             <div className="absolute top-28 right-0 flex flex-col gap-4">
                 {/* Video player container - top */}
                 {videoShowing && VideoName && (
-                    <div className="w-[400px] rounded-lg overflow-hidden shadow-lg">
+                    <div className="w-[400px] rounded-lg overflow-hidden shadow-lg mt-4">
                         <VideoPlayer
                             autoPlay={true}
                             loop={true}
@@ -62,7 +62,7 @@ const QuizAssistant = ({ VideoName }) => {
 
                 {/* Calculator container - middle */}
                 {calculatorShowing && (
-                    <div className="w-[300px] rounded-lg overflow-hidden shadow-lg">
+                    <div className="w-[300px] rounded-lg overflow-hidden shadow-lg mt-4">
                         <Calculator />
                     </div>
                 )}
@@ -70,8 +70,8 @@ const QuizAssistant = ({ VideoName }) => {
                 {/* Drawing Pad container - bottom */}
                 {drawingPadShowing && (
                     <div 
-                        className="rounded-lg overflow-hidden shadow-lg"
-                        style={{ width: '400px', height: '600px' }}
+                        className="rounded-lg overflow-hidden shadow-lg mt-4"
+                        style={{ width: '400px', height: '400px' }}
                     >
                         <DrawingPad />
                     </div>
