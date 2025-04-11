@@ -45,7 +45,25 @@ const DemoStats = ({
 }) => {
   // Calculate average times for each category
   const getAverageTime = (category) => {
-    const categoryResults = results.filter(r => r.category === category);
+    let momentPattern;
+    switch (category) {
+      case 'multiplication':
+        momentPattern = 'multiplicera';
+        break;
+      case 'division':
+        momentPattern = 'dividera';
+        break;
+      case 'addition':
+        momentPattern = 'addera';
+        break;
+      case 'subtraction':
+        momentPattern = 'subtrahera';
+        break;
+      default:
+        return 0;
+    }
+    
+    const categoryResults = results.filter(r => r.category.includes(momentPattern));
     if (categoryResults.length === 0) return 0;
     return categoryResults.reduce((acc, curr) => acc + curr.timeSpent, 0) / categoryResults.length;
   };

@@ -4,7 +4,6 @@ import AnswerButton from '../components/quiz-components/AnswerButton';
 import LoadingScreen from '../components/LoadingScreen';
 import ResultPage from '../components/quiz-components/ResultPage';
 import authStore from '../store/authStore';
-import SkipButton from '../components/quiz-components/SkipButton';
 import QuizAssistant from '../components/quiz-components/QuizAssistant';
 import SmallButton from '../components/SmallButton';
 import { ChevronDoubleRightIcon, ChevronRightIcon } from '@heroicons/react/24/outline';

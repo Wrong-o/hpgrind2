@@ -16,6 +16,7 @@ import MomentTree from './components/MomentTree';
 import WhoAreWe from './pages/WhoAreWe';
 import { CategoryStats } from './pages/CategoryStats';
 import { DatabaseProvider } from './contexts/DatabaseContext';
+import Customization from './pages/Customization';
 
 function App() {
   const isLoggedIn = authStore((state) => state.isLoggedIn);
@@ -76,6 +77,11 @@ function App() {
                   <Route path="/category-stats" element={
                     <ProtectedRoute isLoggedIn={!isLoggedIn} redirectTo="/">
                       <CategoryStats />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/customize-experience" element={
+                    <ProtectedRoute isLoggedIn={!isLoggedIn} redirectTo="/">
+                      <Customization />
                     </ProtectedRoute>
                   } />
                   <Route path="/vilka-vi-ar" element={<WhoAreWe />} />

@@ -2,6 +2,15 @@ import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDatabase } from '../contexts/DatabaseContext';
 import FocusPractice from '../components/FocusPractice';
+import MenuButton from '../components/MenuButton';
+import SmallButton from '../components/SmallButton';
+import { 
+  Cog6ToothIcon, 
+  ChartBarIcon, 
+  AcademicCapIcon,
+  XMarkIcon,
+  PlayIcon
+} from '@heroicons/react/24/outline';
 
 function MainMenu() {
   const { categoryStats, isLoading, error, ProgressColors } = useDatabase();
@@ -41,24 +50,30 @@ function MainMenu() {
         <div className="flex h-full">
           {/* Left Column - Menu Buttons */}
           <div className="w-1/3 p-8 flex flex-col gap-4">
-            <h2 className="text-2xl font-bold mb-6 text-gray-800">Meny</h2>
-            <button
+            <h2 className="text-3xl font-bold mb-6 text-gray-800 border-b-2 border-blue-500 pb-2 inline-block">Meny</h2>
+            <MenuButton
               onClick={() => handleGrindQuizStart()}
               className="w-full bg-blue-600 text-white px-6 py-4 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 text-lg"
-            >
-              Kalibrering: Träna brett för att få bättre rekommendationer
-            </button>
-            <button
+              text="Kalibrering: Träna brett för att få bättre rekommendationer"
+              icon={<AcademicCapIcon className="w-6 h-6" />}
+            />
+            <MenuButton
               onClick={() => navigate('/category-stats')}
-              className="w-full bg-teal-600 text-white px-6 py-4 rounded-lg hover:bg-teal-700 transition-colors flex items-center justify-center gap-2 text-lg"
-            >
-              Momentträd: Se dina moment
-            </button>
+              className="w-full bg-teal-600 text-white px-6 py-4 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 text-lg"
+              text="Momentträd: Se dina moment"
+              icon={<ChartBarIcon className="w-6 h-6" />}
+            />
+            <MenuButton
+              onClick={() => navigate('/customize-experience')}
+              className="w-full bg-indigo-600 text-white px-6 py-4 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 text-lg"
+              text="Anpassa din upplevelse"
+              icon={<Cog6ToothIcon className="w-6 h-6" />}
+            />
           </div>
 
           {/* Right Column - Moment Cards */}
           <div className="w-1/2 border-l border-gray-200 p-8 bg-white">
-            <h2 className="text-2xl font-bold mb-6 text-gray-800">LOCK IN: Mest värde att öva på</h2>
+            <h2 className="text-3xl font-bold mb-6 text-gray-800 border-b-2 border-red-500 pb-2 inline-block">LOCK IN: Mest värde att öva på</h2>
             {redMoments.length > 0 ? (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 {redMoments.map((moment) => (
@@ -74,12 +89,12 @@ function MainMenu() {
                       <p>Rätt svar: {moment.correct} av {moment.total_answers}</p>
                       <p>Träffsäkerhet: {Math.round(moment.accuracy * 100)}%</p>
                     </div>
-                    <button
+                    <MenuButton
                       onClick={() => setSelectedPracticeNode({ id: moment.moment })}
-                      className="w-full px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
-                    >
-                      Träna nu
-                    </button>
+                      className="w-auto px-2 py-0.5 bg-red-500 text-white text-xl rounded hover:bg-blue-600 transition-colors ml-auto"
+                      text="Träna nu"
+                      icon={<PlayIcon className="w-4 h-4" />}
+                    />
                   </div>
                 ))}
               </div>
@@ -96,14 +111,12 @@ function MainMenu() {
       {selectedPracticeNode && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white w-full h-full md:w-3/4 md:h-5/6 rounded-lg relative">
-            <button
+            <SmallButton
               onClick={() => setSelectedPracticeNode(null)}
-              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
+              className="bg-gray-900 absolute top-4 right-4 hover:bg-gray-900 text-gray-600 hover:text-gray-300 p-2"
+              icon={<XMarkIcon className="w-4 h-4" />}
+              text="Stäng"
+            />
             <FocusPractice
               key={selectedPracticeNode.id}
               moment={selectedPracticeNode.id}
