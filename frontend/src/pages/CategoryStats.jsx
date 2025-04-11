@@ -9,7 +9,7 @@ export const CategoryStats = () => {
 
   if (isLoading) {
     return (
-      <div className="w-full max-w-4xl px-4 py-8 relative flex justify-center items-center min-h-[200px]">
+      <div className="w-full px-4 py-8 relative flex justify-center items-center min-h-[200px]">
         Laddar data...
       </div>
     );
@@ -17,25 +17,20 @@ export const CategoryStats = () => {
 
   if (error) {
     return (
-      <div className="w-full max-w-4xl px-4 py-8 relative text-red-600 text-center">
+      <div className="w-full px-4 py-8 relative text-red-600 text-center">
         {error}
       </div>
     );
   }
 
   return (
-    <div className="w-full max-w-4xl px-4 py-8 relative">
-
-
-      <div className="space-y-4 mt-16">
-
-        <MomentTree 
-          stats={categoryStats} 
-          isLoading={isLoading}
-          error={error}
-          onBack={() => navigate('/main-menu')}
-        />
-      </div>
+    <div className="w-full h-screen">
+      <MomentTree 
+        stats={categoryStats || []}
+        isLoading={isLoading}
+        error={error}
+        onBack={() => navigate('/main-menu')}
+      />
     </div>
   );
 };

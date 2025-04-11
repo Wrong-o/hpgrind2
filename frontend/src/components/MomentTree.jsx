@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { VideoPlayer } from './VideoPlayer';
 import { useDatabase } from '../contexts/DatabaseContext';
+import FocusPractice from './FocusPractice';
 
-const MomentTree = ({ onBack }) => {
-  const { categoryStats, isLoading, error } = useDatabase();
+const MomentTree = ({ onBack, stats }) => {
+  const { isLoading, error } = useDatabase();
   
   const initialTree = {
     id: 'root',
@@ -401,12 +402,13 @@ const MomentTree = ({ onBack }) => {
   const [currentNode, setCurrentNode] = useState(initialTree);
   const [path, setPath] = useState([initialTree]);
   const [activeVideoInfo, setActiveVideoInfo] = useState({ nodeId: null, url: null });
+  const [selectedPracticeNode, setSelectedPracticeNode] = useState(null);
 
   const progressMap = useMemo(() => {
-    if (!categoryStats) return {};
+    if (!stats) return {};
 
     const aggregatedStats = {};
-    categoryStats.forEach(item => {
+    stats.forEach(item => {
       const nodeId = item.moment;
       if (!nodeId) return;
 
@@ -426,7 +428,7 @@ const MomentTree = ({ onBack }) => {
       };
     }
     return map;
-  }, [categoryStats]);
+  }, [stats]);
 
   const getProgressColor = (nodeId) => {
     const nodeProgress = progressMap[nodeId];
@@ -441,9 +443,33 @@ const MomentTree = ({ onBack }) => {
     }
   };
 
+  const countChildColors = (node) => {
+    const counts = {
+      gray: 0,
+      red: 0,
+      yellow: 0,
+      green: 0
+    };
+
+    const countNodeColors = (currentNode) => {
+      if (!currentNode.children || currentNode.children.length === 0) {
+        const color = getProgressColor(currentNode.id);
+        if (color === 'transparent') counts.gray++;
+        else if (color === ProgressColors.RED) counts.red++;
+        else if (color === ProgressColors.YELLOW) counts.yellow++;
+        else if (color === ProgressColors.GREEN) counts.green++;
+      } else {
+        currentNode.children.forEach(child => countNodeColors(child));
+      }
+    };
+
+    countNodeColors(node);
+    return counts;
+  };
+
   const getNodeStats = (nodeId) => {
-    if (!categoryStats) return null;
-    return categoryStats.find(stat => stat.moment === nodeId);
+    if (!stats) return null;
+    return stats.find(stat => stat.moment === nodeId);
   };
 
   const navigateToNode = (node) => {
@@ -476,8 +502,8 @@ const MomentTree = ({ onBack }) => {
     const isCurrentParent = currentNode.children && currentNode.children.includes(node);
     const isVideoActive = activeVideoInfo.nodeId === node.id;
     
-    // Get stats for this node if they exist
     const nodeStats = getNodeStats(node.id);
+    const childColorCounts = hasChildren ? countChildColors(node) : null;
 
     return (
       <div
@@ -508,6 +534,35 @@ const MomentTree = ({ onBack }) => {
                 </p>
               </div>
             )}
+            {hasChildren && childColorCounts && (
+              <div className="mt-2 flex items-center gap-3 text-sm">
+                <span className="text-gray-500">Delmoment:</span>
+                {childColorCounts.gray > 0 && (
+                  <span className="flex items-center">
+                    <div className="w-2 h-2 rounded-full bg-gray-300 mr-1"></div>
+                    {childColorCounts.gray}
+                  </span>
+                )}
+                {childColorCounts.red > 0 && (
+                  <span className="flex items-center">
+                    <div className="w-2 h-2 rounded-full" style={{ backgroundColor: ProgressColors.RED, marginRight: '4px' }}></div>
+                    {childColorCounts.red}
+                  </span>
+                )}
+                {childColorCounts.yellow > 0 && (
+                  <span className="flex items-center">
+                    <div className="w-2 h-2 rounded-full" style={{ backgroundColor: ProgressColors.YELLOW, marginRight: '4px' }}></div>
+                    {childColorCounts.yellow}
+                  </span>
+                )}
+                {childColorCounts.green > 0 && (
+                  <span className="flex items-center">
+                    <div className="w-2 h-2 rounded-full" style={{ backgroundColor: ProgressColors.GREEN, marginRight: '4px' }}></div>
+                    {childColorCounts.green}
+                  </span>
+                )}
+              </div>
+            )}
           </div>
           <div className="flex items-center ml-4 flex-shrink-0 space-x-2">
             {hasChildren ? (
@@ -533,12 +588,12 @@ const MomentTree = ({ onBack }) => {
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    console.log(`Start exercises for ${node.id}`);
+                    setSelectedPracticeNode(node);
                   }}
                   className="px-3 py-1 bg-green-500 text-white text-sm rounded-lg hover:bg-green-600 transition-colors"
                   aria-label={`Träna ${node.title}`}
                 >
-                  Träna
+                  Tre snabba 
                 </button>
               </>
             )}
@@ -565,68 +620,70 @@ const MomentTree = ({ onBack }) => {
   }
 
   return (
-    <div className="relative">
-      <div className="w-full max-w-4xl mx-auto px-4 py-8">
-        <div className="flex items-center mb-6">
-          <button
-            onClick={onBack}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors mr-4"
-            aria-label="Gå tillbaka"
-          >
-            Tillbaka
-          </button>
-
-          <div className="flex items-center overflow-x-auto py-2 flex-1 whitespace-nowrap">
+    <div className="flex w-full h-full">
+      {/* Node Tree */}
+      <div className="w-1/2 overflow-y-auto px-8 py-6 bg-white">
+        <div className="max-w-3xl mx-auto">
+          <div className="flex items-center mb-6">
             <button
-              onClick={navigateToRoot}
-              className="px-3 py-1 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors flex-shrink-0"
-              aria-label="Gå till Hem"
+              onClick={onBack}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors mr-4"
+              aria-label="Gå tillbaka"
             >
-              Hem
+              Tillbaka
             </button>
 
-            {path.slice(1).map((pathNode, index) => (
-              <div key={pathNode.id} className="flex items-center flex-shrink-0">
-                <span className="mx-2 text-gray-400">/</span>
-                <button
-                  onClick={() => {
-                    const newPath = path.slice(0, index + 2);
-                    setPath(newPath);
-                    setCurrentNode(newPath[newPath.length - 1]);
-                    setActiveVideoInfo({ nodeId: null, url: null });
-                  }}
-                  className="px-3 py-1 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors"
-                  aria-label={`Gå till ${pathNode.title}`}
-                >
-                  {pathNode.title}
-                </button>
-              </div>
-            ))}
+            <div className="flex items-center overflow-x-auto py-2 flex-1 whitespace-nowrap">
+              <button
+                onClick={navigateToRoot}
+                className="px-3 py-1 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors flex-shrink-0"
+                aria-label="Gå till Hem"
+              >
+                Hem
+              </button>
+
+              {path.slice(1).map((pathNode, index) => (
+                <div key={pathNode.id} className="flex items-center flex-shrink-0">
+                  <span className="mx-2 text-gray-400">/</span>
+                  <button
+                    onClick={() => {
+                      const newPath = path.slice(0, index + 2);
+                      setPath(newPath);
+                      setCurrentNode(newPath[newPath.length - 1]);
+                      setActiveVideoInfo({ nodeId: null, url: null });
+                    }}
+                    className="px-3 py-1 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors"
+                    aria-label={`Gå till ${pathNode.title}`}
+                  >
+                    {pathNode.title}
+                  </button>
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
 
-        <div className="mb-6">
-          <h2 className="text-2xl font-bold mb-2">{currentNode.title}</h2>
-          <p className="text-gray-600">{currentNode.description}</p>
-        </div>
+          <div className="mb-6">
+            <h2 className="text-2xl font-bold mb-2">{currentNode.title}</h2>
+            <p className="text-gray-600">{currentNode.description}</p>
+          </div>
 
-        <div className="space-y-2">
-          {currentNode.children && currentNode.children.length > 0 ? (
-            currentNode.children.map(childNode => renderNode(childNode))
-          ) : (
-            <div className="p-6 bg-gray-100 rounded-lg text-center border border-gray-200">
-              <p className="text-lg text-gray-700">
-                Det här är en specifik skill.
-              </p>
-              <div className="mt-4 flex justify-center space-x-3">
-                <button
-                    onClick={() => console.log(`Start exercises for ${currentNode.id}`)}
+          <div className="space-y-2">
+            {currentNode.children && currentNode.children.length > 0 ? (
+              currentNode.children.map(childNode => renderNode(childNode))
+            ) : (
+              <div className="p-6 bg-gray-100 rounded-lg text-center border border-gray-200">
+                <p className="text-lg text-gray-700">
+                  Det här är en specifik skill.
+                </p>
+                <div className="mt-4 flex justify-center space-x-3">
+                  <button
+                    onClick={() => setSelectedPracticeNode(currentNode)}
                     className="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
-                    aria-label={`Träna ${currentNode.title}`}
+                    aria-label={`räna ${currentNode.title}`}
                   >
                     Börja träna
-                </button>
-                {currentNode.videoUrl && (
+                  </button>
+                  {currentNode.videoUrl && (
                     <button
                       onClick={(e) => handleVideoClick(e, currentNode)}
                       className={`px-6 py-2 text-white rounded-lg transition-colors 
@@ -635,23 +692,41 @@ const MomentTree = ({ onBack }) => {
                     >
                       {activeVideoInfo.nodeId === currentNode.id ? 'Stäng Video' : 'Visa Video'}
                     </button>
+                  )}
+                </div>
+                {activeVideoInfo.nodeId === currentNode.id && (
+                  <div className="mt-4 inline-block relative w-full max-w-md mx-auto"> 
+                    <VideoPlayer 
+                      src={activeVideoInfo.url} 
+                      controls 
+                      autoPlay
+                      width="100%" 
+                      className="rounded-md overflow-hidden shadow-lg"
+                    />
+                  </div>
                 )}
               </div>
-              {activeVideoInfo.nodeId === currentNode.id && (
-                  <div className="mt-4 inline-block relative w-full max-w-md mx-auto"> 
-                      <VideoPlayer 
-                        src={activeVideoInfo.url} 
-                        controls 
-                        autoPlay
-                        width="100%" 
-                        className="rounded-md overflow-hidden shadow-lg"
-                      />
-                  </div>
-              )}
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
+
+      {/* Practice Area */}
+      {selectedPracticeNode ? (
+        <div className="w-1/2 h-screen sticky top-0 bg-white shadow-lg border-l border-gray-200">
+          <FocusPractice 
+            key={selectedPracticeNode.id}
+            moment={selectedPracticeNode.id}
+            onClose={() => setSelectedPracticeNode(null)}
+          />
+        </div>
+      ) : (
+        <div className="w-1/2 h-screen sticky top-0 bg-gray-50 flex items-center justify-center">
+          <div className="text-center text-gray-500">
+            <p>Välj en skill att träna på</p>
+          </div>
+        </div>
+      )}
 
       {/* Video player */}
       {activeVideoInfo.nodeId && activeVideoInfo.url && (
