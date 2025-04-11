@@ -40,7 +40,7 @@ function MainMenu() {
       <div className="flex">
         <main className="flex-1">
           <>
-                <div className="bg-gradient-to-b from-blue-50 to-teal-100 min-h-screen flex flex-col items-center justify-center relative overflow-hidden">
+                <div className="bg-gradient-to-b from-blue-50 to-teal-600 min-h-screen flex flex-col items-center justify-center relative overflow-hidden">
                   <div className="container mx-auto text-center z-10 max-w-4xl px-8">
                     <div className="mt-8 space-y-4">
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

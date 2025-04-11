@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
-const ResultPage = ({ results }) => {
+const ResultPage = ({ results, onReset }) => {
   const navigate = useNavigate();
 
   // Calculate statistics
@@ -11,7 +11,7 @@ const ResultPage = ({ results }) => {
   const averageTime = results?.reduce((acc, curr) => acc + curr.timeSpent, 0) / totalQuestions || 0;
 
   const handleRetry = () => {
-    navigate('/quiz');
+    onReset();
   };
 
   const handleBackToHome = () => {

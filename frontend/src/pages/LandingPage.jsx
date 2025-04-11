@@ -3,6 +3,7 @@ import { VideoPlayer } from '../components/VideoPlayer';
 import authStore from '../store/authStore';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from "../components/Sidebar";
+import Demo from '../components/Demo';
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 
 function LandingPage() {
@@ -235,7 +236,11 @@ function LandingPage() {
           </div>
         </div>
       </section>
-
+      <section>
+        <div className="max-w-7xl mx-auto">
+          <Demo />
+        </div>
+      </section>
     </div>
   );
 }
