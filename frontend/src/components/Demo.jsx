@@ -246,10 +246,10 @@ const Demo = () => {
           </div>
         </div>
 
-        {/* Main content area with three-column layout */}
-        <div className="flex gap-6">
-          {/* Left column - Question and Answers */}
-          <div className="flex-1 min-w-[500px]">
+        {/* Main content area with responsive layout */}
+        <div className="flex flex-col lg:flex-row gap-6">
+          {/* Left/Top Column: Question, Answers, Controls */}
+          <div className="w-full lg:flex-1 order-2 lg:order-1">
             {/* Question Box */}
             <div className="bg-white rounded-lg p-6 shadow-sm mb-6">
               <QuestionBox latexString={currentQuestion.question} />
@@ -300,8 +300,8 @@ const Demo = () => {
             </div>
           </div>
 
-          {/* Right column - Quiz Assistant */}
-          <div className="w-[450px]">
+          {/* Right/Bottom column - Quiz Assistant */}
+          <div className="w-full lg:w-1/4 lg:max-w-sm order-1 lg:order-2">
             <QuizAssistant VideoName={currentQuestion.explanation} />
           </div>
         </div>
