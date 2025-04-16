@@ -1,12 +1,15 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import MenuButton from '../components/MenuButton';
+import { SoundContext } from '../contexts/SoundContext';
+
 import { 
   SpeakerWaveIcon, 
   SwatchIcon, 
   LockClosedIcon,
   ArrowLeftIcon
 } from '@heroicons/react/24/outline';
+
 
 const SubButton = ({ text, locked = true }) => (
   <button 

@@ -41,6 +41,7 @@ class User(UserBase):
 class TokenSchema(BaseModel):
     access_token: str
     token_type: str
+    is_premium: bool = False
 
 
 class UserRegisterSchema(BaseModel):
