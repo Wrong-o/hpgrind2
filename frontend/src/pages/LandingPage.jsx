@@ -5,7 +5,6 @@ import { useNavigate } from 'react-router-dom';
 import Sidebar from "../components/Sidebar";
 import Demo from '../components/Demo';
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
-import SmallButton from '../components/SmallButton';
 
 function LandingPage() {
   const [videoError, setVideoError] = useState({});
