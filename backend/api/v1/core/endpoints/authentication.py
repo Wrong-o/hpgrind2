@@ -1,6 +1,6 @@
 #
 from typing import Annotated
-from api.v1.core.models import User, Token
+from api.v1.core.models import User, Token, Premium
 from api.v1.core.schemas import (
     TokenSchema,
     UserOutSchema,
@@ -27,6 +27,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import delete, select
 from sqlalchemy.exc import IntegrityError
 import logging
+from datetime import datetime
 
 router = APIRouter()
 
@@ -55,8 +56,25 @@ def login(
             detail="Passwords do not match",
             headers={"WWW-Authenticate": "Bearer"},
         )
+    
+    # Check premium status
+    premium = (
+        db.execute(
+            select(Premium)
+            .where(Premium.user_id == user.id)
+            .where(Premium.is_premium == True)
+            .where(Premium.expiration_date > datetime.now())
+        )
+        .scalars()
+        .first()
+    )
+    
     access_token = create_database_token(user_id=user.id, db=db)
-    return {"access_token": access_token.token, "token_type": "Bearer"}
+    return {
+        "access_token": access_token.token, 
+        "token_type": "Bearer",
+        "is_premium": bool(premium)
+    }
 
 
 @router.post("/user/create", status_code=status.HTTP_201_CREATED)

@@ -4,6 +4,7 @@ import Logo from '../assets/favicon.svg?react';
 import authStore from '../store/authStore';
 import SmallButton from './SmallButton';
 import { UserCircleIcon } from '@heroicons/react/24/outline';
+
 const Header = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -11,6 +12,7 @@ const Header = () => {
   const logout = authStore((state) => state.logout);
   const initializeAuth = authStore((state) => state.initializeAuth);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const isPremium = authStore((state) => state.isPremium);
 
   useEffect(() => {
     try {

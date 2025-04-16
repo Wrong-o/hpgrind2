@@ -8,6 +8,7 @@ export const LoginPage = () => {
   const navigate = useNavigate();
 
   const { setToken } = authStore();
+  const { setPremium } = authStore();
 
   const [email, setEmail] = useState("");
   const [emailError, setEmailError] = useState("");
@@ -18,6 +19,7 @@ export const LoginPage = () => {
   const [serverError, setServerError] = useState(""); // New state for server-side errors
   const [showWelcomePopup, setShowWelcomePopup] = useState(false); // State for welcome popup
   const [tempToken, setTempToken] = useState(null); // Temporary store for token
+  const [tempPremium, setTempPremium] = useState(null); // Temporary store for premim
 
   function validateEmail() {
     const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -51,6 +53,10 @@ export const LoginPage = () => {
       setToken(tempToken);
       navigate("/main-menu");
     }
+    if (tempPremium) {
+      setPremium(tempPremium);
+      navigate("/main-menu");
+    }
   };
   
   async function submitLogin(e) {
@@ -72,10 +78,11 @@ export const LoginPage = () => {
 
         if (response.status === 200) {
           const data = await response.json();
-          console.log("Login successful, will show welcome popup");
           
           // Store token temporarily but don't set it in the store yet
           setTempToken(data.access_token);
+          setTempPremium(data.is_premium);
+	  
           setShowWelcomePopup(true);
           
           console.log(data);
