@@ -5,7 +5,6 @@ import { useNavigate } from 'react-router-dom';
 import Sidebar from "../components/Sidebar";
 import Demo from '../components/Demo';
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
-import SmallButton from '../components/SmallButton';
 
 function LandingPage() {
   const [videoError, setVideoError] = useState({});
@@ -59,7 +58,7 @@ function LandingPage() {
             </div>
 
           </div>
-          <div className="rounded-lg overflow-hidden shadow-xl">
+          <div className="rounded-lg overflow-hidden shadow-xl max-w-xl">
             {videoError['intro'] ? (
               <div className="w-full aspect-video bg-gray-200 flex items-center justify-center">
                 <p className="text-gray-500 text-center p-4">
@@ -74,7 +73,7 @@ function LandingPage() {
                 loop={true}
                 muted={true}
                 controls={false}
-                className="w-full aspect-video"
+                className="w-full aspect-video object-contain"
                 onError={() => handleVideoError('intro')}
               />
             )}

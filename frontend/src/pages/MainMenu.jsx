@@ -92,7 +92,7 @@ function MainMenu() {
                     </div>
                     <MenuButton
                       onClick={() => setSelectedPracticeNode({ id: moment.moment })}
-                      className="w-auto px-2 py-0.5 bg-red-500 text-white text-xs rounded hover:bg-red-600 transition-colors ml-auto"
+                      className="w-auto px-4 py-2 bg-red-500 text-white text-xl rounded hover:bg-blue-600 transition-colors ml-auto"
                       text="Träna nu"
                       icon={<PlayIcon className="w-4 h-4" />}
                     />
