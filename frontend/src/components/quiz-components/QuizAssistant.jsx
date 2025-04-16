@@ -3,12 +3,15 @@ import { VideoPlayer } from '../VideoPlayer';
 import { Calculator } from './Calculator';
 import DrawingPad from './DrawingPad';
 import SmallButton from '../SmallButton';
-import { PlayCircleIcon, CalculatorIcon, PencilIcon } from '@heroicons/react/24/outline';
+import AIChatWindow from './AIChatWindow';
+import { PlayCircleIcon, CalculatorIcon, PencilIcon, ChatBubbleLeftIcon } from '@heroicons/react/24/outline';
 
 const QuizAssistant = ({ VideoName }) => {
     const [videoShowing, setVideoShowing] = useState(false);
     const [calculatorShowing, setCalculatorShowing] = useState(false);
     const [drawingPadShowing, setDrawingPadShowing] = useState(false);
+    const [chatShowing, setChatShowing] = useState(false);
+
     const handleVideoToggle = () => {
         setVideoShowing(!videoShowing);
     };
@@ -19,6 +22,10 @@ const QuizAssistant = ({ VideoName }) => {
 
     const handleDrawingPadToggle = () => {
         setDrawingPadShowing(!drawingPadShowing);
+    };
+
+    const handleChatToggle = () => {
+        setChatShowing(!chatShowing);
     };
 
     return (
@@ -42,6 +49,12 @@ const QuizAssistant = ({ VideoName }) => {
                     onClick={handleDrawingPadToggle}
                     icon={<PencilIcon className="w-5 h-5" />}
                     className={drawingPadShowing ? "bg-green-600 hover:bg-green-700" : ""}
+                />
+                <SmallButton
+                    text={chatShowing ? "Stäng AI chat" : "AI chat"}
+                    onClick={handleChatToggle}
+                    icon={<ChatBubbleLeftIcon className="w-5 h-5" />}
+                    className={chatShowing ? "bg-green-600 hover:bg-green-700" : ""}
                 />
             </div>
 
@@ -68,13 +81,20 @@ const QuizAssistant = ({ VideoName }) => {
                     </div>
                 )}
 
-                {/* Drawing Pad container - bottom */}
+                {/* Drawing Pad container */}
                 {drawingPadShowing && (
                     <div 
                         className="rounded-lg overflow-hidden shadow-lg mt-4"
                         style={{ width: '400px', height: '400px' }}
                     >
                         <DrawingPad />
+                    </div>
+                )}
+
+                {/* AI Chat Window container */}
+                {chatShowing && (
+                    <div className="mt-4">
+                        <AIChatWindow />
                     </div>
                 )}
             </div>
