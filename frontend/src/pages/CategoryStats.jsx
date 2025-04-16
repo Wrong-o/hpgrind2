@@ -2,7 +2,7 @@ import React from 'react';
 import { useDatabase } from '../contexts/DatabaseContext';
 import MomentTree from '../components/MomentTree';
 import { useNavigate } from 'react-router-dom';
-
+//
 export const CategoryStats = () => {
   const { categoryStats, isLoading, error } = useDatabase();
   const navigate = useNavigate();

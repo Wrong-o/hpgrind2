@@ -47,46 +47,46 @@ function MainMenu() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
-      <div className="container mx-auto h-full">
-        <div className="flex h-full">
+      <div className="container mx-auto px-4 py-6">
+        <div className="flex flex-col lg:flex-row gap-6">
           {/* Left Column - Menu Buttons */}
-          <div className="w-1/3 p-8 flex flex-col gap-4">
-            <h2 className="text-3xl font-bold mb-6 text-gray-800 border-b-2 border-blue-500 pb-2 inline-block">Meny</h2>
+          <div className="w-full lg:w-1/3 flex flex-col gap-4">
+            <h2 className="text-2xl md:text-3xl font-bold mb-4 text-gray-800 border-b-2 border-blue-500 pb-2 inline-block">Meny</h2>
             <MenuButton
               onClick={() => handleGrindQuizStart()}
-              className="w-full bg-blue-600 text-white px-6 py-4 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 text-lg"
+              className="w-full bg-blue-600 text-white px-4 py-3 md:px-6 md:py-4 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 text-base md:text-lg"
               text="Kalibrering: Träna brett för att få bättre rekommendationer"
-              icon={<AcademicCapIcon className="w-6 h-6" />}
+              icon={<AcademicCapIcon className="w-5 h-5 md:w-6 md:h-6" />}
             />
             <MenuButton
               onClick={() => navigate('/category-stats')}
-              className="w-full bg-teal-600 text-white px-6 py-4 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 text-lg"
+              className="w-full bg-teal-600 text-white px-4 py-3 md:px-6 md:py-4 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 text-base md:text-lg"
               text="Momentträd: Se dina moment"
-              icon={<ChartBarIcon className="w-6 h-6" />}
+              icon={<ChartBarIcon className="w-5 h-5 md:w-6 md:h-6" />}
             />
             <MenuButton
               onClick={() => navigate('/customize-experience')}
-              className="w-full bg-indigo-600 text-white px-6 py-4 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 text-lg"
+              className="w-full bg-indigo-600 text-white px-4 py-3 md:px-6 md:py-4 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 text-base md:text-lg"
               text="Anpassa din upplevelse"
-              icon={<Cog6ToothIcon className="w-6 h-6" />}
+              icon={<Cog6ToothIcon className="w-5 h-5 md:w-6 md:h-6" />}
             />
           </div>
 
           {/* Middle Column - Moment Cards */}
-          <div className="w-1/3 border-l border-gray-200 p-8 bg-white">
-            <h2 className="text-3xl font-bold mb-6 text-gray-800 border-b-2 border-red-500 pb-2 inline-block">LOCK IN: Bäst värde</h2>
+          <div className="w-full lg:w-1/3 lg:border-l border-gray-200 p-4 md:p-8 bg-white rounded-lg shadow-sm">
+            <h2 className="text-2xl md:text-3xl font-bold mb-4 text-gray-800 border-b-2 border-red-500 pb-2 inline-block">LOCK IN: Bäst värde</h2>
             {redMoments.length > 0 ? (
               <div className="grid grid-cols-1 gap-4">
                 {redMoments.map((moment) => (
                   <div
                     key={moment.moment}
-                    className="bg-white rounded-lg shadow-md p-6 border-l-4"
+                    className="bg-white rounded-lg shadow-md p-4 md:p-6 border-l-4"
                     style={{ borderLeftColor: ProgressColors.RED }}
                   >
-                    <h3 className="font-semibold text-lg mb-2">
+                    <h3 className="font-semibold text-base md:text-lg mb-2">
                       {momentTitles[moment.moment] || moment.moment}
                     </h3>
-                    <div className="text-sm text-gray-600 mb-4">
+                    <div className="text-xs md:text-sm text-gray-600 mb-3">
                       <p>Rätt svar: {moment.correct} av {moment.total_answers}</p>
                       <p>Träffsäkerhet: {Math.round(moment.accuracy * 100)}%</p>
                     </div>
@@ -100,14 +100,14 @@ function MainMenu() {
                 ))}
               </div>
             ) : (
-              <div className="text-center text-gray-500 py-8">
+              <div className="text-center text-gray-500 py-6">
                 <p>Gör kalibreringen för att få bättre rekommendationer!</p>
               </div>
             )}
           </div>
 
           {/* Right Column - Updates */}
-          <div className="w-1/3 border-l border-gray-200 p-8 bg-white">
+          <div className="w-full lg:w-1/3 lg:border-l border-gray-200 p-4 md:p-8 bg-white rounded-lg shadow-sm">
             <Updates />
           </div>
         </div>
@@ -115,11 +115,11 @@ function MainMenu() {
 
       {/* Practice Modal */}
       {selectedPracticeNode && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white w-full h-full md:w-3/4 md:h-5/6 rounded-lg relative">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white w-full h-[90vh] md:w-3/4 md:h-5/6 rounded-lg relative overflow-auto">
             <SmallButton
               onClick={() => setSelectedPracticeNode(null)}
-              className="absolute top-2 right-2 text-gray-400 hover:text-gray-600 p-1"
+              className="absolute top-2 right-2 text-gray-400 hover:text-gray-600 p-1 z-10"
               icon={<XMarkIcon className="w-4 h-4" />}
             />
             <FocusPractice
