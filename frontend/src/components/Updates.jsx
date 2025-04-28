@@ -55,10 +55,10 @@ const Updates = () => {
   // Updates are manually maintained here
   const updates = [
     {
-      date: '2024-03-20',
-      title: 'Premium-funktioner på gång!',
-      description: 'Snart kommer du kunna anpassa din upplevelse med olika ljudpaket och färgteman.',
-      type: 'coming'
+      date: '2024-04-28',
+      title: 'AI-chatten är nu live!',
+      description: 'Du kan nu ställa frågor till AI-chatten och få hjälp med att lösa dina matteproblem.',
+      type: 'new'
     },
     {
       date: '2024-03-19',
