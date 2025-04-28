@@ -222,3 +222,59 @@ def generate_fraction_choices(expression, correct_answer, decimals=0):
     random.shuffle(all_answers)
 
     return all_answers
+
+def generate_fraction_shortening_choices(expression, correct_answer, decimals=0):
+    """
+    Returns 4 answers, correct included
+    Possible error sources are:
+    - Not shortening at all (original fraction)
+    - Multiplying both numbers by 2 (equivalent but unsimplified)
+    - Adding 1 to numerator (different fraction)
+    - Subtracting 1 from denominator (different fraction)
+    """ 
+    fraction = Fraction(expression['numerator'],
+                     expression['denominator'])
+    wrong_answers = []
+    
+    # Original unsimplified fraction
+    
+    # Multiplied by 2 (unsimplified)
+    wrong_answers.append(Fraction(fraction.numerator * 2, fraction.denominator * 2))
+    
+    # Slightly modified fractions that are actually different
+    wrong_answers.append(Fraction(fraction.numerator + 1, fraction.denominator))
+    if fraction.denominator > 1:
+        wrong_answers.append(Fraction(fraction.numerator, fraction.denominator - 1))
+    else:
+        wrong_answers.append(Fraction(fraction.numerator, fraction.denominator + 1))
+    
+    # Ensure all wrong answers are unique and convert to LaTeX fraction form
+    wrong_answers = list(set(wrong_answers))
+    wrong_answers = [
+        f"\\frac{{{answer.numerator}}}{{{answer.denominator}}}" for answer in wrong_answers]
+
+    # Add the correct answer in LaTeX fraction form and shuffle
+    all_answers = [correct_answer] + wrong_answers[:3]
+    random.shuffle(all_answers)
+
+    return all_answers 
+
+def generate_x_equation_choices(expression):
+    """
+    Generates choices to  x_equations
+    Args:
+        dict: expression = 
+            int1: int,
+            int2: int,
+            operator: chr,
+            result: int
+         """ 
+    correct_answer =str(expression["result"])
+    wrong_answers = [] 
+    if expression["operator"] == "+":
+        wrong_answers.append(expression["int1"] - expression["int2"])
+        wrong_answers.append(expression["int2"] - expression["int1"])
+        wrong_answers.append(expression["result"] * -1)
+    all_answers = [correct_answer] + wrong_answers[:3]
+    return all_answers 
+

@@ -1,22 +1,25 @@
+import logging
+import os
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, Depends, HTTPException, status, requests
+from typing import Optional
+
+import sqlalchemy.exc
+from api.v1.core.endpoints import authentication, general, question_director
 from api.v1.core.models import Base
 from api.v1.core.schemas import User
-from db_setup import get_db, engine
 from api.v1.routers import router
-from sqlalchemy import delete, insert, select, update, text, inspect
-from sqlalchemy.orm import Session, joinedload, selectinload
+from db_setup import engine, get_db
+from fastapi import Depends, FastAPI, HTTPException, requests, status
 from fastapi.middleware.cors import CORSMiddleware
-import sqlalchemy.exc
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from typing import Optional
 from pydantic import BaseModel
-from api.v1.core.endpoints import question_director, authentication, general
-import os
 from settings import settings
-import logging
+from sqlalchemy import delete, insert, inspect, select, text, update
+from sqlalchemy.orm import Session, joinedload, selectinload
+
 #
 logger = logging.getLogger(__name__)
+
 
 async def lifespan(app: FastAPI):
     logger.debug("Starting lifespan")
@@ -31,22 +34,23 @@ async def lifespan(app: FastAPI):
         # Create all tables if they don't exist
         Base.metadata.create_all(bind=engine)
         print("Database schema initialized successfully.")
-        
+
         # Check if we need to add basic seed data (if tables were just created)
         if not tables_exist:
             print("No tables found before initialization, adding seed data...")
             try:
                 from init_db import initialize_database
+
                 initialize_database()
                 print("Seed data added successfully.")
             except Exception as seed_error:
                 print(f"Warning: Could not add seed data: {str(seed_error)}")
-        
+
         print(f"Running in {settings.ENV} mode")
         print(f"CORS origins: {settings.cors_origins}")
     except Exception as e:
         print(f"Error initializing database schema: {str(e)}")
-    
+
     yield
 
 
@@ -59,12 +63,24 @@ app.add_middleware(
     allow_origins=settings.cors_origins,
     allow_credentials=True,
     allow_methods=["GET", "POST", "OPTIONS", "PUT", "DELETE"],
-    allow_headers=["DNT", "User-Agent", "X-Requested-With", "If-Modified-Since", 
-                  "Cache-Control", "Content-Type", "Range", "Authorization"],
+    allow_headers=[
+        "DNT",
+        "User-Agent",
+        "X-Requested-With",
+        "If-Modified-Since",
+        "Cache-Control",
+        "Content-Type",
+        "Range",
+        "Authorization",
+    ],
     expose_headers=["Content-Length", "Content-Range"],
-    max_age=1728000  # Matching Nginx's Access-Control-Max-Age
+    max_age=1728000,  # Matching Nginx's Access-Control-Max-Age
 )
 
-app.include_router(question_director.router, prefix="/api/v1/question_generator", tags=["question_generator"])
+app.include_router(
+    question_director.router,
+    prefix="/api/v1/question_generator",
+    tags=["question_generator"],
+)
 app.include_router(authentication.router, prefix="/api/auth", tags=["auth"])
 app.include_router(general.router, prefix="/api/v1/general", tags=["general"])

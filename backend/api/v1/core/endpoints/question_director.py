@@ -8,7 +8,8 @@ from api.v1.core.services.kvantitativ.basics.fraction_equation import fraction_e
 from api.v1.core.services.kvantitativ.basics.fraction_equation import fraction_equation_multiplication
 from api.v1.core.services.kvantitativ.basics.fraction_equation import fraction_equation_addition
 from api.v1.core.services.kvantitativ.basics.fraction_equation import fraction_equation_subtraction
-from api.v1.core.services.kvantitativ.basics.x_solve import x_solve
+from api.v1.core.services.kvantitativ.basics.fraction_equation import fraction_shortening
+from api.v1.core.services.kvantitativ.basics.x_equation import x_equation_addition
 from api.v1.core.services.kvantitativ.formula_cheet.mean import mean
 from typing import List, Optional
 from pydantic import BaseModel, Field, validator
@@ -21,14 +22,13 @@ router = APIRouter()
 
 
 moment_functions = {
-    "operations_order": operations_order,
-    #"basics_fraktioner_förlänga": fraction_equations,
-    #"basics_fraktioner_förkorta": fraction_equations,
+    "basics_operations_order": operations_order,
+    "basics_fraktioner_förkorta": fraction_shortening,
     "basics_fraktioner_addera": fraction_equation_addition,
     "basics_fraktioner_subtrahera": fraction_equation_subtraction,
     "basics_fraktioner_multiplicera": fraction_equation_multiplication,
     "basics_fraktioner_dividera": fraction_equation_division,
-    "x_solve": x_solve,
+    "basics_ekvationslösning_addition": x_equation_addition,
     "mean": mean
 }
 
@@ -85,7 +85,7 @@ class BatchQuestionRequest(BaseModel):
         return v
 
 
-async def generate_question(moment: str, difficulty: int):
+async def generate_question(moment: str, difficulty: int = 1):
     """
     Helper function to generate a single question asynchronously.
     This wraps the synchronous question generation function to be used with asyncio.

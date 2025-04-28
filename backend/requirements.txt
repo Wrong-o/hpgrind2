@@ -1,6 +1,6 @@
 alembic==1.15.1
 annotated-types==0.7.0
-anyio==4.8.0
+anyio
 asyncpg==0.30.0
 av==13.1.0
 bcrypt==4.0.1
@@ -49,3 +49,4 @@ typing_extensions==4.12.2
 urllib3==2.3.0
 uvicorn==0.34.0
 watchdog==6.0.0
+OpenAi

@@ -1,5 +1,5 @@
 import random as rd
-
+import math
 
 def fraction_whole_number(negative_allowed: bool = False):
     """_summary_
@@ -139,6 +139,18 @@ def random_fraction(negative_allowed: bool = False, max_numerator: int = 10, max
         "denominator": denominator
     }
 
+def fraction_shortened(max_numerator: int, max_denominator: int):
+    """_summary_
+    Shortens to lowest possible denominator
+    Returns:
+        dict: {numerator: int, denominator: int} - shortened fraction
+    """
+    fraction = random_fraction(max_numerator, max_denominator)
+    gcd = math.gcd(fraction["numerator"], fraction["denominator"])
+    return {
+        "numerator": fraction["numerator"] // gcd,
+        "denominator": fraction["denominator"] // gcd
+    }
 
 def fraction_operations_order(max_numerator: int = 2, max_denominator: int = 2):
     """_summary_

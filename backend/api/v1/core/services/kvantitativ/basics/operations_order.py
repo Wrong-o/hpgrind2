@@ -4,21 +4,11 @@ from api.v1.core.services.wrong_answer_generator import generate_math_choices
 
 
 def explanation():
-    return r"""
-    \text[ Räkneordning} \\
-    \text{1. Räkna ut det som står i paranteserna} \\
-    \text{2. Räkna ut upphöjt i och roten ur} \\
-    \text{3. Gånger och delat med} \\
-    \text{4. Addition and subtraction}
-    \text{Minnesregel: Om man ritar upp räkneordningen blir det en tjur med ett ärr över ögat}
-    \text{(      ) }
-    \text{  *   /  }
-    \text{    +    }
-    \text{    -    }
-    """
+    return "OperationsOrder.mp4"
 
 
 def operations_order(difficulty: int):
+    print("operations_order reached")
     """_summary_ Operations_order question with three different difficulties
 
     Args:

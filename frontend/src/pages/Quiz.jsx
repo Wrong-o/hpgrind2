@@ -83,6 +83,7 @@ const Quiz = () => {
         throw new Error(`HTTP error! Status: ${response.status}. Details: ${errorText}`);
       }
       
+      
       // Parse all questions at once
       const questionsData = await response.json();
       
@@ -331,7 +332,7 @@ const Quiz = () => {
 
           {/* Right column - Quiz Assistant */}
           <div className="w-[450px]">
-            <QuizAssistant VideoName={currentQuestion.explanation} />
+            <QuizAssistant VideoName={currentQuestion.explanation} Question={currentQuestion.question} />
           </div>
         </div>
       </div>

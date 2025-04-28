@@ -1,6 +1,7 @@
 from api.v1.core.models import User, UserAchievements, UserHistory
 from api.v1.core.schemas import UserAchievementsOut, UserAnswerIn, UserHistoryOut
 from db_setup import get_db
+from settings import settings
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import delete, insert, select, update, func, distinct, case
 from sqlalchemy.orm import Session, joinedload, selectinload

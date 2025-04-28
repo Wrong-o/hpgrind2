@@ -27,16 +27,13 @@ const MomentTree = ({ onBack, stats }) => {
           id: 'basics_fraktioner',
           title: 'Bråk',
           description: 'Bråk och hur de fungerar',
-          children: [{
-            id: 'basics_fraktioner_förlänga',
-            title: 'Förlänga',
-            description: 'Förlänga ett bråk',
-            children: []
-          }, {
+          children: [
+          {
             id: 'basics_fraktioner_förkorta',
             title: 'Förkorta',
             description: 'Förkorta ett bråk',
-            children: []
+            children: [],
+            videoUrl: 'FractionShortening.mp4'
           }, {
             id: 'basics_fraktioner_addera',
             title: 'Addera',

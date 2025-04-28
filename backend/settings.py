@@ -19,6 +19,9 @@ class Settings(BaseSettings):
     POSTMARK_TOKEN: str
     FRONTEND_BASE_URL: str
     
+    # OpenAI settings
+    OPENAI_API_KEY: str
+    
     # Environment
     ENV: str = "development"
 

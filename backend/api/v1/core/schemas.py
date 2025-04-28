@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field, ConfigDict, EmailStr, field_validator
-from typing import Optional
+from typing import Optional, Literal
 from datetime import datetime
 from enum import Enum
 import re
@@ -124,3 +124,14 @@ class UserHistoryOut(BaseModel):
 
     # Add Config to allow ORM mode if not already present
     model_config = ConfigDict(from_attributes=True)
+
+class ChatMessage(BaseModel):
+    role: Literal["system", "user", "assistant"]
+    content: str
+
+class ChatBotIn(BaseModel):
+    messages: list[ChatMessage]
+    model_config = ConfigDict(from_attributes=True)
+
+class ChatBotOut(BaseModel):
+    message: str

@@ -6,7 +6,7 @@ import SmallButton from '../SmallButton';
 import AIChatWindow from './AIChatWindow';
 import { PlayCircleIcon, CalculatorIcon, PencilIcon, ChatBubbleLeftIcon } from '@heroicons/react/24/outline';
 
-const QuizAssistant = ({ VideoName }) => {
+const QuizAssistant = ({ VideoName, Question }) => {
     const [videoShowing, setVideoShowing] = useState(false);
     const [calculatorShowing, setCalculatorShowing] = useState(false);
     const [drawingPadShowing, setDrawingPadShowing] = useState(false);
@@ -94,7 +94,7 @@ const QuizAssistant = ({ VideoName }) => {
                 {/* AI Chat Window container */}
                 {chatShowing && (
                     <div className="mt-4">
-                        <AIChatWindow />
+                        <AIChatWindow Question={Question} />
                     </div>
                 )}
             </div>

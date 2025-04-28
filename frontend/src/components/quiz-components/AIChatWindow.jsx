@@ -1,9 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { PaperAirplaneIcon } from '@heroicons/react/24/outline';
 
-const AIChatWindow = () => {
+const AIChatWindow = ({ Question }) => {
     const [messages, setMessages] = useState([]);
     const [inputMessage, setInputMessage] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
     const messagesEndRef = useRef(null);
 
     const scrollToBottom = () => {
@@ -13,31 +14,75 @@ const AIChatWindow = () => {
     useEffect(() => {
         scrollToBottom();
     }, [messages]);
+    const systemPrompt = {
+        role: "system",
+        content: `Svara kort: Modellen kommer hjälpa elever med matte problem. Modeller kommer känna till frågan och svaret redan när eleven börjar interagera med modellen. Korta, svar, svara bara på frågan och undvik svåra ord. Modellen ska inte ge svaret, utan hjälpa eleven på vägen. Frågan är:${Question}.`
+    };
 
     const handleSendMessage = async (e) => {
         e.preventDefault();
         if (!inputMessage.trim()) return;
 
-        // Add user message
-        const newMessage = {
-            text: inputMessage,
+        // Add user message to local state
+        const newUserMessage = {
             sender: 'user',
+            text: inputMessage,
             timestamp: new Date().toLocaleTimeString()
         };
 
-        setMessages(prev => [...prev, newMessage]);
+        setMessages([...messages, newUserMessage]);
         setInputMessage('');
+        setIsLoading(true);
 
-        // TODO: Integrate with actual AI backend
-        // Placeholder AI response
-        setTimeout(() => {
+        // Prepare messages for the API in the correct format
+        const messagesToSend = [
+            systemPrompt,
+            ...messages.map(msg => ({
+                role: msg.sender === 'user' ? 'user' : 'assistant',
+                content: msg.text
+            })),
+            {
+                role: 'user',
+                content: inputMessage
+            }
+        ];
+
+        console.log(messagesToSend);
+
+        try {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/api/v1/chat_bot/question`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                body: JSON.stringify({ messages: messagesToSend })
+            });
+
+            if (!response.ok) {
+                throw new Error(`Failed to get AI response: ${response.status}`);
+            }
+
+            const data = await response.json();
+            
             const aiResponse = {
-                text: "This is a placeholder AI response. Backend integration needed.",
+                text: data.message,
                 sender: 'ai',
                 timestamp: new Date().toLocaleTimeString()
             };
+            
             setMessages(prev => [...prev, aiResponse]);
-        }, 1000);
+        } catch (error) {
+            console.error('Error getting AI response:', error);
+            const errorResponse = {
+                text: 'Sorry, I encountered an error. Please try again later.',
+                sender: 'ai',
+                timestamp: new Date().toLocaleTimeString()
+            };
+            setMessages(prev => [...prev, errorResponse]);
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
@@ -68,6 +113,13 @@ const AIChatWindow = () => {
                         </div>
                     </div>
                 ))}
+                {isLoading && (
+                    <div className="flex justify-start">
+                        <div className="bg-gray-100 text-gray-800 rounded-lg px-4 py-2">
+                            <p>Typing...</p>
+                        </div>
+                    </div>
+                )}
                 <div ref={messagesEndRef} />
             </div>
 
@@ -80,10 +132,12 @@ const AIChatWindow = () => {
                         onChange={(e) => setInputMessage(e.target.value)}
                         placeholder="Type your message..."
                         className="flex-1 rounded-lg border border-gray-300 px-4 py-2 focus:outline-none focus:border-blue-500"
+                        disabled={isLoading}
                     />
                     <button
                         type="submit"
-                        className="bg-blue-600 text-white rounded-lg px-4 py-2 hover:bg-blue-700 transition-colors"
+                        className={`${isLoading ? 'bg-blue-400' : 'bg-blue-600 hover:bg-blue-700'} text-white rounded-lg px-4 py-2 transition-colors`}
+                        disabled={isLoading}
                     >
                         <PaperAirplaneIcon className="w-5 h-5" />
                     </button>
