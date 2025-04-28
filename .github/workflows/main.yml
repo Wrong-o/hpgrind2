@@ -145,6 +145,7 @@ jobs:
           echo 'FRONTEND_BASE_URL=$FRONTEND_BASE_URL' >> ./backend/.env
           echo 'ENV=$ENVIRONMENT' >> ./backend/.env
           echo 'CORS_ORIGINS=https://www.hpgrind.se' >> ./backend/.env
+          echo 'OPENAI_API_KEY=$OPENAI_API_KEY' >> ./backend/.env
           echo '.env file created.'
 
           # Stop existing services (if any)
