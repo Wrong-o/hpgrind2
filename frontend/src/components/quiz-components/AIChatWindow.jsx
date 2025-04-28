@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { PaperAirplaneIcon } from '@heroicons/react/24/outline';
+import 'katex/dist/katex.min.css';
 
 const AIChatWindow = ({ Question }) => {
     const [messages, setMessages] = useState([]);
@@ -17,6 +18,31 @@ const AIChatWindow = ({ Question }) => {
     const systemPrompt = {
         role: "system",
         content: `Svara kort: Modellen kommer hjälpa elever med matte problem. Modeller kommer känna till frågan och svaret redan när eleven börjar interagera med modellen. Korta, svar, svara bara på frågan och undvik svåra ord. Modellen ska inte ge svaret, utan hjälpa eleven på vägen. Frågan är:${Question}.`
+    };
+
+    // Function to render text with LaTeX
+    const renderWithLatex = (text) => {
+        if (!text) return null;
+        
+        // Split by LaTeX delimiters
+        const parts = text.split(/(\$\$.*?\$\$|\$.*?\$)/g);
+        
+        return parts.map((part, index) => {
+            // Block math: $$...$$
+            if (part.startsWith('$$') && part.endsWith('$$')) {
+                const math = part.slice(2, -2);
+                return <BlockMath key={index} math={math} />;
+            }
+            // Inline math: $...$
+            else if (part.startsWith('$') && part.endsWith('$')) {
+                const math = part.slice(1, -1);
+                return <InlineMath key={index} math={math} />;
+            }
+            // Regular text
+            else {
+                return <span key={index}>{part}</span>;
+            }
+        });
     };
 
     const handleSendMessage = async (e) => {
@@ -106,7 +132,7 @@ const AIChatWindow = ({ Question }) => {
                                     : 'bg-gray-100 text-gray-800'
                             }`}
                         >
-                            <p>{message.text}</p>
+                            <div>{renderWithLatex(message.text)}</div>
                             <span className="text-xs opacity-75 block mt-1">
                                 {message.timestamp}
                             </span>

@@ -131,6 +131,7 @@ jobs:
         POSTMARK_TOKEN: ${{ secrets.POSTMARK_TOKEN }}
         FRONTEND_BASE_URL: ${{ secrets.FRONTEND_BASE_URL }}
         ENVIRONMENT: "production"
+        OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       run: |
         ssh -i ~/.ssh/ec2-key.pem $EC2_USERNAME@$EC2_HOST "
           # Navigate to the app directory
