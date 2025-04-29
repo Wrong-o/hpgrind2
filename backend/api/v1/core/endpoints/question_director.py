@@ -9,7 +9,7 @@ from api.v1.core.services.kvantitativ.basics.fraction_equation import fraction_e
 from api.v1.core.services.kvantitativ.basics.fraction_equation import fraction_equation_addition
 from api.v1.core.services.kvantitativ.basics.fraction_equation import fraction_equation_subtraction
 from api.v1.core.services.kvantitativ.basics.fraction_equation import fraction_shortening
-from api.v1.core.services.kvantitativ.basics.x_equation import x_equation_addition
+from api.v1.core.services.kvantitativ.basics.x_equation import x_equation_addition, x_equation_subtraction, x_equation_multiplication, x_equation_division
 from api.v1.core.services.kvantitativ.formula_cheet.mean import mean
 from typing import List, Optional
 from pydantic import BaseModel, Field, validator
@@ -29,6 +29,9 @@ moment_functions = {
     "basics_fraktioner_multiplicera": fraction_equation_multiplication,
     "basics_fraktioner_dividera": fraction_equation_division,
     "basics_ekvationslösning_addition": x_equation_addition,
+    "basics_ekvationslösning_subtraktion": x_equation_subtraction,
+    "basics_ekvationslösning_multiplikation": x_equation_multiplication,
+    "basics_ekvationslösning_division": x_equation_division,
     "mean": mean
 }
 

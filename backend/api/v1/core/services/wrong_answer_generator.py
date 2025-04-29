@@ -269,12 +269,38 @@ def generate_x_equation_choices(expression):
             operator: chr,
             result: int
          """ 
-    correct_answer =str(expression["result"])
-    wrong_answers = [] 
+    correct_answer = str(expression["result"])
+    wrong_answers = set() 
     if expression["operator"] == "+":
-        wrong_answers.append(expression["int1"] - expression["int2"])
-        wrong_answers.append(expression["int2"] - expression["int1"])
-        wrong_answers.append(expression["result"] * -1)
-    all_answers = [correct_answer] + wrong_answers[:3]
-    return all_answers 
+        wrong_answers.add(expression["int1"] - expression["int2"])
+        wrong_answers.add(expression["int2"] - expression["int1"])
+        wrong_answers.add(expression["result"] * -1)
+        all_answers = [correct_answer] + list(wrong_answers)[:3]
+
+    elif expression["operator"] == "-":
+        wrong_answers.add(expression["int1"] + expression["int2"])
+        wrong_answers.add(expression["int2"] + expression["int1"])
+        wrong_answers.add(expression["result"] * -1)
+        all_answers = [correct_answer] + list(wrong_answers)[:3]
+        
+    elif expression["operator"] == "*":
+        # Generate distinct wrong answers for multiplication
+        wrong_answers.add(expression["result"] + expression["int2"])  # Adding instead of multiplying
+        wrong_answers.add(expression["result"] + expression["int1"])  
+        wrong_answers.add(expression["result"] * expression["int2"] + 1)
+        if len(wrong_answers) <3:
+            wrong_answers.add(expression["result"] * expression["int2"] - 1)
+        all_answers = [correct_answer] + list(round(answer, 2) for answer in wrong_answers)[:3]
+        
+    elif expression["operator"] == "/":
+        # Generate distinct wrong answers for division
+        wrong_answers.add(expression["int1"] * expression["int2"])  # Multiplying instead of dividing
+        wrong_answers.add(expression["result"] + expression["int2"])  # Adding divisor to result
+        wrong_answers.add(expression["result"] / expression["int2"] + 1)
+        if len(wrong_answers) <3:
+            wrong_answers.add(expression["result"] * -1)  # Negative of correct result
+        all_answers = [correct_answer] + list(round(answer, 2) for answer in wrong_answers)[:3]
+
+    random.shuffle(all_answers)
+    return all_answers
 

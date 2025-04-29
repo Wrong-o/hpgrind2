@@ -1,5 +1,0 @@
----
-description: virtual enviroments for python
-globs: 
----
-The python enviroment for this project is located in /backend/venv
