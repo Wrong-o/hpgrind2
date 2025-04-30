@@ -26,7 +26,7 @@ def fraction_whole_number(negative_allowed: bool = False):
     }
 
 
-def integer_splitter(split: int, negative_allowed: bool = False):
+def integer_splitter(split: int, negative_allowed: bool = False, even_spacing: bool = False):
     """_summary_
     Splits an integer into two integers that sum up to the original integer.
     Defaults to not allowing negatives
@@ -34,7 +34,11 @@ def integer_splitter(split: int, negative_allowed: bool = False):
     Returns:
         dict: {int1: int, int2: int} - two integers that sum up to split
     """
-    if negative_allowed:
+    if even_spacing:
+        delta = rd.randint(1, 10)
+        int1 = split + delta
+        int2 = split - delta 
+    elif negative_allowed:
         int1 = rd.randint(split - 20, split - 1)
         int2 = split - int1
     else:
@@ -212,8 +216,8 @@ def fraction_operations_order(max_numerator: int = 2, max_denominator: int = 2):
     }
 
 
-def generate_sequence(min, max, n: int = 3, negative_allowed: bool = False, integers_only: bool = True, mean: float = None, median: float = None, mode: float = None):
-    """Generates a sequence of integers and sums them up
+def generate_sequence_mean(even_n, max: int = 20, min: int = -20, n: int = 3, negative_allowed: bool = False, integers_only: bool = True, mean: float = None, median: float = None, mode: float = None):
+    """Generates a sequence of integers and returns mean of the sequence
 
     Args:
         n (int, optional): Numbers of integers in the sequence. Defaults to 3.
@@ -222,44 +226,59 @@ def generate_sequence(min, max, n: int = 3, negative_allowed: bool = False, inte
     Returns: {
         sequence: list of int,
         mean: float
-        median: float
-        mode: float
     }
     """
     sequence = []
-    if negative_allowed:
-        if integers_only:
-            mean = rd.randint(5, 25)
-            # offset =
-            while len(sequence) < n:
-                integer_splitter()
-                print(sequence)
-        else:
-            for i in range(1, n):
-                print(sequence)
-                sequence.append(rd.uniform(min, max))
+    if not negative_allowed and min < 0:
+        min = n
+    mean = rd.randint(min, max)
+    sum_of_sequence = mean * n
+    if even_n:
+        while len(sequence) < n:
+            new_nrs = integer_splitter(split=mean*2, negative_allowed=negative_allowed)
+            sequence.append(new_nrs["int1"])
+            sequence.append(new_nrs["int2"])
     else:
-        try:
-            min = int(min)
-            max = int(max)
-        except ValueError as e:
-            print(
-                f"Converting to integer error occured in question_generator.mean(): {e}")
-
-            raise
-
-        if integers_only:
-            for i in range(0, n):
-                sequence.append(rd.randint(min, max))
-                print(sequence)
-        else:
-            for i in range(1, n):
-                print(sequence)
-                sequence.append(rd.uniform(min, max))
+        sequence.append(mean)
+        while len(sequence) < n:
+            new_nrs = integer_splitter(split=mean*2, negative_allowed=negative_allowed)
+            sequence.append(new_nrs["int1"])
+            sequence.append(new_nrs["int2"])
 
     return {
         "sequence": sequence,
         "mean": mean,
-        "mode": mode,
-        "median": median
+    }
+
+def generate_sequence_median(even_n, max: int = 20, min: int = -20, n: int = 3, negative_allowed: bool = False, integers_only: bool = True, mean: float = None, median: float = None, mode: float = None):
+    """Generates a sequence of integers and returns median of the sequence
+
+    Args:
+        n (int, optional): Numbers of integers in the sequence. Defaults to 3.
+        negative_allowed (bool, optional): Allows negative numbers in the sequence. Defaults to False.
+
+    Returns: {
+        sequence: list of int,
+        median: float
+    }
+    """
+    sequence = []
+    if not negative_allowed and min < 0:
+        min = n
+    median = rd.randint(min, max)
+    if even_n:
+        while len(sequence) < n:
+            new_nrs = integer_splitter(split=median, even_spacing=True)
+            sequence.append(new_nrs["int1"])
+            sequence.append(new_nrs["int2"])
+    else:
+        sequence.append(median)
+        while len(sequence) < n:
+            new_nrs = integer_splitter(split=median, even_spacing=True)
+            sequence.append(new_nrs["int1"])
+            sequence.append(new_nrs["int2"])
+
+    return {
+        "sequence": sequence,
+        "median": median,
     }

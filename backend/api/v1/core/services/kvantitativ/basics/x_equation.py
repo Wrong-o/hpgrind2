@@ -115,7 +115,6 @@ def x_equation_division(difficulty:int = 1):
         "correct_answer": question_data["expression"]["result"],
         "question": f" {question_data["expression"]["int2"]}x = {question_data["expression"]["int1"]}"
         })
-    print(question_data["correct_answer"])
 
     return {
         "subject": "kvantitativ",
@@ -124,5 +123,5 @@ def x_equation_division(difficulty:int = 1):
         "question": question_data["question"],
         "correct_answer": question_data["correct_answer"],
         "drawing": [],
-        "explanation": "XEquationSubtraction.mp4"
+        "explanation": "XEquationDivision.mp4"
     }

@@ -10,13 +10,13 @@ from api.v1.core.services.kvantitativ.basics.fraction_equation import fraction_e
 from api.v1.core.services.kvantitativ.basics.fraction_equation import fraction_equation_subtraction
 from api.v1.core.services.kvantitativ.basics.fraction_equation import fraction_shortening
 from api.v1.core.services.kvantitativ.basics.x_equation import x_equation_addition, x_equation_subtraction, x_equation_multiplication, x_equation_division
-from api.v1.core.services.kvantitativ.formula_cheet.mean import mean
+from api.v1.core.services.kvantitativ.formula_cheet.mean_mode_median import mean_even, mean_odd, mean_negative, median_even, median_odd
 from typing import List, Optional
 from pydantic import BaseModel, Field, validator
 import asyncio
 import logging
 import math
-
+import random as rd
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
@@ -32,7 +32,11 @@ moment_functions = {
     "basics_ekvationslösning_subtraktion": x_equation_subtraction,
     "basics_ekvationslösning_multiplikation": x_equation_multiplication,
     "basics_ekvationslösning_division": x_equation_division,
-    "mean": mean
+    "medelvärde_udda": mean_odd,
+    "medelvärde_jämnt": mean_even,
+    "medelvärde_negativa": mean_negative,
+    "median_udda": median_odd,  
+    "median_jämnt": median_even
 }
 
 
@@ -64,7 +68,7 @@ async def get_question(moment: str, difficulty: int = 1, db: Session = Depends(g
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Moment not found")
     question_data = moment_functions[moment](difficulty=difficulty)
-
+    question_data["answers"] = rd.sample(question_data["answers"], len(question_data["answers"]))
     question_data["moment"] = moment
     question_data["difficulty"] = difficulty
     return question_data

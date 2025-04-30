@@ -304,3 +304,53 @@ def generate_x_equation_choices(expression):
     random.shuffle(all_answers)
     return all_answers
 
+def generate_mean_choices(sequence):
+    """
+    Generates choices to mean questions
+    Args:
+        sequence: dict with sequence: list of int, mean: int
+    """
+    mean = sequence["mean"]
+    sequence = sequence["sequence"]
+    wrong_answers = set()
+    sorted_seq = sorted(sequence)
+    middle_idx = len(sorted_seq) // 2
+    if len(sorted_seq) % 2 == 0:
+        wrong_answers.add(sorted_seq[middle_idx-1])
+        wrong_answers.add(sorted_seq[middle_idx]) 
+    else:
+        wrong_answers.add(sorted_seq[middle_idx-1])
+        wrong_answers.add(sorted_seq[middle_idx+1])
+    wrong_answers_list = list(wrong_answers)
+    wrong_answers.add(wrong_answers_list[0] + 1)
+    wrong_answers.add(wrong_answers_list[1] - 1)
+    if len(wrong_answers) < 3:
+        wrong_answers_list = list(wrong_answers)
+        wrong_answers.add(wrong_answers_list[0] - 1)
+        wrong_answers.add(wrong_answers_list[1] + 1)
+    answers = [mean] + list(wrong_answers)[:3]
+    random.shuffle(answers)
+    return answers
+
+##DU ÄR HÄR: Ändra felsvaren, det blir bara 3
+##
+def generate_median_choices(sequence):
+    """
+    Generates choices to median questions
+    Args:
+        sequence: dict with sequence: list of int, median: int
+    """
+    median = sequence["median"]
+    sequence = sequence["sequence"]
+    wrong_answers = set()
+    sorted_seq = sorted(sequence)
+    middle_idx = len(sorted_seq) // 2
+    if len(sorted_seq) % 2 == 0:
+        wrong_answers.add(sorted_seq[middle_idx-1])
+        wrong_answers.add(sorted_seq[middle_idx]) 
+    else:
+        wrong_answers.add(sorted_seq[middle_idx-1])
+        wrong_answers.add(sorted_seq[middle_idx+1])
+    answers = [median] + list(wrong_answers)[:3]
+    random.shuffle(answers)
+    return answers
