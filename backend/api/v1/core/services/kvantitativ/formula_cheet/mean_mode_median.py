@@ -1,6 +1,6 @@
 import random as rd
-from api.v1.core.services.equation_generator import generate_sequence_mean, generate_sequence_median
-from api.v1.core.services.wrong_answer_generator import generate_mean_choices, generate_median_choices
+from api.v1.core.services.equation_generator import generate_sequence_mean, generate_sequence_median, generate_sequence_mode
+from api.v1.core.services.wrong_answer_generator import generate_mean_choices, generate_median_choices, generate_mode_choices
 
 
 def mean_even(difficulty: int = 1, n = 6):
@@ -106,6 +106,10 @@ def median_odd(difficulty: int = 1, n = 5):
     Returns:
         mean (float): Mean of the sequence
     """
+    sequence = generate_sequence_median(integers_only=True, even_n=False, n=n, negative_allowed=False)
+    sequence["sequence"].sort()
+    choices = generate_median_choices(sequence)
+    print(sequence, choices)
     return {
         "subject": "kvantitativ",
         "category": "formula_cheet",
@@ -113,5 +117,27 @@ def median_odd(difficulty: int = 1, n = 5):
         "answers": choices,
         "correct_answer": str(sequence["median"]),
         "drawing": [],
-        "explanation": "MedianEven.mp4"
+        "explanation": "MedianOdd.mp4"
+    }
+
+def mode(difficulty: int = 1, n = 6):
+    """
+    Generates a sequence and returns mode of the sequence
+    Args:
+        n (int): Number of integers in the sequence
+    Returns:
+        mode (float): Mode of the sequence
+    """
+    sequence = generate_sequence_mode(n=n, negative_allowed=False)
+    sequence["sequence"].sort()
+    choices = generate_mode_choices(sequence)
+    print(sequence, choices)
+    return {
+        "subject": "kvantitativ",
+        "category": "formula_cheet",
+        "question": ", ".join(str(x) for x in sequence["sequence"]),
+        "answers": choices,
+        "correct_answer": str(sequence["median"]),
+        "drawing": [],
+        "explanation": "MedianOdd.mp4"
     }

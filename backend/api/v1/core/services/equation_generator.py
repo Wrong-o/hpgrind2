@@ -282,3 +282,39 @@ def generate_sequence_median(even_n, max: int = 20, min: int = -20, n: int = 3, 
         "sequence": sequence,
         "median": median,
     }
+
+def generate_sequence_mode(even_n, max: int = 20, min: int = -20, n: int = 3, negative_allowed: bool = False, integers_only: bool = True, mean: float = None, median: float = None, mode: float = None):
+    """Generates a sequence of integers and returns mode of the sequence
+
+    Args:
+        n (int, optional): Numbers of integers in the sequence. Defaults to 3.
+        negative_allowed (bool, optional): Allows negative numbers in the sequence. Defaults to False.
+
+    Returns: {
+        sequence: list of int,
+        mode: int
+    }
+    """
+    # TODO: DU ÄR HÄR
+    sequence = []
+    if not negative_allowed and min < 0:
+        min = n
+    mode = rd.randint(min, max)
+    sequence.append(mode)
+    if n < 4:
+        sequence.append(mode)
+        sequence.append(mode + 1)
+        sequence.append(mode + 2)
+    elif n < 6:
+        sequence.append(mode)
+        sequence.append(mode + 1)
+        sequence.append(mode + 2)
+    else:
+        sequence.append(mode)
+        sequence.append(mode + 1)
+        sequence.append(mode + 2)
+        sequence.append(mode + 3)
+    return {
+        "sequence": sequence,
+        "mode": mode,
+    }

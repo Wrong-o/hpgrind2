@@ -347,10 +347,32 @@ def generate_median_choices(sequence):
     middle_idx = len(sorted_seq) // 2
     if len(sorted_seq) % 2 == 0:
         wrong_answers.add(sorted_seq[middle_idx-1])
-        wrong_answers.add(sorted_seq[middle_idx]) 
+        wrong_answers.add(sorted_seq[middle_idx+1])
+        wrong_answers.add(sorted_seq[middle_idx-2])
+        wrong_answers.add(sorted_seq[middle_idx]+1)
     else:
         wrong_answers.add(sorted_seq[middle_idx-1])
         wrong_answers.add(sorted_seq[middle_idx+1])
+        wrong_answers.add(sorted_seq[middle_idx-2])
+        wrong_answers.add(sorted_seq[middle_idx]+1)
     answers = [median] + list(wrong_answers)[:3]
+    random.shuffle(answers)
+    return answers
+
+def generate_mode_choices(sequence):
+    """
+    Generates choices to mode questions
+    Args:
+        sequence: dict with sequence: list of int, median: int
+    """
+    mode = sequence["mode"]
+    sequence = sequence["sequence"]
+    wrong_answers = set()
+    for i in range(len(sequence)):
+        if sequence[i] == mode:
+            wrong_answers.add("meme")
+            wrong_answers.add("mewe")
+            wrong_answers.add("weme")
+    answers = [mode] + list(wrong_answers)[:3]
     random.shuffle(answers)
     return answers
