@@ -128,7 +128,7 @@ def mode(difficulty: int = 1, n = 6):
     Returns:
         mode (float): Mode of the sequence
     """
-    sequence = generate_sequence_mode(n=n, negative_allowed=False)
+    sequence = generate_sequence_mode(even_n=False, n=n, negative_allowed=False)
     sequence["sequence"].sort()
     choices = generate_mode_choices(sequence)
     print(sequence, choices)
@@ -137,7 +137,7 @@ def mode(difficulty: int = 1, n = 6):
         "category": "formula_cheet",
         "question": ", ".join(str(x) for x in sequence["sequence"]),
         "answers": choices,
-        "correct_answer": str(sequence["median"]),
+        "correct_answer": str(sequence["mode"]),
         "drawing": [],
-        "explanation": "MedianOdd.mp4"
+        "explanation": "Mode.mp4"
     }

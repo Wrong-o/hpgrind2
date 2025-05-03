@@ -295,25 +295,14 @@ def generate_sequence_mode(even_n, max: int = 20, min: int = -20, n: int = 3, ne
         mode: int
     }
     """
-    # TODO: DU ÄR HÄR
     sequence = []
     if not negative_allowed and min < 0:
         min = n
     mode = rd.randint(min, max)
     sequence.append(mode)
-    if n < 4:
-        sequence.append(mode)
-        sequence.append(mode + 1)
-        sequence.append(mode + 2)
-    elif n < 6:
-        sequence.append(mode)
-        sequence.append(mode + 1)
-        sequence.append(mode + 2)
-    else:
-        sequence.append(mode)
-        sequence.append(mode + 1)
-        sequence.append(mode + 2)
-        sequence.append(mode + 3)
+    modifier_base = rd.randint(-n + 1, -1)
+    for i in range(1, n):
+        sequence.append(mode + modifier_base + i)
     return {
         "sequence": sequence,
         "mode": mode,

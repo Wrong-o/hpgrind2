@@ -370,9 +370,9 @@ def generate_mode_choices(sequence):
     wrong_answers = set()
     for i in range(len(sequence)):
         if sequence[i] == mode:
-            wrong_answers.add("meme")
-            wrong_answers.add("mewe")
-            wrong_answers.add("weme")
+            continue
+        else:
+            wrong_answers.add(sequence[i])
     answers = [mode] + list(wrong_answers)[:3]
     random.shuffle(answers)
     return answers
