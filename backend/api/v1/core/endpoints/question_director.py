@@ -11,6 +11,7 @@ from api.v1.core.services.kvantitativ.basics.fraction_equation import fraction_e
 from api.v1.core.services.kvantitativ.basics.fraction_equation import fraction_shortening
 from api.v1.core.services.kvantitativ.basics.x_equation import x_equation_addition, x_equation_subtraction, x_equation_multiplication, x_equation_division
 from api.v1.core.services.kvantitativ.formula_cheet.mean_mode_median import mean_even, mean_odd, mean_negative, median_even, median_odd, mode
+from api.v1.core.services.kvantitativ.formula_cheet.linear_equation import linear_find_x, linear_find_y
 from typing import List, Optional
 from pydantic import BaseModel, Field, validator
 import asyncio
@@ -37,7 +38,9 @@ moment_functions = {
     "medelvärde_negativa": mean_negative,
     "median_udda": median_odd,  
     "median_jämnt": median_even,
-    "typvärde": mode
+    "typvärde": mode,
+    "ekvationer_linjer_ekvation_x": linear_find_x,
+    "ekvationer_linjer_ekvation_y": linear_find_y
 }
 
 

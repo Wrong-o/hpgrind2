@@ -376,3 +376,19 @@ def generate_mode_choices(sequence):
     answers = [mode] + list(wrong_answers)[:3]
     random.shuffle(answers)
     return answers
+
+def generate_linear_equation_choices(equation):
+    """
+    Generates choices to linear equation questions
+    Args:
+        equation: dict with equation: str, solution: int
+    """
+### DU ÄR HÄR
+    wrong_answers = set()
+    wrong_answers.add(equation["solution"] + 1)
+    wrong_answers.add(equation["solution"] - 1)
+    wrong_answers.add(equation["solution"] + 2)
+    wrong_answers.add(equation["solution"] - 2)
+    answers = [equation["solution"]] + list(wrong_answers)[:3]
+    random.shuffle(answers)
+    return answers

@@ -307,3 +307,22 @@ def generate_sequence_mode(even_n, max: int = 20, min: int = -20, n: int = 3, ne
         "sequence": sequence,
         "mode": mode,
     }
+
+def generate_linear_km():
+    """
+    Generates a random linear equation in the form y = mx + k
+    and returns the values of x, m, k, and y.
+    """
+    # Generate random values for m, k, and x
+    m = rd.randint(-10, 10)
+    while m == 0:
+        m = rd.randint(-10, 10)
+    k = rd.randint(-3, 3)
+    x = rd.randint(-5, 5)
+    y = k * x + m
+    return {
+        "m": m,
+        "k": k,
+        "x": x,
+        "y": y
+    }
