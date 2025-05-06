@@ -12,6 +12,7 @@ from api.v1.core.services.kvantitativ.basics.fraction_equation import fraction_s
 from api.v1.core.services.kvantitativ.basics.x_equation import x_equation_addition, x_equation_subtraction, x_equation_multiplication, x_equation_division
 from api.v1.core.services.kvantitativ.formula_cheet.mean_mode_median import mean_even, mean_odd, mean_negative, median_even, median_odd, mode
 from api.v1.core.services.kvantitativ.formula_cheet.linear_equation import linear_find_x, linear_find_y
+from api.v1.core.services.kvantitativ.formula_cheet.probability import probability_single, probability_combination_with_replacement, probability_combination_without_replacement
 from typing import List, Optional
 from pydantic import BaseModel, Field, validator
 import asyncio
@@ -40,7 +41,10 @@ moment_functions = {
     "median_jämnt": median_even,
     "typvärde": mode,
     "ekvationer_linjer_ekvation_x": linear_find_x,
-    "ekvationer_linjer_ekvation_y": linear_find_y
+    "ekvationer_linjer_ekvation_y": linear_find_y,
+    "sannolikhet_enskild": probability_single,
+    "sannolikhet_kombinationer_återläggning": probability_combination_with_replacement,
+    "sannolikhet_kombinationer_ej_återläggning": probability_combination_without_replacement,
 }
 
 

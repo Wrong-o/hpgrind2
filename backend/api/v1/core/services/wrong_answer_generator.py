@@ -392,3 +392,40 @@ def generate_linear_equation_choices(equation):
     answers = [equation["solution"]] + list(wrong_answers)[:3]
     random.shuffle(answers)
     return answers
+
+def generate_probability_choices(groups):
+    """
+    Generates choices to probability questions
+    first group is correct answer
+    Args:
+        groups: list of int
+        correct_answer: int 
+    """
+    n = sum(groups)
+    answers = set()
+    attempts = 0
+    if len(groups) == 2:
+        answers.add(f"{groups[0]} / {n}")
+        answers.add(f"{groups[1]} / {n}")
+        answers.add(f"{n} / {groups[0]}")
+        answers.add(f"{n} / {groups[1]}")
+    elif len(groups) == 3:
+        answers.add(f"{groups[0]} / {n}")
+        answers.add(f"{groups[1]} / {n}")
+        answers.add(f"{groups[2]} / {n}")
+        while len(answers) < 4:
+            add_wrong = random.choice(groups)
+            answers.add(f"{n} / {add_wrong}")
+            attempts += 1
+            if attempts > 25:
+                break
+    else:
+        while len(answers) < 4:
+            add_wrong = random.choice(groups)
+            answers.add(f"{add_wrong} / {n}")
+            attempts += 1
+            if attempts > 25:
+                break
+    answers = list(answers)
+    random.shuffle(answers)
+    return answers

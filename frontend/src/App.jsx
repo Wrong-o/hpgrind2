@@ -17,6 +17,7 @@ import WhoAreWe from './pages/WhoAreWe';
 import { CategoryStats } from './pages/CategoryStats';
 import { DatabaseProvider } from './contexts/DatabaseContext';
 import Customization from './pages/Customization';
+import LinearEquationTest from './components/quiz-components/LinearEquationTest';
 
 function App() {
   const isLoggedIn = authStore((state) => state.isLoggedIn);
@@ -85,6 +86,7 @@ function App() {
                     </ProtectedRoute>
                   } />
                   <Route path="/vilka-vi-ar" element={<WhoAreWe />} />
+                  <Route path="/test-linear-equation" element={<LinearEquationTest />} />
                 </Routes>
               </main>
             </div>

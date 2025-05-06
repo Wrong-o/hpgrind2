@@ -234,13 +234,8 @@ const MomentTree = ({ onBack, stats }) => {
           title: 'Sannolikhet',
           description: 'Beräkna sannolikheter',
           children: [{
-            id: 'sannolikhet_återläggning',
-            title: 'Återläggning',
-            description: 'Beräkna sannolikheter med återläggning',
-            children: []
-          }, {
-            id: 'sannolikhet_ejåterläggning',
-            title: 'Ej återläggning',
+            id: 'sannolikhet_enskild',
+            title: 'Enskild sannolikhet',
             description: 'Beräkna sannolikheter utan återläggning',
             children: []
           }, {
