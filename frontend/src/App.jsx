@@ -17,7 +17,11 @@ import WhoAreWe from './pages/WhoAreWe';
 import { CategoryStats } from './pages/CategoryStats';
 import { DatabaseProvider } from './contexts/DatabaseContext';
 import Customization from './pages/Customization';
+<<<<<<< HEAD
 import LinearEquationTest from './components/quiz-components/LinearEquationTest';
+=======
+import NotFound from './pages/NotFound';
+>>>>>>> refs/remotes/origin/main
 
 function App() {
   const isLoggedIn = authStore((state) => state.isLoggedIn);
@@ -86,7 +90,12 @@ function App() {
                     </ProtectedRoute>
                   } />
                   <Route path="/vilka-vi-ar" element={<WhoAreWe />} />
+<<<<<<< HEAD
                   <Route path="/test-linear-equation" element={<LinearEquationTest />} />
+=======
+                  {/* Catch-all route for 404 errors */}
+                  <Route path="*" element={<NotFound />} />
+>>>>>>> refs/remotes/origin/main
                 </Routes>
               </main>
             </div>

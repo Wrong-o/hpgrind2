@@ -12,6 +12,9 @@ from db_setup import engine, get_db
 from fastapi import Depends, FastAPI, HTTPException, requests, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from fastapi.responses import JSONResponse
+from fastapi.exceptions import RequestValidationError
+from starlette.exceptions import HTTPException as StarletteHTTPException
 from pydantic import BaseModel
 from settings import settings
 from sqlalchemy import delete, insert, inspect, select, text, update
@@ -56,6 +59,26 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 app.include_router(router, prefix="/api/v1")
+
+# Custom exception handlers
+@app.exception_handler(StarletteHTTPException)
+async def http_exception_handler(request, exc):
+    if exc.status_code == 404:
+        return JSONResponse(
+            status_code=404,
+            content={"detail": "Resource not found", "path": request.url.path}
+        )
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"detail": str(exc.detail)}
+    )
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request, exc):
+    return JSONResponse(
+        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        content={"detail": "Invalid request parameters", "errors": str(exc)}
+    )
 
 # CORS Configuration - aligned with Nginx configuration
 app.add_middleware(
