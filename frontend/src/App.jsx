@@ -18,10 +18,17 @@ import { CategoryStats } from './pages/CategoryStats';
 import { DatabaseProvider } from './contexts/DatabaseContext';
 import Customization from './pages/Customization';
 <<<<<<< HEAD
+<<<<<<< HEAD
 import NotFound from './pages/NotFound';
 =======
 import LinearEquationTest from './components/quiz-components/LinearEquationTest';
 >>>>>>> db219bff (Added probability, started linear)
+=======
+import LinearEquationTest from './components/quiz-components/LinearEquationTest';
+=======
+import NotFound from './pages/NotFound';
+>>>>>>> refs/remotes/origin/main
+>>>>>>> refs/remotes/origin/main
 
 function App() {
   const isLoggedIn = authStore((state) => state.isLoggedIn);
@@ -91,11 +98,19 @@ function App() {
                   } />
                   <Route path="/vilka-vi-ar" element={<WhoAreWe />} />
 <<<<<<< HEAD
+<<<<<<< HEAD
                   {/* Catch-all route for 404 errors */}
                   <Route path="*" element={<NotFound />} />
 =======
                   <Route path="/test-linear-equation" element={<LinearEquationTest />} />
 >>>>>>> db219bff (Added probability, started linear)
+=======
+                  <Route path="/test-linear-equation" element={<LinearEquationTest />} />
+=======
+                  {/* Catch-all route for 404 errors */}
+                  <Route path="*" element={<NotFound />} />
+>>>>>>> refs/remotes/origin/main
+>>>>>>> refs/remotes/origin/main
                 </Routes>
               </main>
             </div>
