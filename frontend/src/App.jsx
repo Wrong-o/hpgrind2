@@ -17,7 +17,11 @@ import WhoAreWe from './pages/WhoAreWe';
 import { CategoryStats } from './pages/CategoryStats';
 import { DatabaseProvider } from './contexts/DatabaseContext';
 import Customization from './pages/Customization';
+<<<<<<< HEAD
 import NotFound from './pages/NotFound';
+=======
+import LinearEquationTest from './components/quiz-components/LinearEquationTest';
+>>>>>>> db219bff (Added probability, started linear)
 
 function App() {
   const isLoggedIn = authStore((state) => state.isLoggedIn);
@@ -86,8 +90,12 @@ function App() {
                     </ProtectedRoute>
                   } />
                   <Route path="/vilka-vi-ar" element={<WhoAreWe />} />
+<<<<<<< HEAD
                   {/* Catch-all route for 404 errors */}
                   <Route path="*" element={<NotFound />} />
+=======
+                  <Route path="/test-linear-equation" element={<LinearEquationTest />} />
+>>>>>>> db219bff (Added probability, started linear)
                 </Routes>
               </main>
             </div>

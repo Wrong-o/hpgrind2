@@ -314,9 +314,9 @@ def generate_linear_km():
     and returns the values of x, m, k, and y.
     """
     # Generate random values for m, k, and x
-    m = rd.randint(-10, 10)
+    m = rd.randint(-3, 3)
     while m == 0:
-        m = rd.randint(-10, 10)
+        m = rd.randint(-3, 3)
     k = rd.randint(-3, 3)
     x = rd.randint(-5, 5)
     y = k * x + m
@@ -326,3 +326,26 @@ def generate_linear_km():
         "x": x,
         "y": y
     }
+
+def divide_into_groups(n: int, groups: int):
+    """
+    Divides n items into groups
+    Args:
+        n (int): Number of items
+        groups (int): Number of groups
+    Returns:
+        dict: {
+            "groups": list of int,
+        }
+    """
+    if groups > n:
+        raise ValueError("Groups cannot be greater than n")
+    if groups < 2:
+        raise ValueError("Groups must be at least 2")
+    if n < 2:
+        raise ValueError("n must be at least 2")
+    
+    groups = [1] * groups
+    for i in range(n - len(groups)):
+        groups[rd.randint(0, len(groups) - 1)] += 1
+    return groups

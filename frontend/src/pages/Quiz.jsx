@@ -8,6 +8,74 @@ import QuizAssistant from '../components/quiz-components/QuizAssistant';
 import SmallButton from '../components/SmallButton';
 import { ChevronDoubleRightIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 import { useSound } from '../contexts/SoundContext';
+import LinearEquationQuestion from '../components/quiz-components/LinearEquationQuestion';
+import LinearEquationDebug from '../components/quiz-components/LinearEquationDebug';
+
+// Helper function to determine if a question is a linear equation
+const isLinearEquation = (questionObj) => {
+  if (!questionObj) return false;
+  
+  // For debugging in console
+  console.log("Checking if question is linear equation:", questionObj);
+  
+  // Most reliable: Check for graph_data field first
+  if (questionObj?.graph_data) {
+    console.log("Found graph_data, identified as linear equation");
+    return true;
+  }
+  
+  // Check the moment to identify linear equation questions
+  if (questionObj.moment) {
+    if (questionObj.moment.includes('linear') || 
+        questionObj.moment.includes('find_x') || 
+        questionObj.moment.includes('find_y')) {
+      console.log("Identified as linear equation by moment:", questionObj.moment);
+      return true;
+    }
+  }
+  
+  // Check category
+  if (questionObj.category === "Linear Equations") {
+    console.log("Identified as linear equation by category");
+    return true;
+  }
+  
+  // If it's just a string question, use regex to determine
+  if (typeof questionObj === 'string') {
+    // More comprehensive regex patterns to handle different equation formats
+    // For find-x type questions: pattern like "2x + 3 = 5" or "-x - 2 = 10"
+    const findXRegex = /^-?\d*x\s*[+-]\s*\d+\s*=\s*-?\d+$/;
+    const findXRelaxedRegex = /-?\d*x\s*[+-]\s*\d+\s*=\s*-?\d+/;
+    
+    // For find-y type questions
+    const findYRegex = /if\s*x\s*=.*find\s*y/i;
+    
+    const result = findXRegex.test(questionObj) || 
+                  findXRelaxedRegex.test(questionObj) || 
+                  findYRegex.test(questionObj);
+                  
+    console.log("String question check result:", result);
+    return result;
+  }
+  
+  // If it's a question object from the server
+  if (typeof questionObj === 'object' && questionObj.question) {
+    // Check with multiple regex patterns
+    const findXRegex = /^-?\d*x\s*[+-]\s*\d+\s*=\s*-?\d+$/;
+    const findXRelaxedRegex = /-?\d*x\s*[+-]\s*\d+\s*=\s*-?\d+/;
+    const findYRegex = /if\s*x\s*=.*find\s*y/i;
+    
+    const result = findXRegex.test(questionObj.question) || 
+                  findXRelaxedRegex.test(questionObj.question) || 
+                  findYRegex.test(questionObj.question);
+                  
+    console.log("Object question check result:", result);
+    return result;
+  }
+  
+  console.log("Not identified as linear equation");
+  return false;
+};
 
 const Quiz = () => {
   const [selectedAnswer, setSelectedAnswer] = useState(null);
@@ -44,22 +112,31 @@ const Quiz = () => {
       const questionCount = 5;
 
       // List of available moments with equal probabilities
+      // Add linear equation moments to ensure they're included in the mix
       const moments = [
         {
           moment: "basics_fraktioner_dividera",
-          probability: 0.25
+          probability: 0.2
         },
         {
           moment: "basics_fraktioner_multiplicera",
-          probability: 0.25
+          probability: 0.2
         },
         {
           moment: "basics_fraktioner_addera",
-          probability: 0.25
+          probability: 0.2
         },
         {
           moment: "basics_fraktioner_subtrahera",
-          probability: 0.25
+          probability: 0.2
+        },
+        {
+          moment: "linear_find_x", // Add linear equation moment
+          probability: 0.1
+        },
+        {
+          moment: "linear_find_y", // Add linear equation moment
+          probability: 0.1
         }
       ];
       
@@ -87,21 +164,71 @@ const Quiz = () => {
       // Parse all questions at once
       const questionsData = await response.json();
       
+      // Log the questions data to debug
+      console.log("Questions from API:", questionsData);
+      
       // Format the questions
-      const formattedQuestions = questionsData.map((data, i) => ({
-        id: i,
-        question: data.question,
-        options: data.answers.map((answer, index) => ({
-          id: index,
-          latex: answer.toString(),
-          isCorrect: answer.toString() === data.correct_answer
-        })),
-        explanation: data.explanation,
-        subject: data.subject,
-        category: data.category,
-        difficulty: data.difficulty,
-        moment: data.moment // Ensure moment is available
-      }));
+      const formattedQuestions = questionsData.map((data, i) => {
+        console.log(`Processing question ${i}:`, data);
+        
+        // Ensure the graph_data is preserved if it exists
+        let graphData = data.graph_data;
+        
+        // For category "Linear Equations" questions, ensure they have graph_data
+        if (data.category === "Linear Equations" && !graphData) {
+          console.log(`Adding default graph_data for linear equation question ${i}`);
+          
+          // Try to parse the equation to extract parameters
+          let k = 1, m = 0, x = 0, y = 0;
+          
+          if (data.question.includes("find y")) {
+            // For find-y questions, try to extract values
+            const xMatch = data.question.match(/if\s*x\s*=\s*(-?\d+)/i);
+            if (xMatch) {
+              x = parseInt(xMatch[1]);
+            }
+            
+            // Extract k and m from the equation part
+            const eqMatch = data.question.match(/equation:?\s*(-?\d*)x\s*([+-])\s*(\d+)\s*=\s*y/i);
+            if (eqMatch) {
+              k = eqMatch[1] === "-" ? -1 : (parseInt(eqMatch[1]) || 1);
+              m = (eqMatch[2] === "-" ? -1 : 1) * parseInt(eqMatch[3]);
+            }
+            
+            // Calculate y = kx + m
+            y = k * x + m;
+          } else {
+            // For find-x questions, try to extract values
+            const match = data.question.match(/^(-?\d*)x\s*([+-])\s*(\d+)\s*=\s*(-?\d+)$/);
+            if (match) {
+              k = match[1] === "-" ? -1 : (parseInt(match[1]) || 1);
+              m = (match[2] === "-" ? -1 : 1) * parseInt(match[3]);
+              y = parseInt(match[4]);
+              x = (y - m) / k;
+            }
+          }
+          
+          graphData = { k, m, x, y };
+        }
+        
+        return {
+          id: i,
+          question: data.question,
+          options: data.answers.map((answer, index) => ({
+            id: index,
+            latex: answer.toString(),
+            isCorrect: answer.toString() === data.correct_answer
+          })),
+          explanation: data.explanation,
+          subject: data.subject,
+          category: data.category,
+          moment: data.moment,
+          // Pass through graph_data if it exists or we created it
+          ...(graphData && { graph_data: graphData })
+        };
+      });
+      
+      console.log("Formatted questions:", formattedQuestions);
       
       setQuestions(formattedQuestions);
       setLoading(false);
@@ -262,6 +389,14 @@ const Quiz = () => {
 
   return (
     <div className="min-h-screen w-full p-4 bg-gray-100">
+      {/* Add the debug component */}
+      {process.env.NODE_ENV !== 'production' && (
+        <LinearEquationDebug
+          questions={questions}
+          currentIndex={currentQuestionIndex}
+        />
+      )}
+      
       <div className="max-w-[1600px] mx-auto">
         {/* Progress bar and question counter */}
         <div className="mb-6">
@@ -282,7 +417,15 @@ const Quiz = () => {
           <div className="flex-1 min-w-[500px]">
             {/* Question Box */}
             <div className="bg-white rounded-lg p-6 shadow-sm mb-6">
-              <QuestionBox latexString={currentQuestion.question} />
+              {isLinearEquation(currentQuestion) ? (
+                <LinearEquationQuestion 
+                  latexString={currentQuestion.question}
+                  momentType={currentQuestion.moment || ''}
+                  graphData={currentQuestion.graph_data}
+                />
+              ) : (
+                <QuestionBox latexString={currentQuestion.question} />
+              )}
             </div>
 
             {/* Answer grid */}
