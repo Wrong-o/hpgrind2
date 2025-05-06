@@ -7,6 +7,7 @@ import { ChevronDoubleRightIcon, ChevronRightIcon } from '@heroicons/react/24/ou
 import { useSound } from '../contexts/SoundContext';
 import demoQuestions from '../contexts/DemoQuestions.json';
 import DemoStats from './quiz-components/DemoStats';
+import ResultPage from './quiz-components/ResultPage';
 
 const Demo = () => {
   const [selectedAnswer, setSelectedAnswer] = useState(null);
@@ -133,7 +134,9 @@ const Demo = () => {
       correct: isAnswerCorrect,
       timeSpent: timeSpent,
       skipped: skipped,
-      category: question.moment
+      category: question.moment,
+      difficulty: question.difficulty,
+      subject: question.subject
     };
 
     setResults(prev => [...prev, answerResult]);
@@ -183,7 +186,7 @@ const Demo = () => {
   };
   if (quizCompleted) {
     return (
-      <div className="absolute inset-0 z-50 bg-gradient-to-b from-blue-300 to-white">
+      <div className="fixed inset-0 z-50 bg-gradient-to-b from-blue-300 to-white overflow-auto">
         <ResultPage 
           results={results} 
           onReset={() => {
@@ -193,7 +196,14 @@ const Demo = () => {
             setSelectedAnswer(null);
             setShowAnswer(false);
             setSkipped(false);
-            fetchQuestions();
+            setAnsweredMultiplication(0);
+            setAnsweredDivision(0);
+            setAnsweredAddition(0);
+            setAnsweredSubtraction(0);
+            setCorrectMultiplication(0);
+            setCorrectDivision(0);
+            setCorrectAddition(0);
+            setCorrectSubtraction(0);
             startTimeRef.current = Date.now();
           }}
         />

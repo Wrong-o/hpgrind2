@@ -17,6 +17,7 @@ import WhoAreWe from './pages/WhoAreWe';
 import { CategoryStats } from './pages/CategoryStats';
 import { DatabaseProvider } from './contexts/DatabaseContext';
 import Customization from './pages/Customization';
+import NotFound from './pages/NotFound';
 
 function App() {
   const isLoggedIn = authStore((state) => state.isLoggedIn);
@@ -85,6 +86,8 @@ function App() {
                     </ProtectedRoute>
                   } />
                   <Route path="/vilka-vi-ar" element={<WhoAreWe />} />
+                  {/* Catch-all route for 404 errors */}
+                  <Route path="*" element={<NotFound />} />
                 </Routes>
               </main>
             </div>
