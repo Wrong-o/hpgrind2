@@ -16,20 +16,9 @@
     "@mui/icons-material": "^6.4.7",
     "@mui/material": "^6.4.7",
     "axios": "^1.8.3",
-<<<<<<< HEAD
-<<<<<<< HEAD
     "framer-motion": "^12.9.7",
-=======
     "chart.js": "^4.4.9",
     "chartjs-plugin-annotation": "^3.1.0",
->>>>>>> db219bff (Added probability, started linear)
-=======
-    "chart.js": "^4.4.9",
-    "chartjs-plugin-annotation": "^3.1.0",
-=======
-    "framer-motion": "^12.9.7",
->>>>>>> refs/remotes/origin/main
->>>>>>> refs/remotes/origin/main
     "jwt-decode": "^4.0.0",
     "katex": "^0.16.21",
     "plotly.js": "^3.0.1",

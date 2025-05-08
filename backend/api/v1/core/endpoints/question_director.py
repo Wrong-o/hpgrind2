@@ -44,9 +44,8 @@ moment_functions = {
     "ekvationer_linjer_ekvation_y": linear_find_y,
     "sannolikhet_enskild": probability_single,
     "sannolikhet_kombinationer_återläggning": probability_combination_with_replacement,
-    "sannolikhet_kombinationer_ej_återläggning": probability_combination_without_replacement,
+    "sannolikhet_kombinationer_ej_återläggning": probability_combination_without_replacement
 }
-
 
 @router.get("/{moment}{difficulty}", status_code=200)
 async def get_question(moment: str, difficulty: int = 1, db: Session = Depends(get_db)):

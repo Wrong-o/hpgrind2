@@ -143,17 +143,24 @@ def random_fraction(negative_allowed: bool = False, max_numerator: int = 10, max
         "denominator": denominator
     }
 
-def fraction_shortened(max_numerator: int, max_denominator: int):
+def fraction_shortened(max_numerator: int = 1, max_denominator: int = 10, numerator: int = None, denominator: int = None):
     """_summary_
     Shortens to lowest possible denominator
     Returns:
         dict: {numerator: int, denominator: int} - shortened fraction
     """
-    fraction = random_fraction(max_numerator, max_denominator)
-    gcd = math.gcd(fraction["numerator"], fraction["denominator"])
-    return {
-        "numerator": fraction["numerator"] // gcd,
-        "denominator": fraction["denominator"] // gcd
+    if numerator and denominator:
+        gcd = math.gcd(numerator, denominator)
+        return {
+            "numerator": numerator // gcd,
+            "denominator": denominator // gcd
+        }
+    else:
+        fraction = random_fraction(max_numerator, max_denominator)
+        gcd = math.gcd(fraction["numerator"], fraction["denominator"])
+        return {
+            "numerator": fraction["numerator"] // gcd,
+            "denominator": fraction["denominator"] // gcd
     }
 
 def fraction_operations_order(max_numerator: int = 2, max_denominator: int = 2):

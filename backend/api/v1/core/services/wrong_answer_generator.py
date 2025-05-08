@@ -1,6 +1,8 @@
 import random
 import re
 from fractions import Fraction
+from api.v1.core.services.equation_generator import fraction_shortened
+import math
 
 
 def generate_math_choices(expression, correct_answer, decimals=0):
@@ -426,6 +428,71 @@ def generate_probability_choices(groups):
             attempts += 1
             if attempts > 25:
                 break
+    answers = list(answers)
+    random.shuffle(answers)
+    return answers
+
+def generate_probability_combination_with_replacement_choices(groups):
+    """
+    Generates choices to probability combination with replacement questions
+    first group is correct answer
+    Args:
+        groups: list of int
+    """
+    n = sum(groups)
+    answers = set()
+    
+    # Fix 1: Access as dictionary keys instead of attributes
+    alternative = fraction_shortened(numerator=groups[0] * groups[1], denominator=n**2)
+    print(alternative)
+    answers.add(f"\\frac{{{alternative['numerator']}}}{{{alternative['denominator']}}}")
+    
+    alternative = fraction_shortened(numerator=groups[1]**2, denominator=n**2)
+    answers.add(f"\\frac{{{alternative['numerator']}}}{{{alternative['denominator']}}}")
+    
+    alternative = fraction_shortened(numerator=n**2, denominator=groups[0]**2)
+    answers.add(f"\\frac{{{alternative['numerator']}}}{{{alternative['denominator']}}}")
+    
+    alternative = fraction_shortened(numerator=n**2, denominator=groups[1]**2)
+    answers.add(f"\\frac{{{alternative['numerator']}}}{{{alternative['denominator']}}}")
+    
+    answers = list(answers)
+    random.shuffle(answers)
+    return answers
+
+def generate_probability_combination_without_replacement_choices(groups):
+    """
+    Generates choices to probability combination without replacement questions
+    first group is correct answer
+    Args:
+        groups: list of int 
+    """
+    n = sum(groups)
+    answers = set()
+
+    # Calculate first answer with GCD
+    num1 = groups[0] * (groups[0] - 1)
+    den1 = n * (n - 1)
+    gcd1 = math.gcd(num1, den1)
+    answers.add(f"\\frac{{{num1 // gcd1}}}{{{den1 // gcd1}}}")
+
+    # Calculate second answer with GCD
+    num2 = groups[1] * (groups[1] - 1) 
+    den2 = n * (n - 1)
+    gcd2 = math.gcd(num2, den2)
+    answers.add(f"\\frac{{{num2 // gcd2}}}{{{den2 // gcd2}}}")
+
+    # Calculate third answer with GCD (using groups[0])
+    num3 = groups[0] * groups[1]  # Changed from groups[0] * groups[0]
+    den3 = n * (n - 1)  # Changed from n * n
+    gcd3 = math.gcd(num3, den3)
+    answers.add(f"\\frac{{{num3 // gcd3}}}{{{den3 // gcd3}}}")
+
+    # Calculate fourth answer (inverse of correct answer)
+    num4 = den1 // gcd1
+    den4 = num1 // gcd1
+    answers.add(f"\\frac{{{num4}}}{{{den4}}}")
+
     answers = list(answers)
     random.shuffle(answers)
     return answers

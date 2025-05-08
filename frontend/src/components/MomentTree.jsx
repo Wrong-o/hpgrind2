@@ -248,7 +248,7 @@ const MomentTree = ({ onBack, stats }) => {
               description: 'Beräkna kombinationer med återläggning',
               children: []
             }, {
-              id: 'sannolikhet_kombinationer_ejåterläggning',
+              id: 'sannolikhet_kombinationer_ej_återläggning',
               title: 'Ej återläggning',
               description: 'Beräkna kombinationer utan återläggning',
               children: []
