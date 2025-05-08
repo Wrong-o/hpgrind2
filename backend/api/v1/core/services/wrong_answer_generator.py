@@ -405,30 +405,14 @@ def generate_probability_choices(groups):
     """
     n = sum(groups)
     answers = set()
-    attempts = 0
-    if len(groups) == 2:
-        answers.add(f"{groups[0]} / {n}")
-        answers.add(f"{groups[1]} / {n}")
-        answers.add(f"{n} / {groups[0]}")
-        answers.add(f"{n} / {groups[1]}")
-    elif len(groups) == 3:
-        answers.add(f"{groups[0]} / {n}")
-        answers.add(f"{groups[1]} / {n}")
-        answers.add(f"{groups[2]} / {n}")
-        while len(answers) < 4:
-            add_wrong = random.choice(groups)
-            answers.add(f"{n} / {add_wrong}")
-            attempts += 1
-            if attempts > 25:
-                break
-    else:
-        while len(answers) < 4:
-            add_wrong = random.choice(groups)
-            answers.add(f"{add_wrong} / {n}")
-            attempts += 1
-            if attempts > 25:
-                break
-    answers = list(answers)
+    for i in range(len(groups)):
+        shortened = fraction_shortened(numerator=groups[i], denominator=n)
+        answers.add(f"\\frac{{{shortened['numerator']}}}{{{shortened['denominator']}}}")
+        answers.add(f"\\frac{{{shortened['denominator']}}}{{{shortened['numerator']}}}")
+    if len(answers) < 4:
+        answers.add(f"\\frac{{{0}}}{{{1}}}")
+        answers.add(f"\\frac{{{1}}}{{{1}}}")
+    answers = list(answers)[:4]
     random.shuffle(answers)
     return answers
 
@@ -442,9 +426,7 @@ def generate_probability_combination_with_replacement_choices(groups):
     n = sum(groups)
     answers = set()
     
-    # Fix 1: Access as dictionary keys instead of attributes
-    alternative = fraction_shortened(numerator=groups[0] * groups[1], denominator=n**2)
-    print(alternative)
+    alternative = fraction_shortened(numerator=groups[0]**2, denominator=n**2)
     answers.add(f"\\frac{{{alternative['numerator']}}}{{{alternative['denominator']}}}")
     
     alternative = fraction_shortened(numerator=groups[1]**2, denominator=n**2)
@@ -456,7 +438,10 @@ def generate_probability_combination_with_replacement_choices(groups):
     alternative = fraction_shortened(numerator=n**2, denominator=groups[1]**2)
     answers.add(f"\\frac{{{alternative['numerator']}}}{{{alternative['denominator']}}}")
     
-    answers = list(answers)
+    if len(answers) < 4:
+        answers.add(f"\\frac{{{0}}}{{{1}}}")
+        answers.add(f"\\frac{{{1}}}{{{1}}}")
+    answers = list(answers)[:4]
     random.shuffle(answers)
     return answers
 
