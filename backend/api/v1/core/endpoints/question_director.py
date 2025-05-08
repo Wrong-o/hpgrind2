@@ -13,6 +13,7 @@ from api.v1.core.services.kvantitativ.basics.x_equation import x_equation_additi
 from api.v1.core.services.kvantitativ.formula_cheet.mean_mode_median import mean_even, mean_odd, mean_negative, median_even, median_odd, mode
 from api.v1.core.services.kvantitativ.formula_cheet.linear_equation import linear_find_x, linear_find_y
 from api.v1.core.services.kvantitativ.formula_cheet.probability import probability_single, probability_combination_with_replacement, probability_combination_without_replacement
+from api.v1.core.services.kvantitativ.formula_cheet.procent import procent_grundläggande, procent_förändring, procent_ränta
 from typing import List, Optional
 from pydantic import BaseModel, Field, validator
 import asyncio
@@ -44,7 +45,11 @@ moment_functions = {
     "ekvationer_linjer_ekvation_y": linear_find_y,
     "sannolikhet_enskild": probability_single,
     "sannolikhet_kombinationer_återläggning": probability_combination_with_replacement,
-    "sannolikhet_kombinationer_ej_återläggning": probability_combination_without_replacement
+    "sannolikhet_kombinationer_ej_återläggning": probability_combination_without_replacement,
+    "procent_grundläggande": procent_grundläggande,
+    "procent_förändring": procent_förändring,
+    "procent_ränta": procent_ränta,
+
 }
 
 @router.get("/{moment}{difficulty}", status_code=200)

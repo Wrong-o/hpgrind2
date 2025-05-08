@@ -238,7 +238,6 @@ def generate_fraction_shortening_choices(expression, correct_answer, decimals=0)
                      expression['denominator'])
     wrong_answers = []
     
-    # Original unsimplified fraction
     
     # Multiplied by 2 (unsimplified)
     wrong_answers.append(Fraction(fraction.numerator * 2, fraction.denominator * 2))

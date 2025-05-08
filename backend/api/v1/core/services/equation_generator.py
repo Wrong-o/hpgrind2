@@ -356,3 +356,10 @@ def divide_into_groups(n: int, groups: int):
     for i in range(n - len(groups)):
         groups[rd.randint(0, len(groups) - 1)] += 1
     return groups
+
+def generate_percentage_whole_number(base_number: int, percentage: int):
+    """
+    Generates a percentage of a whole number
+    """
+    return base_number * percentage / 100
+
