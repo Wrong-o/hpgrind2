@@ -20,6 +20,8 @@ class User(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=func.now())
     tokens: Mapped[List["Token"]] = relationship(back_populates="user")
     reset_tokens: Mapped[List["PasswordResetToken"]] = relationship(back_populates="user")
+    verification_tokens: Mapped[List["EmailVerificationToken"]] = relationship(back_populates="user")
+    is_verified: Mapped[bool] = mapped_column(Boolean, default=False)
 
 
 class Premium(Base):
@@ -77,6 +79,18 @@ class PasswordResetToken(Base):
     token: Mapped[str] = mapped_column(unique=True, index=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
     user: Mapped["User"] = relationship(back_populates="reset_tokens")
+    used: Mapped[bool] = mapped_column(Boolean, default=False)
+
+class EmailVerificationToken(Base):
+    """Token used for email verification"""
+    __tablename__ = "email_verification_tokens"
+    created: Mapped[datetime] = mapped_column(
+        DateTime,
+        default=lambda: datetime.now(timezone.utc)
+    )
+    token: Mapped[str] = mapped_column(unique=True, index=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    user: Mapped["User"] = relationship(back_populates="verification_tokens")
     used: Mapped[bool] = mapped_column(Boolean, default=False)
 
 class Achievement(Base):

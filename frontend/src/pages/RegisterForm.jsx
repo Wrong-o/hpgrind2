@@ -8,6 +8,8 @@ export default function RegisterForm() {
   const [error, setError] = useState(null);
   const [emailError, setEmailError] = useState([]);
   const [passwordError, setPasswordError] = useState([]);
+  const [registrationSuccess, setRegistrationSuccess] = useState(false);
+  const [registeredEmail, setRegisteredEmail] = useState('');
   const navigate = useNavigate();
 
   const { register, login, isLoading } = authStore();
@@ -26,28 +28,55 @@ export default function RegisterForm() {
 
   function validatePassword() {
     let passwordErrors = [];
-    const regex = /[^a-zA-Z0-9]/;
-    if (password.length <= 8) {
-      passwordErrors.push("Lösenordet måste vara längre än 8 tecken");
-    }
-    if (!regex.test(password)) {
-      passwordErrors.push("Lösenordet måste innehålla ett unikt tecken");
-    }
+    
     if (!password) {
       passwordErrors.push("Skriv in ett lösenord");
+      setPasswordError(passwordErrors);
+      return;
     }
+    
+    if (password.length < 8) {
+      passwordErrors.push("Lösenordet måste vara minst 8 tecken långt");
+    }
+    
+    if (!/[A-Z]/.test(password)) {
+      passwordErrors.push("Lösenordet måste innehålla minst en stor bokstav");
+    }
+    
+    if (!/[a-z]/.test(password)) {
+      passwordErrors.push("Lösenordet måste innehålla minst en liten bokstav");
+    }
+    
+    if (!/\d/.test(password)) {
+      passwordErrors.push("Lösenordet måste innehålla minst en siffra");
+    }
+    
+    if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+      passwordErrors.push("Lösenordet måste innehålla minst ett specialtecken (!@#$%^&*(),.?\":{}|<>)");
+    }
+    
     setPasswordError(passwordErrors);
   }
 
   async function handleSubmit(e) {
     e.preventDefault();
+    
+    // Validate before submitting
     validateEmail();
     validatePassword();
     
-    if (emailError.length > 0 || passwordError.length > 0) {
-      return;
-    }
-
+    // Wait for state updates
+    setTimeout(() => {
+      // Check if there are validation errors
+      if (emailError.length > 0 || passwordError.length > 0) {
+        return;
+      }
+      
+      submitForm();
+    }, 0);
+  }
+  
+  async function submitForm() {
     try {
       const response = await fetch(
         `${import.meta.env.VITE_API_URL}/api/v1/auth/user/create`,
@@ -63,7 +92,11 @@ export default function RegisterForm() {
 
       if (response.status === 201) {
         console.log("Användare skapades");
-        navigate("/login");
+        setRegisteredEmail(email);
+        setError(null);
+        setEmailError([]);
+        setPasswordError([]);
+        setRegistrationSuccess(true);
       } else {
         console.log(data);
         setError(data.detail);
@@ -71,6 +104,50 @@ export default function RegisterForm() {
     } catch (error) {
       setError("Ett fel uppstod vid registrering");
     }
+  }
+
+  if (registrationSuccess) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-md w-full bg-white rounded-lg shadow-md p-8">
+          <div className="text-center">
+            <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100 mb-4">
+              <svg className="h-6 w-6 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Verifiera din email!</h2>
+            <p className="text-gray-600 mb-6">
+              Ett mail har skickats till <span className="font-medium">{registeredEmail}</span>. 
+              Klicka på länken i mailet för att aktivera ditt konto!
+            </p>
+            <div className="border-t border-gray-200 pt-6">
+              <p className="text-sm text-gray-500 mb-4">
+                Om du inte ser mailet i din inkorg, kolla i skräpposten eller försök igen.
+              </p>
+              <div className="flex space-x-4 justify-center">
+                <button
+                  onClick={() => navigate('/login')}
+                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                >
+                  Gå till inloggning
+                </button>
+                <button
+                  onClick={() => {
+                    setRegistrationSuccess(false);
+                    setEmail('');
+                    setPassword('');
+                  }}
+                  className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                >
+                  Tillbaka till registrering
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -98,7 +175,15 @@ export default function RegisterForm() {
                 placeholder="Email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                onBlur={validateEmail}
               />
+              {emailError.length > 0 && (
+                <div className="mt-2 text-sm text-red-600">
+                  {emailError.map((err, index) => (
+                    <p key={index}>{err}</p>
+                  ))}
+                </div>
+              )}
             </div>
             <div>
               <label htmlFor="password" className="sr-only">
@@ -114,18 +199,26 @@ export default function RegisterForm() {
                 placeholder="Lösenord"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                onBlur={validatePassword}
               />
+              {passwordError.length > 0 && (
+                <div className="mt-2 text-sm text-red-600">
+                  {passwordError.map((err, index) => (
+                    <p key={index}>{err}</p>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 
           <div className="text-sm text-gray-600">
             <h3 className="font-medium mb-2">Lösenordskrav:</h3>
             <ul className="list-disc list-inside space-y-1">
-              <li>Minst 8 tecken</li>
-              <li>Minst en stor bokstav</li>
-              <li>Minst en liten bokstav</li>
-              <li>Minst ett nummer</li>
-              <li>Minst ett specialtecken (!@#$%^&*(),.?&quot;:|&lt;&gt;)</li>
+              <li className={password.length >= 8 ? 'text-green-600' : ''}>Minst 8 tecken</li>
+              <li className={/[A-Z]/.test(password) ? 'text-green-600' : ''}>Minst en stor bokstav</li>
+              <li className={/[a-z]/.test(password) ? 'text-green-600' : ''}>Minst en liten bokstav</li>
+              <li className={/\d/.test(password) ? 'text-green-600' : ''}>Minst ett nummer</li>
+              <li className={/[!@#$%^&*(),.?":{}|<>]/.test(password) ? 'text-green-600' : ''}>Minst ett specialtecken (!@#$%^&*(),.?&quot;:|&lt;&gt;)</li>
             </ul>
           </div>
 

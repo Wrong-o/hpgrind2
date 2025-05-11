@@ -361,5 +361,13 @@ def generate_percentage_whole_number(base_number: int, percentage: int):
     """
     Generates a percentage of a whole number
     """
-    return base_number * percentage / 100
+    gdc = math.gcd(100, percentage)
+    divisibility_factor = 100 / gdc
+    multiplier = rd.randint(1, 100 // divisibility_factor)
+    base_number = multiplier * base_number
+    return {
+        "base_number": base_number,
+        "percentage": percentage,
+        "result": base_number * percentage / 100
+    }
 

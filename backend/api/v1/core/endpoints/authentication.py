@@ -1,6 +1,6 @@
 #
 from typing import Annotated
-from api.v1.core.models import User, Token
+from api.v1.core.models import User, Token, EmailVerificationToken
 from api.v1.core.schemas import (
     TokenSchema,
     UserOutSchema,
@@ -18,7 +18,9 @@ from security import (
 from email_service import (
     get_user_by_email,
     generate_password_reset_token,
-    send_password_reset_email
+    send_password_reset_email,
+    generate_verification_token,
+    send_verification_email
 )
 from fastapi import APIRouter, Depends, HTTPException, status, Response
 from fastapi.security import OAuth2PasswordRequestForm
@@ -75,41 +77,38 @@ def register_user(
         ).scalars().first()
 
         if existing_user:
+            logger.warning(f"Email already registered: {user.email}")
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Email already registered"
             )
 
-        # Validate password requirements
-        if len(user.password) < 8:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Lösenordet måste vara minst 8 tecken långt"
-            )
-        if not any(c.islower() for c in user.password):
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Lösenordet måste innehålla minst en liten bokstav"
-            )
-        if not any(c.isupper() for c in user.password):
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Lösenordet måste innehålla minst en stor bokstav"
-            )
-        if not any(c.isdigit() for c in user.password):
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Lösenordet måste innehålla minst en siffra"
-            )
-
+        # Password validation is now handled by the Pydantic model
+        logger.debug(f"Creating user with email: {user.email}")
         hashed_password = hash_password(user.password)
         new_user = User(
             **user.model_dump(exclude={"password"}), hashed_password=hashed_password
         )
         db.add(new_user)
         db.commit()
+        db.refresh(new_user)
+        
+        # Generate verification token and send verification email
+        logger.debug(f"Generating verification token for user ID: {new_user.id}")
+        verification_token = generate_verification_token(new_user.id, db)
+        logger.debug(f"Sending verification email to: {new_user.email}")
+        send_verification_email(new_user.email, verification_token)
+        
+        logger.info(f"User registered successfully: {new_user.email}")
         return new_user
-    except:
+    except ValidationError as ve:
+        logger.error(f"Validation error: {ve}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(ve)
+        )
+    except Exception as e:
+        logger.error(f"Unexpected error during user registration: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Ett oväntat fel uppstod"
@@ -159,3 +158,32 @@ def request_password_reset(
     return {
         "message": "En länk för att återställa ditt lösenord har skickats till din email"
     }
+
+@router.get("/verify-email")
+def verify_email(token: str, db: Session = Depends(get_db)):
+    """
+    Verify a user's email address using the token sent via email
+    """
+    # Find the verification token
+    verification_token = db.execute(
+        select(EmailVerificationToken)
+        .where(EmailVerificationToken.token == token)
+        .where(EmailVerificationToken.used == False)
+    ).scalars().first()
+    
+    if not verification_token:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid or expired verification token"
+        )
+    
+    # Mark the user as verified
+    user = verification_token.user
+    user.is_verified = True
+    
+    # Mark the token as used
+    verification_token.used = True
+    
+    db.commit()
+    
+    return {"message": "Email verified successfully"}

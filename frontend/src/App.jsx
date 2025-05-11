@@ -8,6 +8,7 @@ import { SecondChance } from './components/SecondChance';
 import Header from './components/Header';
 import LandingPage from './pages/LandingPage';
 import PasswordResetRequestPage from './pages/PasswordResetRequestPage';
+import VerifyEmailPage from './pages/VerifyEmailPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import MainMenu from './pages/MainMenu';
 import UserStatsPage from './pages/UserStatsPage';
@@ -65,6 +66,7 @@ function App() {
                       <PasswordResetRequestPage />
                     </ProtectedRoute>
                   } />
+                  <Route path="/verify-email" element={<VerifyEmailPage />} />
                   <Route path="/main-menu" element={
                     <ProtectedRoute isLoggedIn={!isLoggedIn} redirectTo="/">
                       <MainMenu />

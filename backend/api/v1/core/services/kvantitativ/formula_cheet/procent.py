@@ -1,17 +1,15 @@
-import random as rd
+from api.v1.core.services.equation_generator import generate_percentage_whole_number
+
 def procent_grundläggande():
     """
     Generates a basic percentage question
     """
-    result = rd.randint(1, 100)
-    percentage = rd.randint(1, 100)
-    question = f"Vad är {percentage}% av {result}?"
-
+    data = generate_percentage_whole_number()
     return {
         "subject": "kvantitativ",
         "category": "procent",
-        "question": question,
-        "answer": result * percentage / 100
+        "question": f"Vad är {data['percentage']}% av {data['base_number']}?",
+        "answer": data['result']
     }
 def procent_förändring():
     """
