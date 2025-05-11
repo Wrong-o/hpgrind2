@@ -45,10 +45,10 @@ def send_password_reset_email(email: str, token: str):
     Send a password reset email using Postmark API
     """
     print(token)
-    reset_url = f"{settings.FRONTEND_BASE_URL}/password-reset?token={token}"
+    reset_url = f"{settings.FRONTEND_BASE_URL}/password-reset-confirm?token={token}"
 
     message = {
-        "From": "support@example.com",
+        "From": "support@hpgrind.se",
         "To": email,
         "Subject": "Återställ ditt lösenord",
         "HtmlBody": f"""

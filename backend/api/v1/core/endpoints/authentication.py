@@ -1,11 +1,12 @@
 #
 from typing import Annotated
-from api.v1.core.models import User, Token, EmailVerificationToken
+from api.v1.core.models import User, Token, EmailVerificationToken, PasswordResetToken
 from api.v1.core.schemas import (
     TokenSchema,
     UserOutSchema,
     UserRegisterSchema,
-    PasswordResetRequestSchema
+    PasswordResetRequestSchema,
+    PasswordResetConfirmSchema
 )
 from db_setup import get_db
 from security import (
@@ -29,6 +30,8 @@ from sqlalchemy.orm import Session
 from sqlalchemy import delete, select
 from sqlalchemy.exc import IntegrityError
 import logging
+from datetime import datetime, timezone, timedelta
+from settings import settings
 
 router = APIRouter()
 
@@ -167,6 +170,52 @@ def request_password_reset(
     return {
         "message": "En länk för att återställa ditt lösenord har skickats till din email"
     }
+
+@router.post("/password-reset-confirm", status_code=status.HTTP_200_OK)
+def confirm_password_reset(
+    reset_confirm: PasswordResetConfirmSchema,
+    db: Session = Depends(get_db),
+):
+    """
+    Confirm password reset and set new password
+    This endpoint validates the reset token and updates the user's password
+    """
+    # Find the reset token
+    reset_token = db.execute(
+        select(PasswordResetToken)
+        .where(PasswordResetToken.token == reset_confirm.token)
+        .where(PasswordResetToken.used == False)
+    ).scalars().first()
+    
+    if not reset_token:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid or expired password reset token"
+        )
+    
+    # Check if token is expired (based on creation time + expiry minutes)
+    token_age = datetime.now(timezone.utc) - reset_token.created
+    if token_age > timedelta(minutes=int(settings.PASSWORD_RESET_TOKEN_EXPIRE_MINUTES)):
+        # Mark token as used to prevent reuse
+        reset_token.used = True
+        db.commit()
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Password reset token has expired"
+        )
+    
+    # Get the user
+    user = reset_token.user
+    
+    # Update the password
+    user.hashed_password = hash_password(reset_confirm.new_password)
+    
+    # Mark the token as used
+    reset_token.used = True
+    
+    db.commit()
+    
+    return {"message": "Lösenordet har uppdaterats. Du kan nu logga in med ditt nya lösenord."}
 
 @router.get("/verify-email")
 def verify_email(token: str, db: Session = Depends(get_db)):
