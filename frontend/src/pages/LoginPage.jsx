@@ -141,7 +141,7 @@ export const LoginPage = () => {
             setEmailToVerify(email);
             setShowVerificationMessage(true);
           } else {
-            setServerError(data.detail);
+            setServerError("Någonting gick fel, vänligen försök igen senare.");
           }
         } else if (response.status === 400 || response.status === 401) {
           const data = await response.json();

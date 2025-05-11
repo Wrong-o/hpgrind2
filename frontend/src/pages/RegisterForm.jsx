@@ -116,10 +116,9 @@ export default function RegisterForm() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
             </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Verifiera din email!</h2>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Registrering lyckades!</h2>
             <p className="text-gray-600 mb-6">
-              Ett mail har skickats till <span className="font-medium">{registeredEmail}</span>. 
-              Klicka på länken i mailet för att aktivera ditt konto!
+              Ett mail har skickats till dig med en länk för att verifiera ditt konto. Klicka på länken och logga sedan in för att starta!
             </p>
             <div className="border-t border-gray-200 pt-6">
               <p className="text-sm text-gray-500 mb-4">
