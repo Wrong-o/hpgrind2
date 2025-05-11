@@ -12,7 +12,8 @@ import {
 } from 'chart.js';
 import annotationPlugin from 'chartjs-plugin-annotation';
 import 'chart.js/auto';
-import MathJax from 'react-mathjax';
+import 'katex/dist/katex.min.css';
+import { InlineMath, BlockMath } from 'react-katex';
 
 // Register the required Chart.js components
 ChartJS.register(
@@ -585,9 +586,7 @@ const LinearEquationQuestion = ({ latexString, momentType, graphData }) => {
       }}>
         <div style={styles.mathJaxWrapper}>
           {shouldRenderAsLaTeX ? (
-            <MathJax.Provider>
-              <MathJax.Node formula={processedFormulaText} />
-            </MathJax.Provider>
+            <BlockMath math={processedFormulaText} errorColor={'#cc0000'} />
           ) : (
             <div className="py-1 px-2 text-md font-medium" style={{
               lineHeight: '1.4',
