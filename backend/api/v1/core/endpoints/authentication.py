@@ -57,6 +57,15 @@ def login(
             detail="Passwords do not match",
             headers={"WWW-Authenticate": "Bearer"},
         )
+    
+    # Check if the user's email is verified
+    if not user.is_verified:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="email_not_verified",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+        
     access_token = create_database_token(user_id=user.id, db=db)
     return {"access_token": access_token.token, "token_type": "Bearer"}
 
@@ -187,3 +196,41 @@ def verify_email(token: str, db: Session = Depends(get_db)):
     db.commit()
     
     return {"message": "Email verified successfully"}
+
+@router.post("/resend-verification")
+def resend_verification(
+    email: str, 
+    db: Session = Depends(get_db)
+):
+    """
+    Resend verification email to a user
+    """
+    # Find the user by email
+    user = db.execute(select(User).where(User.email == email)).scalars().first()
+    
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+    
+    # Check if the user is already verified
+    if user.is_verified:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="User is already verified"
+        )
+    
+    # Generate a new verification token
+    token = generate_verification_token(user.id, db)
+    
+    # Send the verification email
+    success = send_verification_email(user.email, token)
+    
+    if not success:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to send verification email"
+        )
+    
+    return {"message": "Verification email resent successfully"}
