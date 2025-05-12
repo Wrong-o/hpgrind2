@@ -480,3 +480,49 @@ def generate_probability_combination_without_replacement_choices(groups):
     answers = list(answers)
     random.shuffle(answers)
     return answers
+
+def percentage_whole_number_wrong_answers(base_number, percentage):
+    """
+    Generates wrong answers for percentage whole number questions
+    Args:
+        base_number: int
+        percentage: int
+    """
+    wrong_answers = set()
+    wrong_answers.add(int(base_number * percentage / 100))
+    wrong_answers.add(int(base_number * percentage / 100) - 1)
+    wrong_answers.add(int(base_number * percentage / 100) + 1)
+    wrong_answers.add(int(base_number * percentage / 100) - 2)
+    wrong_answers.add(int(base_number * percentage / 100) + 2)
+    return list(wrong_answers)[:4]
+
+def percentage_change_wrong_answers(base_number, percentage):
+    """
+    Generates wrong answers for percentage change questions
+    Args:
+        base_number: int
+        percentage: int
+    """
+    wrong_answers = set()
+
+    wrong_answers.add(percentage)
+    wrong_answers.add(percentage + 10)
+    wrong_answers.add(percentage - 10)
+    wrong_answers.add(percentage + 20)
+    return list(wrong_answers)[:4]
+
+def percentage_interest_wrong_answers(base_number, interest_rate, time_period):
+    """
+    Generates wrong answers for percentage interest questions
+    Args:
+        base_number: int
+        interest_rate: int
+        time_period: int
+    """
+    print(base_number, interest_rate, time_period)
+    wrong_answers = set()
+    wrong_answers.add(base_number * (1 + interest_rate / 100) ** time_period)
+    wrong_answers.add(base_number * (1 + interest_rate / 100) ** time_period)
+    wrong_answers.add(base_number * (1 + interest_rate / 100) ** (time_period - 1))
+    wrong_answers.add(base_number * (1 + interest_rate / 100) ** (time_period + 1))
+    return list(wrong_answers)[:4]

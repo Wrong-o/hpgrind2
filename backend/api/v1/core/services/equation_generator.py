@@ -357,17 +357,80 @@ def divide_into_groups(n: int, groups: int):
         groups[rd.randint(0, len(groups) - 1)] += 1
     return groups
 
-def generate_percentage_whole_number(base_number: int, percentage: int):
+def generate_percentage_basics(base_number: int = None):
     """
-    Generates a percentage of a whole number
+    Generates a percentage of a whole number, ensuring all results are integers.
+    Only returns simple percentages.
+    Returns:
+        dict: {
+            "base_number": int,
+            "percentage": int,
+            "result": int
+        }
     """
-    gdc = math.gcd(100, percentage)
-    divisibility_factor = 100 / gdc
-    multiplier = rd.randint(1, 100 // divisibility_factor)
-    base_number = multiplier * base_number
-    return {
-        "base_number": base_number,
-        "percentage": percentage,
-        "result": base_number * percentage / 100
-    }
+    while True:
+        # Generate percentage components
+        percent_denominator = rd.choice([4, 10]) # Denominators that easily yield round percentages
+        # Generate numerator ensuring it's less than denominator - 1
+        possible_numerators = list(range(1, percent_denominator - 1))
+        if not possible_numerators: # Safety check, should not trigger with [4, 10]
+            continue
+        percent_numerator = rd.choice(possible_numerators)
 
+        # Calculate percentage (guaranteed integer with denominators 4 or 10)
+        percentage = int(percent_numerator * 100 / percent_denominator)
+
+        # Generate a potential base number within a reasonable range
+        current_base_number = rd.randint(10, 100)
+
+        # Calculate the numerator for the result check
+        result_numerator = current_base_number * percentage
+
+        # Check if the result is a whole number (i.e., numerator is divisible by 100)
+        if result_numerator % 100 == 0:
+            result = result_numerator // 100
+            # Ensure result is positive (should be guaranteed by ranges)
+            if result > 0:
+                # Found a valid combination where all are integers
+                return {
+                    "base_number": current_base_number,
+                    "percentage": percentage,
+                    "result": result
+                }
+        # If result wasn't an integer, the loop continues to find a valid combination
+
+def generate_percentage_interest(base_number: int = None, interest_rate: int = None, time_period: int = None):
+    """
+    Generates a percentage of a whole number, ensuring all results are integers.
+    Only returns simple percentages.
+    Returns:
+        dict: {
+            "base_number": int,
+            "interest_rate": int,
+            "time_period": int,
+            "result": int
+        }
+    """
+    while True:
+        if base_number is None:
+            base_number = generate_percentage_basics()["base_number"]
+        if interest_rate is None:
+            interest_rate = generate_percentage_basics()["percentage"]
+        if time_period is None:
+            time_period = rd.randint(1, 10)
+            
+        # Calculate result and check if it's a whole number
+        result = base_number * (1 + interest_rate / 100) ** time_period
+        if result.is_integer():
+            result = int(result)
+            return {
+                "base_number": base_number,
+                "interest_rate": interest_rate, 
+                "time_period": time_period,
+                "result": result
+            }
+            
+        # If result wasn't a whole number, try again with new random values
+        base_number = None
+        interest_rate = None
+        time_period = None

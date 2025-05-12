@@ -127,7 +127,6 @@ export const LoginPage = () => {
 
         if (response.status === 200) {
           const data = await response.json();
-          console.log("Login successful, will show welcome popup");
           
           // Store token temporarily but don't set it in the store yet
           setTempToken(data.access_token);
@@ -141,16 +140,15 @@ export const LoginPage = () => {
             setEmailToVerify(email);
             setShowVerificationMessage(true);
           } else {
-            setServerError("Någonting gick fel, vänligen försök igen senare.");
+            setServerError("Din e-post är inte verifierad, vänligen verifiera din e-postadress.");
           }
         } else if (response.status === 400 || response.status === 401) {
           const data = await response.json();
           setServerError(data.detail); // Set server error based on the response
         
-          console.log("Login Failed");
         } else {
           setServerError(
-            "An unexpected error occurred. Please try again later."
+            "Någonting gick fel, vänligen försök igen senare."
           );
         }
       } catch (error) {

@@ -106,21 +106,16 @@ def register_user(
         db.refresh(new_user)
         
         # Generate verification token and send verification email
-        logger.debug(f"Generating verification token for user ID: {new_user.id}")
         verification_token = generate_verification_token(new_user.id, db)
-        logger.debug(f"Sending verification email to: {new_user.email}")
         send_verification_email(new_user.email, verification_token)
         
-        logger.info(f"User registered successfully: {new_user.email}")
         return new_user
     except ValidationError as ve:
-        logger.error(f"Validation error: {ve}")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(ve)
         )
     except Exception as e:
-        logger.error(f"Unexpected error during user registration: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Ett oväntat fel uppstod"
