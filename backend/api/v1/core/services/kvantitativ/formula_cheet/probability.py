@@ -22,7 +22,7 @@ def probability_single(difficulty: int = 1, n = None, n_groups = None):
     correct_answer = f"\\frac{{{shortened['numerator']}}}{{{shortened['denominator']}}}"
     choices = generate_probability_choices(groups)
     if n_groups == 2:
-        question = f"En påse innehåller {groups[0]} blå och {groups[1]} röda kulor. Vad är sannolikheten att dra en röd kula?"
+        question = f"En påse innehåller {groups[0]} röda och {groups[1]} blåa kulor. Vad är sannolikheten att dra en röd kula?"
     elif n_groups == 3:
         question = f"En påse innehåller {groups[0]} röda, {groups[1]} blåa och {groups[2]} gröna kulor. Vad är sannolikheten att dra en röd kula?"
     return {

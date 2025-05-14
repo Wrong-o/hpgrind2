@@ -6,7 +6,6 @@ import SmallButton from '../components/SmallButton';
 import { ChevronDoubleRightIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 import { useSound } from '../contexts/SoundContext';
 import LinearEquationQuestion from './quiz-components/LinearEquationQuestion';
-import LinearEquationDebug from './quiz-components/LinearEquationDebug';
 
 const FocusPractice = ({ moment, onClose }) => {
   const [selectedAnswer, setSelectedAnswer] = useState(null);

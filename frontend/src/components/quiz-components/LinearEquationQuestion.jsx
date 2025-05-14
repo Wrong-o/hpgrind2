@@ -233,7 +233,7 @@ const LinearEquationQuestion = ({ latexString, momentType, graphData }) => {
       x = (y - m) / k; // Calculate x value
       
       // If this is a find_x question (based on the moment type)
-      if (momentType === 'find_x' || momentType === 'linear_find_x') {
+      if (momentType === 'find_x' || momentType === 'linear_find_x' || momentType === 'ekvationer_linjer_ekvation_x') {
         isFindX = true;
       }
       
@@ -250,7 +250,7 @@ const LinearEquationQuestion = ({ latexString, momentType, graphData }) => {
     
     // If moment type is "find_x" but we haven't parsed it correctly from the text,
     // try to use sensible defaults or check for "=" in the text
-    if ((momentType === 'find_x' || momentType === 'linear_find_x') && !findXMatch) {
+    if ((momentType === 'find_x' || momentType === 'linear_find_x' || momentType === 'ekvationer_linjer_ekvation_x') && !findXMatch) {
       console.log('Question is find_x type but regex did not match, using alternate method');
       // This is a workaround when regex fails but we know it's a find_x question
       if (allNumbers && allNumbers.length >= 3) {

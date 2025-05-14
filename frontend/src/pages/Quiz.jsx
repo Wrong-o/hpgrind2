@@ -9,7 +9,6 @@ import SmallButton from '../components/SmallButton';
 import { ChevronDoubleRightIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 import { useSound } from '../contexts/SoundContext';
 import LinearEquationQuestion from '../components/quiz-components/LinearEquationQuestion';
-import LinearEquationDebug from '../components/quiz-components/LinearEquationDebug';
 
 // Helper function to determine if a question is a linear equation
 const isLinearEquation = (questionObj) => {
@@ -28,7 +27,8 @@ const isLinearEquation = (questionObj) => {
   if (questionObj.moment) {
     if (questionObj.moment.includes('linear') || 
         questionObj.moment.includes('find_x') || 
-        questionObj.moment.includes('find_y')) {
+        questionObj.moment.includes('find_y') ||
+        questionObj.moment.includes('ekvationer_linjer_ekvation')) {
       console.log("Identified as linear equation by moment:", questionObj.moment);
       return true;
     }
@@ -131,11 +131,11 @@ const Quiz = () => {
           probability: 0.2
         },
         {
-          moment: "linear_find_x", // Add linear equation moment
+          moment: "ekvationer_linjer_ekvation_x",
           probability: 0.1
         },
         {
-          moment: "linear_find_y", // Add linear equation moment
+          moment: "ekvationer_linjer_ekvation_y",
           probability: 0.1
         }
       ];
@@ -265,7 +265,9 @@ const Quiz = () => {
     const answerResult = {
       correct: selectedOption.isCorrect,
       timeSpent: timeSpent,
-      skipped: skipped
+      skipped: skipped,
+      category: question.category || '',
+      moment: question.moment || ''
     };
     
     setResults(prev => [...prev, answerResult]);
@@ -389,14 +391,6 @@ const Quiz = () => {
 
   return (
     <div className="min-h-screen w-full p-4 bg-gray-100">
-      {/* Add the debug component */}
-      {process.env.NODE_ENV !== 'production' && (
-        <LinearEquationDebug
-          questions={questions}
-          currentIndex={currentQuestionIndex}
-        />
-      )}
-      
       <div className="max-w-[1600px] mx-auto">
         {/* Progress bar and question counter */}
         <div className="mb-6">

@@ -1,6 +1,7 @@
 import random as rd
 import math
 
+
 def fraction_whole_number(negative_allowed: bool = False):
     """_summary_
     This function generates a fraction where the numerator is below 100.
@@ -434,3 +435,37 @@ def generate_percentage_interest(base_number: int = None, interest_rate: int = N
         base_number = None
         interest_rate = None
         time_period = None
+
+def generate_square_formula(difficulty: int = 1, operator: str = None):
+
+    """
+    Generates a square formula
+    DEFAULTS CONJUGATE FORMULA UNLESS OPERATOR IS SPECIFIED
+    Args:
+        operator (str): The operator to use in the formula
+    Returns:
+        dict: {
+            "formula": str,
+            "result": int
+        }
+    """
+    int1 = rd.randint(1, 10)
+    int2 = rd.randint(1, 10)
+    while int1 == int2:
+        int2 = rd.randint(1, 10)
+    if operator == "+":
+        formula = f"({int1} + {int2})²"
+        result = (int1 + int2)**2
+    elif operator == "-":
+        formula = f"({int1} - {int2})²"
+        result = (int1 - int2)**2
+    else:
+        formula = f"({int1} + {int2})({int1} - {int2})"
+        result = (int1 + int2) * (int1 - int2)
+    return {
+        "int1": int1,
+        "int2": int2,
+        "operator": operator,
+        "formula": formula,
+        "result": result
+    }

@@ -43,7 +43,7 @@ def linear_find_x(difficulty: int = 1, n = 5):
         "answers": [f"{x}", f"{x + 1}", f"{x + 2}", f"{x + 3}"],
         "correct_answer": f"{x}",
         "explanation": "Video.mp4",
-        "moment": "linear_find_x",  # Explicitly set the moment for frontend detection
+        "moment": "ekvationer_linjer_ekvation_x",  # Changed from "linear_find_x" to match the dictionary key
         # Additional data for graph visualization
         "graph_data": {
             "k": k,
@@ -87,6 +87,7 @@ def linear_find_y(difficulty: int = 1, n = 5):
         "answers": all_answers,
         "correct_answer": str(correct_y),
         "explanation": "Video.mp4",
+        "moment": "ekvationer_linjer_ekvation_y",  # Add moment field to match the dictionary key
         # Additional data for graph visualization
         "graph_data": {
             "k": equation['k'],

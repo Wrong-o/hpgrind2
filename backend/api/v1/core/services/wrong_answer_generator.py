@@ -526,3 +526,29 @@ def percentage_interest_wrong_answers(base_number, interest_rate, time_period):
     wrong_answers.add(base_number * (1 + interest_rate / 100) ** (time_period - 1))
     wrong_answers.add(base_number * (1 + interest_rate / 100) ** (time_period + 1))
     return list(wrong_answers)[:4]
+
+def generate_square_formula_wrong_answers(int1, int2, operator: str = None):
+    """
+    Generates wrong answers for square formula questions
+    Args:
+        int1: int
+        int2: int
+        operator: str
+    """
+    wrong_answers = set()
+    if operator == "+":
+        wrong_answers.add((int1 + int2)**2)
+        wrong_answers.add((int1 - int2)**2)
+        wrong_answers.add(int2**2 + int1**2)
+        wrong_answers.add((int1 + int2) * (int1 - int2))
+    elif operator == "-":
+        wrong_answers.add((int1 - int2)**2)
+        wrong_answers.add((int1 + int2)**2)
+        wrong_answers.add(int2**2 - int1**2)
+        wrong_answers.add((int1 + int2) * (int1 - int2))
+    else:
+        wrong_answers.add((int1 + int2) * (int1 - int2))
+        wrong_answers.add((int1 + int2)**2)
+        wrong_answers.add((int1 - int2)**2)
+        wrong_answers.add(int2**2 + int1**2)
+    return list(wrong_answers)[:4]

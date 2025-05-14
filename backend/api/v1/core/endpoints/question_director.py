@@ -14,6 +14,7 @@ from api.v1.core.services.kvantitativ.formula_cheet.mean_mode_median import mean
 from api.v1.core.services.kvantitativ.formula_cheet.linear_equation import linear_find_x, linear_find_y
 from api.v1.core.services.kvantitativ.formula_cheet.probability import probability_single, probability_combination_with_replacement, probability_combination_without_replacement
 from api.v1.core.services.kvantitativ.formula_cheet.procent import procent_grundläggande, procent_förändring, procent_ränta
+from api.v1.core.services.kvantitativ.formula_cheet.parenthesis import square_formula_positive, square_formula_negative, conjugate_formula
 from typing import List, Optional
 from pydantic import BaseModel, Field, validator
 import asyncio
@@ -49,6 +50,9 @@ moment_functions = {
     "procent_grundläggande": procent_grundläggande,
     "procent_förändring": procent_förändring,
     "procent_ränta": procent_ränta,
+    "ekvationer_paranteser_kvadreringsregeln_positiv": square_formula_positive,
+    "ekvationer_paranteser_kvadreringsregeln_negativ": square_formula_negative,
+    "ekvationer_paranteser_konjugatregeln": conjugate_formula,
 
 }
 

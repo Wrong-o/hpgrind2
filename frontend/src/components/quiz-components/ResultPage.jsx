@@ -22,7 +22,7 @@ const ResultPage = ({ results, onReset }) => {
 
   // Calculate category-specific statistics
   const categoryStats = Object.keys(categories).map(catKey => {
-    const categoryResults = results.filter(r => r.category.includes(catKey));
+    const categoryResults = results.filter(r => r.category && r.category.includes(catKey));
     const totalCatQuestions = categoryResults.length;
     const correctCatAnswers = categoryResults.filter(r => r.correct).length;
     const catAccuracy = totalCatQuestions > 0 ? Math.round((correctCatAnswers / totalCatQuestions) * 100) : 0;
