@@ -4,7 +4,7 @@ import { useDatabase } from '../contexts/DatabaseContext';
 import FocusPractice from './FocusPractice';
 
 const MomentTree = ({ onBack, stats }) => {
-  const { isLoading, error, ProgressColors, getProgressColor } = useDatabase();
+  const { isLoading, error, ProgressColors, getProgressColor, userHistory, getMomentHistory, refreshUserData } = useDatabase();
   
   const initialTree = {
     id: 'root',
@@ -385,43 +385,168 @@ const MomentTree = ({ onBack, stats }) => {
   };
 
   const [tree, setTree] = useState(initialTree);
-  const [currentNode, setCurrentNode] = useState(initialTree);
-  const [path, setPath] = useState([initialTree]);
+  const [currentNode, setCurrentNode] = useState(null);
+  const [path, setPath] = useState([]);
   const [activeVideoInfo, setActiveVideoInfo] = useState({ nodeId: null, url: null });
   const [selectedPracticeNode, setSelectedPracticeNode] = useState(null);
+  const [selectedHistoryNode, setSelectedHistoryNode] = useState(null);
+
+  useEffect(() => {
+    setCurrentNode(initialTree);
+    setPath([initialTree]);
+  }, []);
+
+  // Cache the node ID from path to restore position after refresh
+  const [lastNavigationState, setLastNavigationState] = useState({
+    pathIds: [],
+    currentNodeId: 'root'
+  });
+
+  // Store navigation state when it changes
+  useEffect(() => {
+    if (path.length && currentNode) {
+      setLastNavigationState({
+        pathIds: path.map(node => node.id),
+        currentNodeId: currentNode.id
+      });
+    }
+  }, [path, currentNode]);
+
+  // Helper function to find a node by ID in the tree
+  const findNodeById = (nodeId, searchNode = initialTree) => {
+    if (searchNode.id === nodeId) {
+      return searchNode;
+    }
+    
+    if (searchNode.children) {
+      for (const child of searchNode.children) {
+        const found = findNodeById(nodeId, child);
+        if (found) return found;
+      }
+    }
+    
+    return null;
+  };
+
+  // Restore navigation after tree updates
+  useEffect(() => {
+    // Skip on initial render
+    if (path.length <= 1 || !lastNavigationState.pathIds.length) return;
+    
+    // If the current node ID doesn't match our last navigation state,
+    // try to restore the navigation path
+    if (currentNode?.id !== lastNavigationState.currentNodeId) {
+      console.log('Attempting to restore navigation state...');
+      
+      const restoredPath = [];
+      let success = true;
+      
+      // Rebuild the path using the cached IDs
+      for (const nodeId of lastNavigationState.pathIds) {
+        const node = findNodeById(nodeId);
+        if (node) {
+          restoredPath.push(node);
+        } else {
+          success = false;
+          console.log(`Could not find node with ID: ${nodeId}`);
+          break;
+        }
+      }
+      
+      // If we successfully rebuilt the path, restore it
+      if (success && restoredPath.length) {
+        console.log('Successfully restored navigation path');
+        setPath(restoredPath);
+        setCurrentNode(restoredPath[restoredPath.length - 1]);
+      } else {
+        console.log('Failed to restore navigation path');
+      }
+    }
+  }, [stats, userHistory, lastNavigationState]);
+
+  // Helper to preserve the selected history node after data refresh
+  useEffect(() => {
+    if (!selectedHistoryNode) return;
+    
+    // After stats are refreshed, restore the selected history node
+    const node = findNodeById(selectedHistoryNode.id);
+    if (node) {
+      setSelectedHistoryNode(node);
+    }
+  }, [userHistory]);
 
   const progressMap = useMemo(() => {
     if (!stats) return {};
-
-    const aggregatedStats = {};
-    stats.forEach(item => {
-      const nodeId = item.moment;
-      if (!nodeId) return;
-
-      if (!aggregatedStats[nodeId]) {
-        aggregatedStats[nodeId] = { total_answers: 0, correct: 0 };
-      }
-      aggregatedStats[nodeId].total_answers += item.total_answers || 0;
-      aggregatedStats[nodeId].correct += item.correct || 0;
-    });
-
-    const map = {};
-    for (const nodeId in aggregatedStats) {
-      const nodeStats = aggregatedStats[nodeId];
-      const accuracy = nodeStats.total_answers > 0 ? (nodeStats.correct / nodeStats.total_answers) : 0;
-      map[nodeId] = {
-        attempts: nodeStats.total_answers,
-        accuracy: accuracy,
-        classification: getProgressColor(accuracy)
+    
+    return stats.reduce((map, stat) => {
+      map[stat.moment] = {
+        total_answers: stat.total_answers,
+        correct: stat.correct,
+        accuracy: stat.accuracy,
+        classification: stat.classification
       };
-    }
-    return map;
-  }, [stats, getProgressColor]);
+      return map;
+    }, {});
+  }, [stats]);
 
-  const getNodeProgressColor = (nodeId) => {
+  // Get the color for a specific node based on its progress and children's progress
+  const getNodeProgressColor = (nodeId, node) => {
+    // Direct stats for this node
     const nodeProgress = progressMap[nodeId];
-    if (!nodeProgress || nodeProgress.attempts === 0) return 'transparent';
-    return nodeProgress.classification;
+    
+    // If this node has stats, use its classification
+    if (nodeProgress && nodeProgress.total_answers > 0) {
+      return nodeProgress.classification;
+    }
+    
+    // If this node has no stats but has children, calculate aggregate stats from children
+    if (node && node.children && node.children.length > 0) {
+      let totalAnswers = 0;
+      let totalCorrect = 0;
+      let childClassifications = [];
+      
+      // Function to recursively collect stats from all descendants
+      const collectChildStats = (childNode) => {
+        const childStats = progressMap[childNode.id];
+        if (childStats) {
+          if (childStats.total_answers > 0) {
+            totalAnswers += childStats.total_answers;
+            totalCorrect += childStats.correct;
+          }
+          if (childStats.classification !== ProgressColors.TRANSPARENT) {
+            childClassifications.push(childStats.classification);
+          }
+        }
+        
+        if (childNode.children && childNode.children.length > 0) {
+          childNode.children.forEach(grandchild => collectChildStats(grandchild));
+        }
+      };
+      
+      // Collect stats from all children
+      node.children.forEach(child => collectChildStats(child));
+      
+      // If we found stats in children, determine an aggregate classification
+      if (childClassifications.length > 0) {
+        // If any child is red, the parent is red
+        if (childClassifications.includes(ProgressColors.RED)) {
+          return ProgressColors.RED;
+        }
+        // If any child is yellow and none are red, the parent is yellow
+        if (childClassifications.includes(ProgressColors.YELLOW)) {
+          return ProgressColors.YELLOW;
+        }
+        // If all children with classifications are green, the parent is green
+        if (childClassifications.every(c => c === ProgressColors.GREEN)) {
+          return ProgressColors.GREEN;
+        }
+        // Default to transparent if no clear classification
+        return ProgressColors.TRANSPARENT;
+      }
+    }
+    
+    // If no stats found for node or children, return transparent
+    return ProgressColors.TRANSPARENT;
   };
 
   const countChildColors = (node) => {
@@ -434,7 +559,7 @@ const MomentTree = ({ onBack, stats }) => {
 
     const countNodeColors = (currentNode) => {
       if (!currentNode.children || currentNode.children.length === 0) {
-        const color = getNodeProgressColor(currentNode.id);
+        const color = getNodeProgressColor(currentNode.id, currentNode);
         if (color === 'transparent') counts.gray++;
         else if (color === ProgressColors.RED) counts.red++;
         else if (color === ProgressColors.YELLOW) counts.yellow++;
@@ -448,21 +573,62 @@ const MomentTree = ({ onBack, stats }) => {
     return counts;
   };
 
-  const getNodeStats = (nodeId) => {
-    if (!stats) return null;
-    return stats.find(stat => stat.moment === nodeId);
+  const getNodeStats = (nodeId, node) => {
+    // First check for direct stats
+    if (stats) {
+      const directStat = stats.find(stat => stat.moment === nodeId);
+      if (directStat) return directStat;
+    }
+
+    // If no direct stats but node has children, aggregate from children
+    if (node && node.children && node.children.length > 0) {
+      let totalAnswers = 0;
+      let totalCorrect = 0;
+      
+      // Function to recursively collect stats from all descendants
+      const collectChildStats = (childNode) => {
+        const childStats = progressMap[childNode.id];
+        if (childStats && childStats.total_answers > 0) {
+          totalAnswers += childStats.total_answers;
+          totalCorrect += childStats.correct;
+        }
+        
+        if (childNode.children && childNode.children.length > 0) {
+          childNode.children.forEach(grandchild => collectChildStats(grandchild));
+        }
+      };
+      
+      // Collect stats from all children
+      node.children.forEach(child => collectChildStats(child));
+      
+      // If we found stats in children, return aggregated stats
+      if (totalAnswers > 0) {
+        return {
+          moment: nodeId,
+          total_answers: totalAnswers,
+          correct: totalCorrect,
+          accuracy: totalCorrect / totalAnswers,
+          classification: getProgressColor(totalCorrect / totalAnswers),
+          isAggregated: true // Flag that these are aggregated stats
+        };
+      }
+    }
+    
+    return null;
   };
 
   const navigateToNode = (node) => {
     setCurrentNode(node);
     setPath(prev => [...prev, node]);
     setActiveVideoInfo({ nodeId: null, url: null });
+    // Don't reset selectedHistoryNode when navigating
   };
 
   const navigateToRoot = () => {
     setCurrentNode(initialTree);
     setPath([initialTree]);
     setActiveVideoInfo({ nodeId: null, url: null });
+    // Don't reset selectedHistoryNode when navigating to root
   };
 
   const handleVideoClick = (e, node) => {
@@ -478,41 +644,163 @@ const MomentTree = ({ onBack, stats }) => {
   };
 
   const renderNode = (node, level = 0) => {
-    const progressColor = getNodeProgressColor(node.id);
+    const progressColor = getNodeProgressColor(node.id, node);
     const hasChildren = node.children && node.children.length > 0;
-    const isCurrentParent = currentNode.children && currentNode.children.includes(node);
+    const isCurrentParent = currentNode && currentNode.children && currentNode.children.includes(node);
     const isVideoActive = activeVideoInfo.nodeId === node.id;
+    const isHistoryActive = selectedHistoryNode && selectedHistoryNode.id === node.id;
     
-    const nodeStats = getNodeStats(node.id);
+    const nodeStats = getNodeStats(node.id, node);
     const childColorCounts = hasChildren ? countChildColors(node) : null;
+    const nodeHistory = getMomentHistory ? getMomentHistory(node.id) : [];
+    const hasHistory = nodeHistory && nodeHistory.length > 0;
+
+    // Get performance status text based on color
+    const getPerformanceStatus = (color) => {
+      if (color === ProgressColors.GREEN) return "Snabb och korrekt";
+      if (color === ProgressColors.YELLOW) return "Korrekt men långsam";
+      if (color === ProgressColors.RED) return "Behöver övas mer";
+      return "Inte tillräckligt med data";
+    };
+
+    // Calculate performance metrics for display
+    const getPerformanceMetrics = () => {
+      if (!hasHistory || nodeHistory.length < 1) return null;
+      
+      // Get last 10 questions
+      const recentQuestions = nodeHistory
+        .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+        .slice(0, 10);
+      
+      const correctCount = recentQuestions.filter(q => q.correct).length;
+      const totalTime = recentQuestions.reduce((sum, q) => sum + q.time_spent, 0);
+      const avgTime = recentQuestions.length > 0 ? 
+        Math.round((totalTime / recentQuestions.length) * 10) / 10 : 0;
+      
+      return {
+        recentCount: recentQuestions.length,
+        correctCount,
+        avgTime,
+        isComplete: recentQuestions.length >= 10
+      };
+    };
+
+    const performanceMetrics = getPerformanceMetrics();
 
     return (
       <div
         key={node.id}
         className={`relative p-4 rounded-lg mb-3 transition-all duration-300 
-                  ${isCurrentParent ? 'bg-neutral-300 shadow-lg' : 'bg-gray-50 hover:bg-white/80 hover:shadow-md'}`}
-        onClick={() => hasChildren && navigateToNode(node)} 
-        style={{ cursor: hasChildren ? 'pointer' : 'default' }}
+                  ${isCurrentParent ? 'bg-neutral-300 shadow-lg' : 'bg-gray-50 hover:bg-white/80 hover:shadow-md'}
+                  ${isHistoryActive ? 'ring-2 ring-blue-500' : ''}`}
+        onClick={() => {
+          if (hasChildren) {
+            navigateToNode(node);
+          } else if (!isHistoryActive && hasHistory) {
+            setSelectedHistoryNode(node);
+          }
+        }} 
+        style={{ cursor: (hasChildren || hasHistory) ? 'pointer' : 'default' }}
       >
         <div className="flex items-center mb-2">
-          <div
-            className="w-3 h-3 rounded-full mr-3 flex-shrink-0"
-            style={{ backgroundColor: progressColor }}
-          />
+          {hasChildren && childColorCounts ? (
+            // For parent nodes, show color distribution instead of a single color
+            <div className="flex-shrink-0 mr-3 w-auto flex items-center">
+              <div className="flex flex-col">
+                <div 
+                  className="h-4 flex rounded-full overflow-hidden shadow-sm border border-gray-200" 
+                  style={{ width: '40px' }}
+                  title={`Distribution: ${childColorCounts.gray} ej tränade, ${childColorCounts.red} behöver övas, ${childColorCounts.yellow} långsamma, ${childColorCounts.green} bemästrade`}
+                >
+                  {childColorCounts.gray > 0 && (
+                    <div 
+                      className="h-full bg-gray-300" 
+                      style={{ 
+                        width: `${(childColorCounts.gray / (childColorCounts.gray + childColorCounts.red + childColorCounts.yellow + childColorCounts.green)) * 40}px`,
+                        minWidth: childColorCounts.gray > 0 ? '3px' : '0'
+                      }}
+                    ></div>
+                  )}
+                  {childColorCounts.red > 0 && (
+                    <div 
+                      style={{ 
+                        backgroundColor: ProgressColors.RED,
+                        width: `${(childColorCounts.red / (childColorCounts.gray + childColorCounts.red + childColorCounts.yellow + childColorCounts.green)) * 40}px`,
+                        minWidth: childColorCounts.red > 0 ? '3px' : '0'
+                      }}
+                    ></div>
+                  )}
+                  {childColorCounts.yellow > 0 && (
+                    <div 
+                      style={{ 
+                        backgroundColor: ProgressColors.YELLOW,
+                        width: `${(childColorCounts.yellow / (childColorCounts.gray + childColorCounts.red + childColorCounts.yellow + childColorCounts.green)) * 40}px`,
+                        minWidth: childColorCounts.yellow > 0 ? '3px' : '0'
+                      }}
+                    ></div>
+                  )}
+                  {childColorCounts.green > 0 && (
+                    <div 
+                      style={{ 
+                        backgroundColor: ProgressColors.GREEN,
+                        width: `${(childColorCounts.green / (childColorCounts.gray + childColorCounts.red + childColorCounts.yellow + childColorCounts.green)) * 40}px`,
+                        minWidth: childColorCounts.green > 0 ? '3px' : '0'
+                      }}
+                    ></div>
+                  )}
+                </div>
+                <div className="text-xs text-gray-500 text-center" style={{ fontSize: '9px', marginTop: '1px' }}>
+                  {childColorCounts.gray + childColorCounts.red + childColorCounts.yellow + childColorCounts.green} delmoment
+                </div>
+              </div>
+            </div>
+          ) : (
+            // For leaf nodes, continue showing a single color indicator
+            <div
+              className="w-4 h-4 rounded-full mr-3 flex-shrink-0 transition-all duration-300"
+              style={{ 
+                backgroundColor: progressColor,
+                boxShadow: progressColor !== ProgressColors.TRANSPARENT ? '0 0 6px ' + progressColor : 'none'
+              }}
+            />
+          )}
           <div className="flex-1 min-w-0">
             <h3 className="font-medium text-gray-900 truncate">{node.title}</h3>
             <p className="text-sm text-gray-600">{node.description}</p>
             {nodeStats && (
               <div className="mt-2 text-sm">
-                <p className="text-blue-600">
-                  Svarat på: {nodeStats.total_answers} frågor
-                </p>
+                <div className="flex items-center gap-2">
+                  <span className="text-blue-600">
+                    Svarat på: {nodeStats.total_answers} frågor
+                    {nodeStats.isAggregated && <span className="text-xs text-gray-500 ml-1">(inkl. delmoment)</span>}
+                  </span>
+                  {!hasChildren && progressColor !== ProgressColors.TRANSPARENT && (
+                    <span className="px-2 py-0.5 rounded text-white text-xs font-medium"
+                         style={{ backgroundColor: progressColor }}>
+                      {getPerformanceStatus(progressColor)}
+                    </span>
+                  )}
+                </div>
+                {performanceMetrics && (
+                  <div className="mt-1 text-xs text-gray-600">
+                    {performanceMetrics.isComplete ? 
+                      <p>Senaste 10 frågorna: {performanceMetrics.correctCount} rätt, {performanceMetrics.avgTime}s genomsnitt</p> : 
+                      <p>Senaste {performanceMetrics.recentCount} frågorna: {performanceMetrics.correctCount} rätt</p>
+                    }
+                  </div>
+                )}
                 <p className="text-green-600">
-                  Rätt: {nodeStats.correct} ({Math.round((nodeStats.correct / nodeStats.total_answers) * 100)}%)
+                  Rätt: {nodeStats.correct} ({Math.round((nodeStats.correct / nodeStats.total_answers) * 100)}% totalt)
                 </p>
-                <p className="text-gray-500">
-                  Svårighetsgrad: {nodeStats.difficulty}
-                </p>
+                {hasHistory && (
+                  <p className="text-gray-500 text-xs mt-1 cursor-pointer hover:text-blue-500" 
+                     onClick={(e) => {
+                       e.stopPropagation();
+                       setSelectedHistoryNode(isHistoryActive ? null : node);
+                     }}>
+                    {isHistoryActive ? 'Dölj historik ▲' : 'Visa historik ▼'}
+                  </p>
+                )}
               </div>
             )}
             {hasChildren && childColorCounts && (
@@ -580,9 +868,97 @@ const MomentTree = ({ onBack, stats }) => {
             )}
           </div>
         </div>
+        
+        {/* History panel */}
+        {isHistoryActive && nodeHistory && nodeHistory.length > 0 && (
+          <div className="mt-3 p-3 bg-gray-100 rounded-lg max-h-72 overflow-y-auto">
+            <div className="flex justify-between items-center mb-2">
+              <h4 className="font-medium text-gray-700 text-sm">Historik för detta moment</h4>
+              <button 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  // Prevent resetting navigation by using a local refresh function instead of directly calling refreshUserData
+                  const refreshHistoryData = async () => {
+                    try {
+                      await refreshUserData();
+                    } catch (error) {
+                      console.error("Error refreshing data:", error);
+                    }
+                  };
+                  refreshHistoryData();
+                }}
+                className="text-xs px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+              >
+                Uppdatera
+              </button>
+            </div>
+            <div className="space-y-2">
+              {nodeHistory.slice(0, 10).map((entry, index) => {
+                const date = new Date(entry.timestamp);
+                const formattedDate = `${date.toLocaleDateString()} ${date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
+                
+                return (
+                  <div key={index} className="flex items-center gap-2 text-sm p-2 bg-white rounded border border-gray-200">
+                    <div 
+                      className={`w-3 h-3 rounded-full ${entry.correct ? 'bg-green-500' : 'bg-red-500'}`}
+                      title={entry.correct ? 'Rätt svar' : 'Fel svar'}
+                    />
+                    <div className="flex-1">
+                      <div className="flex justify-between">
+                        <p className="text-gray-700">
+                          {entry.skipped ? 'Hoppade över' : (entry.correct ? 'Rätt svar' : 'Fel svar')}
+                        </p>
+                        <p className="text-gray-500 text-xs">{formattedDate}</p>
+                      </div>
+                      <p className="text-xs text-gray-500">Tid: {entry.time_spent} sekunder • Svårighetsgrad: {entry.difficulty}</p>
+                    </div>
+                  </div>
+                );
+              })}
+              {nodeHistory.length > 10 && (
+                <p className="text-xs text-center text-gray-500 mt-2">
+                  Visar de 10 senaste av totalt {nodeHistory.length} aktiviteter
+                </p>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     );
   };
+
+  // Count all nodes by color status across the entire tree
+  const countAllNodeColors = () => {
+    const counts = {
+      gray: 0,
+      red: 0,
+      yellow: 0,
+      green: 0,
+      total: 0
+    };
+
+    const countNodesRecursively = (node) => {
+      // Only count leaf nodes (nodes without children)
+      if (!node.children || node.children.length === 0) {
+        counts.total++;
+        const color = getNodeProgressColor(node.id, node);
+        if (color === ProgressColors.TRANSPARENT) counts.gray++;
+        else if (color === ProgressColors.RED) counts.red++;
+        else if (color === ProgressColors.YELLOW) counts.yellow++;
+        else if (color === ProgressColors.GREEN) counts.green++;
+      } else {
+        // Recursively count children
+        node.children.forEach(child => countNodesRecursively(child));
+      }
+    };
+
+    // Start counting from the root
+    countNodesRecursively(initialTree);
+    return counts;
+  };
+
+  // Get the total counts
+  const totalColorCounts = useMemo(() => countAllNodeColors(), [stats, userHistory]);
 
   if (isLoading) {
     return (
@@ -617,116 +993,141 @@ const MomentTree = ({ onBack, stats }) => {
             <div className="flex items-center overflow-x-auto py-2 flex-1 whitespace-nowrap">
               <button
                 onClick={navigateToRoot}
-                className="px-3 py-1 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors flex-shrink-0"
-                aria-label="Gå till Hem"
+                className="text-blue-600 hover:text-blue-800 font-medium"
               >
-                Hem
+                Totala skills
               </button>
-
-              {path.slice(1).map((pathNode, index) => (
-                <div key={pathNode.id} className="flex items-center flex-shrink-0">
-                  <span className="mx-2 text-gray-400">/</span>
-                  <button
+              
+              {path.slice(1).map((node, i) => (
+                <React.Fragment key={node.id}>
+                  <svg className="w-4 h-4 mx-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                  <button 
                     onClick={() => {
-                      const newPath = path.slice(0, index + 2);
+                      const newPath = path.slice(0, i + 2);
                       setPath(newPath);
                       setCurrentNode(newPath[newPath.length - 1]);
-                      setActiveVideoInfo({ nodeId: null, url: null });
                     }}
-                    className="px-3 py-1 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors"
-                    aria-label={`Gå till ${pathNode.title}`}
+                    className="text-blue-600 hover:text-blue-800 font-medium"
                   >
-                    {pathNode.title}
+                    {node.title}
                   </button>
-                </div>
+                </React.Fragment>
               ))}
             </div>
           </div>
 
-          <div className="mb-6">
-            <h2 className="text-2xl font-bold mb-2">{currentNode.title}</h2>
-            <p className="text-gray-600">{currentNode.description}</p>
+          {/* Total Tally Summary */}
+          <div className="mb-6 bg-gray-50 rounded-lg p-4 shadow-sm">
+            <h3 className="text-lg font-bold text-gray-800 mb-3">Total Framsteg</h3>
+            <div className="grid grid-cols-5 gap-3">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-gray-700">{totalColorCounts.total}</div>
+                <div className="text-xs text-gray-500">Totalt</div>
+              </div>
+              <div className="text-center">
+                <div className="inline-flex items-center justify-center">
+                  <div className="w-3 h-3 rounded-full bg-gray-300 mr-1"></div>
+                  <div className="text-2xl font-bold text-gray-500">{totalColorCounts.gray}</div>
+                </div>
+                <div className="text-xs text-gray-500">Ej tränade</div>
+              </div>
+              <div className="text-center">
+                <div className="inline-flex items-center justify-center">
+                  <div className="w-3 h-3 rounded-full mr-1" style={{ backgroundColor: ProgressColors.RED }}></div>
+                  <div className="text-2xl font-bold" style={{ color: ProgressColors.RED }}>{totalColorCounts.red}</div>
+                </div>
+                <div className="text-xs text-gray-500">Behöver övas</div>
+              </div>
+              <div className="text-center">
+                <div className="inline-flex items-center justify-center">
+                  <div className="w-3 h-3 rounded-full mr-1" style={{ backgroundColor: ProgressColors.YELLOW }}></div>
+                  <div className="text-2xl font-bold" style={{ color: ProgressColors.YELLOW }}>{totalColorCounts.yellow}</div>
+                </div>
+                <div className="text-xs text-gray-500">Långsamma</div>
+              </div>
+              <div className="text-center">
+                <div className="inline-flex items-center justify-center">
+                  <div className="w-3 h-3 rounded-full mr-1" style={{ backgroundColor: ProgressColors.GREEN }}></div>
+                  <div className="text-2xl font-bold" style={{ color: ProgressColors.GREEN }}>{totalColorCounts.green}</div>
+                </div>
+                <div className="text-xs text-gray-500">Bemästrade</div>
+              </div>
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-2 mt-3">
+              <div className="flex h-full rounded-full overflow-hidden">
+                <div className="bg-gray-300 h-full" style={{ width: `${(totalColorCounts.gray / totalColorCounts.total) * 100}%` }}></div>
+                <div style={{ backgroundColor: ProgressColors.RED, width: `${(totalColorCounts.red / totalColorCounts.total) * 100}%` }}></div>
+                <div style={{ backgroundColor: ProgressColors.YELLOW, width: `${(totalColorCounts.yellow / totalColorCounts.total) * 100}%` }}></div>
+                <div style={{ backgroundColor: ProgressColors.GREEN, width: `${(totalColorCounts.green / totalColorCounts.total) * 100}%` }}></div>
+              </div>
+            </div>
           </div>
 
-          <div className="space-y-2">
-            {currentNode.children && currentNode.children.length > 0 ? (
-              currentNode.children.map(childNode => renderNode(childNode))
-            ) : (
-              <div className="p-6 bg-gray-100 rounded-lg text-center border border-gray-200">
-                <p className="text-lg text-gray-700">
-                  Det här är en specifik skill.
-                </p>
-                <div className="mt-4 flex justify-center space-x-3">
-                  <button
-                    onClick={() => setSelectedPracticeNode(currentNode)}
-                    className="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
-                    aria-label={`räna ${currentNode.title}`}
-                  >
-                    Börja träna
-                  </button>
-                  {currentNode.videoUrl && (
-                    <button
-                      onClick={(e) => handleVideoClick(e, currentNode)}
-                      className={`px-6 py-2 text-white rounded-lg transition-colors 
-                                ${activeVideoInfo.nodeId === currentNode.id ? 'bg-red-500 hover:bg-red-600' : 'bg-blue-500 hover:bg-blue-600'}`}
-                      aria-label={`${activeVideoInfo.nodeId === currentNode.id ? 'Stäng' : 'Visa'} video för ${currentNode.title}`}
-                    >
-                      {activeVideoInfo.nodeId === currentNode.id ? 'Stäng Video' : 'Visa Video'}
-                    </button>
-                  )}
+          <div className="space-y-4">
+            <div className="mb-6">
+              <h2 className="text-xl font-bold text-gray-900">{currentNode?.title || 'Loading...'}</h2>
+              <p className="text-gray-600">{currentNode?.description}</p>
+            </div>
+            
+            <div className="mb-4 flex flex-col gap-2">
+              <h3 className="text-sm font-semibold text-gray-700 mb-1">Färgkodning (baserat på senaste 10 frågorna):</h3>
+              <div className="flex flex-wrap gap-4">
+                <div className="flex items-center">
+                  <div className="w-3 h-3 rounded-full bg-gray-300 mr-1"></div>
+                  <span className="text-xs text-gray-600">Mindre än 10 frågor</span>
                 </div>
-                {activeVideoInfo.nodeId === currentNode.id && (
-                  <div className="mt-4 inline-block relative w-full max-w-md mx-auto"> 
-                    <VideoPlayer 
-                      src={activeVideoInfo.url} 
-                      controls 
-                      autoPlay
-                      width="100%" 
-                      className="rounded-md overflow-hidden shadow-lg"
-                    />
-                  </div>
-                )}
+                <div className="flex items-center">
+                  <div className="w-3 h-3 rounded-full mr-1" style={{ backgroundColor: ProgressColors.RED }}></div>
+                  <span className="text-xs text-gray-600">Mindre än 8 rätt svar</span>
+                </div>
+                <div className="flex items-center">
+                  <div className="w-3 h-3 rounded-full mr-1" style={{ backgroundColor: ProgressColors.YELLOW }}></div>
+                  <span className="text-xs text-gray-600">Minst 8 rätt, genomsnitt över 15s</span>
+                </div>
+                <div className="flex items-center">
+                  <div className="w-3 h-3 rounded-full mr-1" style={{ backgroundColor: ProgressColors.GREEN }}></div>
+                  <span className="text-xs text-gray-600">Minst 8 rätt, genomsnitt under 15s</span>
+                </div>
               </div>
-            )}
+            </div>
+            
+            {currentNode && currentNode.children && currentNode.children.map(node => renderNode(node))}
           </div>
         </div>
       </div>
 
-      {/* Practice Area */}
-      {selectedPracticeNode ? (
-        <div className="w-1/2 h-screen sticky top-0 bg-white shadow-lg border-l border-gray-200">
-          <FocusPractice 
-            key={selectedPracticeNode.id}
-            moment={selectedPracticeNode.id}
-            onClose={() => setSelectedPracticeNode(null)}
-          />
-        </div>
-      ) : (
-        <div className="w-1/2 h-screen sticky top-0 bg-gray-50 flex items-center justify-center">
-          <div className="text-center text-gray-500">
-            <p>Välj en skill att träna på</p>
-          </div>
-        </div>
-      )}
-
-      {/* Video player */}
-      {activeVideoInfo.nodeId && activeVideoInfo.url && (
-        <div className="fixed top-28 right-10">
-          <div className="w-[400px] rounded-lg overflow-hidden shadow-lg bg-white">
-            <VideoPlayer src={activeVideoInfo.url}
-              controls={true}
-              autoPlay={true}
-              loop={true}
-            />
-            <button 
+      {/* Right Panel - Video or Practice */}
+      <div className="w-1/2 bg-gray-100 p-4 overflow-y-auto">
+        {activeVideoInfo.nodeId && activeVideoInfo.url ? (
+          <div className="p-4">
+            <VideoPlayer src={activeVideoInfo.url} />
+            <button
               onClick={() => setActiveVideoInfo({ nodeId: null, url: null })}
-              className="w-full px-4 py-2 bg-gray-200 hover:bg-gray-300 transition-colors"
+              className="mt-4 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
             >
               Stäng video
             </button>
           </div>
-        </div>
-      )}
+        ) : selectedPracticeNode ? (
+          <FocusPractice 
+            moment={selectedPracticeNode.id} 
+            onClose={() => setSelectedPracticeNode(null)} 
+          />
+        ) : (
+          <div className="flex items-center justify-center h-full">
+            <div className="text-center p-8 max-w-md">
+              <h3 className="text-xl font-bold text-gray-800 mb-2">
+                Välj en aktivitet
+              </h3>
+              <p className="text-gray-600">
+                Klicka på en video eller "Tre snabba" för att öva på ett specifikt moment.
+              </p>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

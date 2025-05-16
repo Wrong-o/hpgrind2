@@ -5,9 +5,12 @@ import QuizAssistant from '../components/quiz-components/QuizAssistant';
 import SmallButton from '../components/SmallButton';
 import { ChevronDoubleRightIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 import { useSound } from '../contexts/SoundContext';
+import { useDatabase } from '../contexts/DatabaseContext';
+import authStore from '../store/authStore';
 import LinearEquationQuestion from './quiz-components/LinearEquationQuestion';
 
 const FocusPractice = ({ moment, onClose }) => {
+  const { refreshUserData } = useDatabase();
   const [selectedAnswer, setSelectedAnswer] = useState(null);
   const [showAnswer, setShowAnswer] = useState(false);
   const [questions, setQuestions] = useState([]);
@@ -229,6 +232,44 @@ const FocusPractice = ({ moment, onClose }) => {
     };
 
     setResults(prev => [...prev, answerResult]);
+    
+    // Submit answer to backend if user is logged in
+    if (authStore.getState().isLoggedIn) {
+      try {
+        const answerData = {
+          subject: question.subject || 'Mathematics',
+          category: question.category || question.moment,
+          moment: question.moment,
+          difficulty: question.difficulty || 2,
+          skipped: skipped,
+          time_spent: timeSpent,
+          correct: isAnswerCorrect,
+        };
+        
+        console.log('Submitting focus practice answer:', answerData);
+        
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/v1/general/submit_quiz_answer`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${authStore.getState().token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(answerData)
+        });
+        
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({ detail: 'Unknown error' }));
+          console.error('Error submitting focus practice answer:', response.status, errorData);
+        } else {
+          console.log('Focus practice answer submitted successfully');
+          
+          // Refresh user history after submitting the answer
+          setTimeout(() => refreshUserData(), 500);
+        }
+      } catch (error) {
+        console.error('Error in focus practice answer submission:', error);
+      }
+    }
   };
 
   const playSkipSound = useCallback(() => {
@@ -264,6 +305,10 @@ const FocusPractice = ({ moment, onClose }) => {
     if (currentQuestionIndex < questions.length - 1) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
     } else {
+      // Quiz completed - refresh stats
+      if (authStore.getState().isLoggedIn) {
+        setTimeout(() => refreshUserData(), 1000); // Refresh all user data after a short delay
+      }
       setQuizCompleted(true);
     }
   };
@@ -396,14 +441,6 @@ const FocusPractice = ({ moment, onClose }) => {
 
   return (
     <div className="min-h-screen w-full p-4 bg-gray-50">
-      {/* Add the debug component */}
-      {process.env.NODE_ENV !== 'production' && (
-        <LinearEquationDebug
-          questions={questions}
-          currentIndex={currentQuestionIndex}
-        />
-      )}
-      
       <div className="max-w-[1600px] mx-auto">
         {/* Progress bar and question counter */}
         <div className="mb-6">

@@ -8,6 +8,7 @@ import QuizAssistant from '../components/quiz-components/QuizAssistant';
 import SmallButton from '../components/SmallButton';
 import { ChevronDoubleRightIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 import { useSound } from '../contexts/SoundContext';
+import { useDatabase } from '../contexts/DatabaseContext';
 import LinearEquationQuestion from '../components/quiz-components/LinearEquationQuestion';
 
 // Helper function to determine if a question is a linear equation
@@ -78,6 +79,7 @@ const isLinearEquation = (questionObj) => {
 };
 
 const Quiz = () => {
+  const { refreshUserData } = useDatabase();
   const [selectedAnswer, setSelectedAnswer] = useState(null);
   const [showAnswer, setShowAnswer] = useState(false);
   const [questions, setQuestions] = useState([]);
@@ -220,9 +222,10 @@ const Quiz = () => {
             isCorrect: answer.toString() === data.correct_answer
           })),
           explanation: data.explanation,
-          subject: data.subject,
-          category: data.category,
-          moment: data.moment,
+          subject: data.subject || "Mathematics", // Default subject if not provided
+          category: data.category || "General", // Default category if not provided
+          moment: data.moment || "",
+          difficulty: data.difficulty || 2, // Store difficulty, default to 2 if not provided
           // Pass through graph_data if it exists or we created it
           ...(graphData && { graph_data: graphData })
         };
@@ -279,15 +282,16 @@ const Quiz = () => {
     
     try {
       const answerData = {
-        token: authStore.getState().token,
         subject: question.subject,
         category: question.category,
         moment: question.moment,
-        difficulty: question.difficulty,
+        difficulty: question.difficulty || 2, // Use default difficulty if not set
         skipped: skipped,
         time_spent: timeSpent,
         correct: selectedOption.isCorrect,
       };
+      
+      console.log('Submitting answer data:', answerData); // Add logging to debug
       
       const response = await fetch(`${import.meta.env.VITE_API_URL}/api/v1/general/submit_quiz_answer`, {
         method: 'POST',
@@ -298,8 +302,20 @@ const Quiz = () => {
         body: JSON.stringify(answerData)
       });
       
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ detail: 'Unknown error' }));
+        console.error('Error submitting answer:', response.status, errorData);
+        throw new Error(`Failed to submit answer: ${errorData.detail || response.statusText}`);
+      }
+      
       const result = await response.json();
+      console.log('Answer submission result:', result);
+      
+      // Refresh user history after submitting the answer
+      // Wait a short delay to allow the server to process the submission
+      setTimeout(() => refreshUserData(), 500);
     } catch (error) {
+      console.error('Error in answer submission:', error);
     }
   };
 
@@ -336,6 +352,10 @@ const Quiz = () => {
     if (currentQuestionIndex < questions.length - 1) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
     } else {
+      // Quiz completed - refresh stats
+      if (authStore.getState().isLoggedIn) {
+        setTimeout(() => refreshUserData(), 1000); // Refresh all user data after a short delay
+      }
       setQuizCompleted(true);
     }
   };
