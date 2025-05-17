@@ -15,6 +15,7 @@ from api.v1.core.services.kvantitativ.formula_cheet.linear_equation import linea
 from api.v1.core.services.kvantitativ.formula_cheet.probability import probability_single, probability_combination_with_replacement, probability_combination_without_replacement
 from api.v1.core.services.kvantitativ.formula_cheet.procent import procent_grundläggande, procent_förändring, procent_ränta
 from api.v1.core.services.kvantitativ.formula_cheet.parenthesis import square_formula_positive, square_formula_negative, conjugate_formula
+from api.v1.core.services.kvantitativ.formula_cheet.triangles import triangle_sum_of_angles, triangle_pythagoras, triangle_area
 from typing import List, Optional
 from pydantic import BaseModel, Field, validator
 import asyncio
@@ -53,7 +54,9 @@ moment_functions = {
     "ekvationer_paranteser_kvadreringsregeln_positiv": square_formula_positive,
     "ekvationer_paranteser_kvadreringsregeln_negativ": square_formula_negative,
     "ekvationer_paranteser_konjugatregeln": conjugate_formula,
-
+    "trianglar_vinkelsumma": triangle_sum_of_angles,
+    "trianglar_pythagoras": triangle_pythagoras,
+    "trianglar_area": triangle_area,
 }
 
 @router.get("/{moment}{difficulty}", status_code=200)

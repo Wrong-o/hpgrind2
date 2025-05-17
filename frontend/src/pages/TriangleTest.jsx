@@ -9,7 +9,7 @@ const TriangleTest = () => {
     current: 'rightAngled',
     configs: {
       rightAngled: {
-        points: [[0, 0], [4, 0], [0, 3]],
+        points: [[0, 0], [3, 0], [0, 4]],
         labels: {
           point0: 'A',
           point1: 'B',

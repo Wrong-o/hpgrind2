@@ -122,31 +122,44 @@ const TriangleQuestion = ({ questionText, triangleData }) => {
     // Handle numerical precision issues
     const clampedCosAngle = Math.max(-1, Math.min(1, cosAngle));
     
+    // Convert to degrees and round to the nearest integer
     return Math.round(Math.acos(clampedCosAngle) * (180 / Math.PI));
+  };
+  
+  // Check for right angle using the Pythagorean theorem
+  const isRightAngle = (sides, tolerance = 0.01) => {
+    // Sort sides to put hypotenuse last (largest side)
+    const sortedSides = [...sides].sort((a, b) => a - b);
+    
+    // Check if a² + b² = c² (Pythagorean theorem)
+    const a2b2 = Math.pow(sortedSides[0], 2) + Math.pow(sortedSides[1], 2);
+    const c2 = Math.pow(sortedSides[2], 2);
+    
+    // Return true if the difference is within tolerance
+    return Math.abs(a2b2 - c2) / c2 < tolerance;
   };
   
   // Determine triangle type based on sides and angles
   const determineTriangleType = (sides, angles) => {
-    // Check if it's equilateral
+    // Check if it's a right-angled triangle first using the Pythagorean theorem
+    if (isRightAngle(sides)) {
+      return 'right-angled';
+    }
+    
+    // Check if it's equilateral (all sides equal)
     const isEquilateral = sides.every(side => 
       Math.abs(side - sides[0]) < 0.01
     );
     
     if (isEquilateral) return 'equilateral';
     
-    // Check if it's isosceles
+    // Check if it's isosceles (at least two sides equal)
     const isIsosceles = (
       Math.abs(sides[0] - sides[1]) < 0.01 ||
       Math.abs(sides[1] - sides[2]) < 0.01 ||
       Math.abs(sides[0] - sides[2]) < 0.01
     );
     
-    // Check if it's right-angled
-    const isRightAngled = angles.some(angle => 
-      Math.abs(angle - 90) < 0.1
-    );
-    
-    if (isRightAngled) return 'right-angled';
     if (isIsosceles) return 'isosceles';
     
     return 'scalene';
@@ -226,15 +239,58 @@ const TriangleQuestion = ({ questionText, triangleData }) => {
       calculateDistance(triangleData.points[0], triangleData.points[1])
     ];
     
+    // Determine triangle type - do this before calculating angles
+    // so we can adjust angles based on type
+    const type = triangleData.type || determineTriangleType(sides, []);
+    
     // Calculate angles
-    const angles = [
+    let angles = [
       calculateAngle(triangleData.points[1], triangleData.points[0], triangleData.points[2]),
       calculateAngle(triangleData.points[0], triangleData.points[1], triangleData.points[2]),
       calculateAngle(triangleData.points[0], triangleData.points[2], triangleData.points[1])
     ];
     
-    // Determine triangle type
-    const type = triangleData.type || determineTriangleType(sides, angles);
+    // Special handling for right-angled triangles
+    if (type === 'right-angled') {
+      // Find which angle is closest to 90 degrees
+      let rightAngleIndex = 0;
+      let minDiff = Math.abs(angles[0] - 90);
+      
+      for (let i = 1; i < 3; i++) {
+        const diff = Math.abs(angles[i] - 90);
+        if (diff < minDiff) {
+          minDiff = diff;
+          rightAngleIndex = i;
+        }
+      }
+      
+      // Set the right angle to exactly 90 degrees
+      angles[rightAngleIndex] = 90;
+      
+      // Calculate the other two angles to ensure they sum to 90
+      const remainingSum = angles[(rightAngleIndex + 1) % 3] + angles[(rightAngleIndex + 2) % 3];
+      const scaleFactor = 90 / remainingSum;
+      
+      angles[(rightAngleIndex + 1) % 3] = Math.round(angles[(rightAngleIndex + 1) % 3] * scaleFactor);
+      angles[(rightAngleIndex + 2) % 3] = 90 - angles[(rightAngleIndex + 1) % 3];
+    } else {
+      // For non-right triangles, normalize angles to sum to 180 degrees
+      const angleSum = angles.reduce((sum, angle) => sum + angle, 0);
+      if (Math.abs(angleSum - 180) > 0.1) {
+        // Scale all angles proportionally to sum to 180
+        const scaleFactor = 180 / angleSum;
+        for (let i = 0; i < 3; i++) {
+          angles[i] = Math.round(angles[i] * scaleFactor);
+        }
+        
+        // Ensure exactly 180 by adjusting the largest angle if needed
+        const correctedSum = angles.reduce((sum, angle) => sum + angle, 0);
+        if (correctedSum !== 180) {
+          const largestAngleIndex = angles.indexOf(Math.max(...angles));
+          angles[largestAngleIndex] += (180 - correctedSum);
+        }
+      }
+    }
     
     // Update triangle info state
     setTriangleInfo({
@@ -341,7 +397,7 @@ const TriangleQuestion = ({ questionText, triangleData }) => {
       ctx.beginPath();
       
       // For right angle, draw a square instead of an arc
-      if (Math.abs(angles[i] - 90) < 0.1) {
+      if (angles[i] === 90) {
         // Calculate points for small square to represent right angle
         const sqSize = 10;
         const mid1x = v1x / v1Len * sqSize + vertex[0];
@@ -372,13 +428,16 @@ const TriangleQuestion = ({ questionText, triangleData }) => {
         bisectorAngle += Math.PI;
       }
       
+      // Make sure we're displaying the correct angles that sum to 180
+      const angleDisplay = triangleInfo.angles[i];
+      
       const labelRadius = arcRadius * 1.5;
       const labelX = vertex[0] + Math.cos(bisectorAngle) * labelRadius;
       const labelY = vertex[1] - Math.sin(bisectorAngle) * labelRadius;
       
       ctx.font = '12px Arial';
       ctx.fillStyle = '#666';
-      ctx.fillText(`${angles[i]}°`, labelX - 10, labelY + 5);
+      ctx.fillText(`${angleDisplay}°`, labelX - 10, labelY + 5);
     }
   };
   

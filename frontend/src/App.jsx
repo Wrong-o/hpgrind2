@@ -22,7 +22,7 @@ import Customization from './pages/Customization';
 import NotFound from './pages/NotFound';
 import TriangleTest from './pages/TriangleTest';
 
-function App() {
+export function App() {
   const isLoggedIn = authStore((state) => state.isLoggedIn);
   return (
     <DatabaseProvider>
