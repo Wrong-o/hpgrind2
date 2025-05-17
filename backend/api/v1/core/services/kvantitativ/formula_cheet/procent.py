@@ -42,14 +42,24 @@ def procent_förändring(difficulty: int = 1):
 def procent_ränta(difficulty: int = 1):
     data = generate_percentage_interest()
     question = f"Hur mycket ränta betalar du om du lånar {data['base_number']} kr i {data['time_period']} år med {data['interest_rate']}% ränta?"
-    correct_answer = data['result']
-    choices = percentage_interest_wrong_answers(data['base_number'], data['interest_rate'], data['time_period'])
+    
+    # data['result'] is now the simple interest amount directly
+    correct_answer_numeric = data['result'] 
+
+    # Pass the correct simple interest to the wrong answer generator
+    choices = percentage_interest_wrong_answers(
+        data['base_number'], 
+        data['interest_rate'], 
+        data['time_period'], 
+        correct_answer_numeric # This is the correct simple interest
+    )
+    
     return {
         "subject": "kvantitativ",
         "category": "formula_cheet",
         "question": question,
-        "answers": choices,
-        "correct_answer": str(correct_answer) + "%",
+        "answers": choices, # Expecting a list of strings from wrong_answer_generator
+        "correct_answer": str(correct_answer_numeric), 
         "drawing": [],
-        "explanation": "PercentageInterest.mp4"
+        "explanation": "PercentageInterest.mp4" # Consider if a new video for simple interest is needed
     }

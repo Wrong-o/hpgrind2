@@ -115,8 +115,8 @@ def fraction_equation_multiplication(difficulty: int):
     from fractions import Fraction
     import random as rd
     from api.v1.core.services.wrong_answer_generator import generate_fraction_choices
-    fraction1 = {"numerator": rd.randint(1, 10), "denominator": rd.randint(1, 10)}
-    fraction2 = {"numerator": rd.randint(1, 10), "denominator": rd.randint(1, 10)}
+    fraction1 = {"numerator": rd.randint(2, 10), "denominator": rd.randint(2, 10)}
+    fraction2 = {"numerator": rd.randint(2, 10), "denominator": rd.randint(2, 10)}
     
     frac1 = Fraction(fraction1["numerator"], fraction1["denominator"])
     frac2 = Fraction(fraction2["numerator"], fraction2["denominator"])
@@ -285,7 +285,7 @@ def fraction_shortening(difficulty: int):
     question_data = {
         "subject": "kvantitativ",
         "category": "basics_fractions",
-        "question": f"Förkorta bråket \\frac{{{numerator}}}{{{denominator}}}",
+        "question": f"\\frac{{{numerator}}}{{{denominator}}}",
         "correct_answer": correct_answer,
         "drawing": [],
         "explanation": explanation_shortening()

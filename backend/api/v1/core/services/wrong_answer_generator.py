@@ -1,7 +1,7 @@
 import random
 import re
 from fractions import Fraction
-from api.v1.core.services.equation_generator import fraction_shortened
+from api.v1.core.services.equation_generator import fraction_shortened, format_fraction_latex
 import math
 
 
@@ -156,77 +156,114 @@ def generate_math_choices(expression, correct_answer, decimals=0):
     return all_answers
 
 
-def generate_fraction_choices(expression, correct_answer, decimals=0):
+def generate_fraction_choices(expression, correct_answer_frac: Fraction, decimals=0):
     """
-    Generate 4 answer all_answers for a math expression, including the correct answer and
-    3 wrong answers that result from evaluating the expression with common errors:
-    - Applying operations in the wrong order
-    - Incorrect simplification
-    - Treating fractions as integers
-    - Incorrect inversion during division
-
-    expression (list): A list of dict with 2 fractions and an operator, e.g {'numerator': 9, 'denominator': 4} / {'numerator': 4, 'denominator': 6}
-    correct_answer (float): The correct result of evaluating the expression
-
-    Returns:
-    list: List of 4 answer all_answers (including the correct answer), shuffled
+    Generate 4 answer choices for a math expression involving fractions.
+    The correct_answer_frac is a Fraction object.
+    Returns a list of 4 unique LaTeX strings.
     """
-    # Parse the expression
-    frac1 = Fraction(expression[0]['numerator'],
-                     expression[0]['denominator'])
-    print(correct_answer)
+    frac1_dict = expression[0]
     operator = expression[1]
-    frac2 = Fraction(expression[2]['numerator'],
-                     expression[2]['denominator'])
-    # Generate wrong answers based on common errors
-    wrong_answers = []
-# Wrong order of operations
+    frac2_dict = expression[2]
+
+    frac1 = Fraction(frac1_dict['numerator'], frac1_dict['denominator'])
+    frac2 = Fraction(frac2_dict['numerator'], frac2_dict['denominator'])
+
+    # Generate potential wrong answers as Fraction objects based on common errors
+    potential_wrong_fractions = []
+
+    # Error type 1: Incorrect operation
     if operator == '+':
-        wrong_answers.append(frac1 * frac2)
+        potential_wrong_fractions.append(frac1 * frac2) # Multiply instead of add
+        if frac1.denominator != 0 and frac2.denominator != 0 and (frac1.denominator + frac2.denominator != 0):
+             potential_wrong_fractions.append(Fraction(frac1.numerator + frac2.numerator, frac1.denominator + frac2.denominator))
     elif operator == '-':
-        wrong_answers.append(frac1 * frac2)
+        if frac2 != 0: potential_wrong_fractions.append(frac1 / frac2) # Divide instead of subtract
+        if frac1.denominator != 0 and frac2.denominator != 0 and (frac1.denominator - frac2.denominator != 0 if frac1.denominator != frac2.denominator else True): # Avoid 0 den
+            if frac1.denominator == frac2.denominator and frac1.denominator - frac2.denominator == 0: # handle same den
+                 potential_wrong_fractions.append(Fraction(frac1.numerator - frac2.numerator, frac1.denominator + 1))
+            elif frac1.denominator != frac2.denominator:
+                 potential_wrong_fractions.append(Fraction(frac1.numerator - frac2.numerator, frac1.denominator - frac2.denominator))
+
+
     elif operator == '*':
-        wrong_answers.append(frac1 + frac2)
+        potential_wrong_fractions.append(frac1 + frac2) # Add instead of multiply
     elif operator == '/':
-        wrong_answers.append(frac1 + frac2)
+        if frac2 != 0:
+            potential_wrong_fractions.append(frac1 * frac2) # Common inversion error (forgetting to invert or inverting wrong part)
+            potential_wrong_fractions.append(frac1 * Fraction(frac2.denominator, frac2.numerator * 2 if frac2.numerator != 0 else 1)) # Incorrect inversion of one part
 
-    # Incorrect simplification
-    if operator == '+':
-        wrong_answers.append(frac1 + frac2 + Fraction(1, 10))
-    elif operator == '-':
-        wrong_answers.append(frac1 - frac2 - Fraction(1, 10))
-    elif operator == '*':
-        wrong_answers.append(frac1 * frac2 + Fraction(1, 10))
-    elif operator == '/':
-        wrong_answers.append(frac1 / frac2 - Fraction(1, 10))
+    # Error type 2: Using integer parts of fractions
+    # int_frac1 = frac1.numerator // frac1.denominator if frac1.denominator != 0 else frac1.numerator
+    # int_frac2 = frac2.numerator // frac2.denominator if frac2.denominator != 0 else frac2.numerator
+    # if operator == '+': potential_wrong_fractions.append(Fraction(int_frac1 + int_frac2))
+    # elif operator == '-': potential_wrong_fractions.append(Fraction(int_frac1 - int_frac2))
 
-    # Treating fractions as integers
-    int_frac1 = frac1.numerator // frac1.denominator
-    int_frac2 = frac2.numerator // frac2.denominator
-    if operator == '+':
-        wrong_answers.append(Fraction(int_frac1 + int_frac2))
-    elif operator == '-':
-        wrong_answers.append(Fraction(int_frac1 - int_frac2))
-    elif operator == '*':
-        wrong_answers.append(Fraction(int_frac1 * int_frac2))
-    elif operator == '/':
-        wrong_answers.append(Fraction(int_frac1, int_frac2)
-                             if int_frac2 != 0 else Fraction(0))
+    # Error type 3: Slightly off from correct answer
+    if correct_answer_frac.denominator != 0:
+        potential_wrong_fractions.append(correct_answer_frac + Fraction(1, correct_answer_frac.denominator + random.randint(1,3)))
+        if correct_answer_frac.numerator != 0: # Ensure subtraction doesn't lead to zero if original isn't zero unless it's a small number
+            potential_wrong_fractions.append(correct_answer_frac - Fraction(1, correct_answer_frac.denominator + random.randint(1,3)))
 
-    # Incorrect inversion during division
-    if operator == '/':
-        wrong_answers.append(frac1 * frac2)
 
-    # Ensure all wrong answers are unique and convert to LaTeX fraction form
-    wrong_answers = list(set(wrong_answers))
-    wrong_answers = [
-        f"\\frac{{{answer.numerator}}}{{{answer.denominator}}}" for answer in wrong_answers]
+    # Filter out duplicates and any that are identical to the correct answer
+    distinct_wrong_fractions_set = set()
+    for wf in potential_wrong_fractions:
+        if wf != correct_answer_frac:
+            distinct_wrong_fractions_set.add(wf)
+    
+    distinct_wrong_fractions_list = list(distinct_wrong_fractions_set)
 
-    # Add the correct answer in LaTeX fraction form and shuffle
-    all_answers = [correct_answer] + wrong_answers[:3]
-    random.shuffle(all_answers)
+    # Format the correct answer (Fraction object) to LaTeX string
+    correct_answer_latex = format_fraction_latex(correct_answer_frac)
 
-    return all_answers
+    # Format the distinct wrong fractions to LaTeX strings
+    wrong_answers_latex = [format_fraction_latex(f) for f in distinct_wrong_fractions_list]
+
+    # Combine correct answer with up to 3 distinct wrong answers
+    all_answers_latex_set = {correct_answer_latex} # Use a set to ensure uniqueness of final LaTeX strings
+    for wa_latex in wrong_answers_latex:
+        if len(all_answers_latex_set) < 4: # Need 1 correct + 3 wrong
+            all_answers_latex_set.add(wa_latex)
+        else:
+            break
+            
+    # Pad if we don't have 4 unique LaTeX strings yet
+    padding_idx = 1
+    common_denominators_for_padding = [d for d in range(2,11)] # Denominators from 2 to 10
+    random.shuffle(common_denominators_for_padding)
+
+    while len(all_answers_latex_set) < 4:
+        # Generate a new random fraction for padding
+        # Make it somewhat related to the correct answer's complexity or just simple
+        num = random.randint(1,5) + correct_answer_frac.numerator % 5 + padding_idx
+        den = common_denominators_for_padding[padding_idx % len(common_denominators_for_padding)]
+        
+        # Avoid generating a fraction that simplifies to the correct answer or existing options easily
+        # This is tricky; for now, just generate and check uniqueness of LaTeX string
+        padding_fraction = Fraction(num, den)
+        
+        padding_latex = format_fraction_latex(padding_fraction)
+        
+        if padding_latex not in all_answers_latex_set:
+            all_answers_latex_set.add(padding_latex)
+        
+        padding_idx += 1
+        if padding_idx > 20: # Safety break to prevent infinite loops
+            # Fallback: add very simple, potentially less distinct items if padding is problematic
+            while len(all_answers_latex_set) < 4:
+                fallback_latex = format_fraction_latex(Fraction(padding_idx + random.randint(1,3), padding_idx + random.randint(4,7)))
+                all_answers_latex_set.add(fallback_latex) # Set handles uniqueness
+            break
+
+    final_choices = list(all_answers_latex_set)[:4] # Ensure exactly 4 choices if set grew larger
+    # If by some chance it's still less than 4 after the loop (e.g. safety break with non-unique fallback)
+    while len(final_choices) < 4:
+        final_choices.append(format_fraction_latex(Fraction(random.randint(11,20), random.randint(11,20)+len(final_choices))))
+        final_choices = list(set(final_choices)) # ensure unique again
+
+    random.shuffle(final_choices)
+    return final_choices
 
 def generate_fraction_shortening_choices(expression, correct_answer, decimals=0):
     """
@@ -250,8 +287,7 @@ def generate_fraction_shortening_choices(expression, correct_answer, decimals=0)
     else:
         wrong_answers.add(Fraction(fraction.numerator, fraction.denominator + 1))
     if len(wrong_answers) < 4:
-        wrong_answers.add(Fraction(1, 0))
-    # Convert all wrong answers to LaTeX fraction form
+        wrong_answers.add(Fraction(1, 1))
     wrong_answers = [
         f"\\frac{{{answer.numerator}}}{{{answer.denominator}}}" for answer in wrong_answers]
 
@@ -510,21 +546,120 @@ def percentage_change_wrong_answers(base_number, percentage):
     wrong_answers.add(str(percentage + 20) + "%")
     return list(wrong_answers)[:4]
 
-def percentage_interest_wrong_answers(base_number, interest_rate, time_period):
+def percentage_interest_wrong_answers(base_number, interest_rate_percent, time_period, correct_simple_interest):
     """
-    Generates wrong answers for percentage interest questions
+    Generates wrong answers for simple percentage interest questions.
+    The choices returned will be interest amounts as strings.
+
     Args:
         base_number: int
-        interest_rate: int
+        interest_rate_percent: int (e.g., 50 for 50%)
         time_period: int
+        correct_simple_interest: float or int (this is P * (rate/100) * t)
     """
-    print(base_number, interest_rate, time_period)
-    wrong_answers = set()
-    wrong_answers.add(base_number * (1 + interest_rate / 100) ** time_period)
-    wrong_answers.add(base_number * (1 + interest_rate / 100) ** time_period)
-    wrong_answers.add(base_number * (1 + interest_rate / 100) ** (time_period - 1))
-    wrong_answers.add(base_number * (1 + interest_rate / 100) ** (time_period + 1))
-    return list(wrong_answers)[:4]
+    wrong_answers_numeric = set()
+
+    # Distractor 1: Compound interest amount for the same period
+    # A = P * (1 + r/100)^t
+    # Compound Interest = A - P
+    if time_period > 0 : # Compound interest makes sense if there is a time period
+        total_compound_amount = base_number * (1 + interest_rate_percent / 100) ** time_period
+        compound_interest = total_compound_amount - base_number
+        if compound_interest != correct_simple_interest:
+            wrong_answers_numeric.add(compound_interest)
+
+    # Distractor 2: Simple interest for only one year
+    one_year_simple_interest = base_number * (interest_rate_percent / 100) * 1
+    if one_year_simple_interest != correct_simple_interest:
+        wrong_answers_numeric.add(one_year_simple_interest)
+    
+    # Distractor 3: The principal amount itself
+    if base_number != correct_simple_interest:
+        wrong_answers_numeric.add(base_number)
+        
+    # Distractor 4: Total amount (Principal + Simple Interest)
+    total_simple_amount = base_number + correct_simple_interest
+    # This is a distractor *if* the question specifically asks for *interest*
+    # and not total. We add it because users might calculate total.
+    wrong_answers_numeric.add(total_simple_amount)
+
+    # Distractor 5: Interest rate percentage itself (as a number)
+    if interest_rate_percent != correct_simple_interest:
+        wrong_answers_numeric.add(interest_rate_percent)
+
+    # Process to ensure numeric and distinct from correct_simple_interest
+    # Round floats to 2 decimal places or convert to int if they are whole numbers
+    processed_wrong_answers = set()
+    for ans in wrong_answers_numeric:
+        if ans == correct_simple_interest: # Skip if it accidentally equals the correct answer
+            continue
+        if isinstance(ans, float):
+            processed_wrong_answers.add(int(ans) if ans.is_integer() else round(ans, 2))
+        else: # ans is int
+            processed_wrong_answers.add(ans)
+            
+    final_wrong_for_choices = list(processed_wrong_answers)
+    random.shuffle(final_wrong_for_choices) # Shuffle to pick diverse wrong answers if many were generated
+    final_wrong_for_choices = final_wrong_for_choices[:3] # Take up to 3 distinct wrong answers
+    
+    # Fill up with more variations if we don't have enough distinct wrong answers
+    idx = 1
+    temp_additional_wrong = set(final_wrong_for_choices)
+    
+    while len(temp_additional_wrong) < 3:
+        # Variation: slight arithmetic error
+        variation_add = correct_simple_interest + (idx * (base_number * 0.05) if base_number > 0 else idx) # Add/subtract 5% of base or just idx
+        variation_sub = correct_simple_interest - (idx * (base_number * 0.05) if base_number > 0 else idx)
+        
+        if variation_add > 0 and variation_add != correct_simple_interest and variation_add not in temp_additional_wrong:
+            val_to_add = int(variation_add) if isinstance(variation_add, float) and variation_add.is_integer() else round(variation_add, 2)
+            if val_to_add != correct_simple_interest and val_to_add not in temp_additional_wrong:
+                 temp_additional_wrong.add(val_to_add)
+        
+        if len(temp_additional_wrong) < 3 and variation_sub > 0 and variation_sub != correct_simple_interest and variation_sub not in temp_additional_wrong:
+            val_to_add = int(variation_sub) if isinstance(variation_sub, float) and variation_sub.is_integer() else round(variation_sub, 2)
+            if val_to_add != correct_simple_interest and val_to_add not in temp_additional_wrong:
+                temp_additional_wrong.add(val_to_add)
+                
+        if idx > 10: # Safety break if variations are not generating new distinct values
+             # Add simple +/- a small integer
+            if correct_simple_interest + idx not in temp_additional_wrong and (correct_simple_interest + idx) != correct_simple_interest:
+                temp_additional_wrong.add(correct_simple_interest + idx)
+            if len(temp_additional_wrong) < 3 and correct_simple_interest - idx > 0 and correct_simple_interest - idx not in temp_additional_wrong and (correct_simple_interest - idx) != correct_simple_interest:
+                 temp_additional_wrong.add(correct_simple_interest - idx)
+        if idx > 20: # Ultimate safety break
+            break
+        idx += 1
+    
+    final_wrong_for_choices = list(temp_additional_wrong)[:3]
+
+    # Ensure the correct answer is stringified appropriately
+    correct_answer_str = str(int(correct_simple_interest) if isinstance(correct_simple_interest, float) and correct_simple_interest.is_integer() else round(correct_simple_interest, 2))
+    
+    # Combine correct answer with the chosen wrong answers (all as strings)
+    final_choices_str = [correct_answer_str] + [str(ans) for ans in final_wrong_for_choices]
+    
+    # Shuffle the final list of choices
+    random.shuffle(final_choices_str)
+    
+    # Pad if somehow we don't have 4 choices (should be rare)
+    safety_idx = 1
+    while len(final_choices_str) < 4:
+        # Generate a simple padding value not already in the list
+        padding_val_numeric = correct_simple_interest + safety_idx * 10 + random.randint(-5,5)
+        if padding_val_numeric <=0 : padding_val_numeric = correct_simple_interest + safety_idx * 10 + 5 # ensure positive
+        
+        padding_val_str = str(int(padding_val_numeric) if isinstance(padding_val_numeric, float) and padding_val_numeric.is_integer() else round(padding_val_numeric,2))
+        
+        if padding_val_str not in final_choices_str:
+            final_choices_str.append(padding_val_str)
+        safety_idx += 1
+        if safety_idx > 10: # Break if padding is problematic
+            # Fallback: add very simple, potentially non-unique but different items
+            final_choices_str.extend([str(correct_simple_interest + 100), str(correct_simple_interest + 200)]) 
+            break
+            
+    return final_choices_str[:4]
 
 def generate_square_formula_wrong_answers(int1, int2, operator: str = None):
     """
