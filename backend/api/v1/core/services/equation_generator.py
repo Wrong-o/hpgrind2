@@ -277,11 +277,16 @@ def generate_sequence_mean(even_n, max: int = 20, min: int = -20, n: int = 3, ne
             sequence.append(new_nrs["int1"])
             sequence.append(new_nrs["int2"])
     else:
-        sequence.append(mean)
+        mean_change = rd.randint(1, 10)
+        sequence.append(mean + mean_change)
         while len(sequence) < n:
             new_nrs = integer_splitter(split=mean*2, negative_allowed=negative_allowed)
             sequence.append(new_nrs["int1"])
             sequence.append(new_nrs["int2"])
+        
+        random_index = rd.randint(0, len(sequence) - 1)
+        sequence[random_index] -= mean_change
+        
 
     return {
         "sequence": sequence,

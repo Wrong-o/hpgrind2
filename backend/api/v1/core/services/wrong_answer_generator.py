@@ -318,7 +318,7 @@ def generate_mean_choices(sequence):
     """
     mean = sequence["mean"]
     sequence = sequence["sequence"]
-    wrong_answers = set()
+    wrong_answers = set([mean])
     sorted_seq = sorted(sequence)
     middle_idx = len(sorted_seq) // 2
     if len(sorted_seq) % 2 == 0:
@@ -327,19 +327,15 @@ def generate_mean_choices(sequence):
     else:
         wrong_answers.add(sorted_seq[middle_idx-1])
         wrong_answers.add(sorted_seq[middle_idx+1])
-    wrong_answers_list = list(wrong_answers)
-    wrong_answers.add(wrong_answers_list[0] + 1)
-    wrong_answers.add(wrong_answers_list[1] - 1)
-    if len(wrong_answers) < 3:
-        wrong_answers_list = list(wrong_answers)
-        wrong_answers.add(wrong_answers_list[0] - 1)
-        wrong_answers.add(wrong_answers_list[1] + 1)
-    answers = [mean] + list(wrong_answers)[:3]
+    if len(wrong_answers) < 4:
+        wrong_answers.add(mean - 1)
+        wrong_answers.add(mean + 1)
+        wrong_answers.add(mean - 2)
+        wrong_answers.add(mean + 2)
+    answers = list(wrong_answers)[:4]
     random.shuffle(answers)
     return answers
 
-##DU ÄR HÄR: Ändra felsvaren, det blir bara 3
-##
 def generate_median_choices(sequence):
     """
     Generates choices to median questions
@@ -464,7 +460,7 @@ def generate_probability_combination_without_replacement_choices(groups):
     den1 = n * (n - 1)
     gcd1 = math.gcd(num1, den1)
     answers.add(f"\\frac{{{num1 // gcd1}}}{{{den1 // gcd1}}}")
-
+    answers.add(f"\\frac{{{num1 // gcd1}}}{{{den1}}}")
     # Calculate second answer with GCD
     num2 = groups[1] * (groups[1] - 1) 
     den2 = n * (n - 1)
@@ -477,12 +473,10 @@ def generate_probability_combination_without_replacement_choices(groups):
     gcd3 = math.gcd(num3, den3)
     answers.add(f"\\frac{{{num3 // gcd3}}}{{{den3 // gcd3}}}")
 
-    # Calculate fourth answer (inverse of correct answer)
-    num4 = den1 // gcd1
-    den4 = num1 // gcd1
-    answers.add(f"\\frac{{{num4}}}{{{den4}}}")
+    answers.add(f"\\frac{{{groups[0]}}}{{{groups[1]}}}")
 
-    answers = list(answers)
+    answers = list(answers)[:4]
+
     random.shuffle(answers)
     return answers
 
@@ -510,10 +504,10 @@ def percentage_change_wrong_answers(base_number, percentage):
     """
     wrong_answers = set()
 
-    wrong_answers.add(percentage)
-    wrong_answers.add(percentage + 10)
-    wrong_answers.add(percentage - 10)
-    wrong_answers.add(percentage + 20)
+    wrong_answers.add(str(percentage) + "%")
+    wrong_answers.add(str(percentage + 10) + "%")
+    wrong_answers.add(str(percentage - 10) + "%")
+    wrong_answers.add(str(percentage + 20) + "%")
     return list(wrong_answers)[:4]
 
 def percentage_interest_wrong_answers(base_number, interest_rate, time_period):

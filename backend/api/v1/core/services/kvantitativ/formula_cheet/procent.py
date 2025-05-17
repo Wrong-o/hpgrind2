@@ -49,7 +49,7 @@ def procent_ränta(difficulty: int = 1):
         "category": "formula_cheet",
         "question": question,
         "answers": choices,
-        "correct_answer": str(correct_answer),
+        "correct_answer": str(correct_answer) + "%",
         "drawing": [],
         "explanation": "PercentageInterest.mp4"
     }
