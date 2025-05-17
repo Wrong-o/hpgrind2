@@ -267,35 +267,91 @@ def generate_fraction_choices(expression, correct_answer_frac: Fraction, decimal
 
 def generate_fraction_shortening_choices(expression, correct_answer, decimals=0):
     """
-    Returns 4 answers, correct included
+    Returns 4 answers, with the correct answer included
     Possible error sources are:
     - Not shortening at all (original fraction)
     - Multiplying both numbers by 2 (equivalent but unsimplified)
     - Adding 1 to numerator (different fraction)
     - Subtracting 1 from denominator (different fraction)
     """ 
-    fraction = Fraction(expression['numerator'],
-                     expression['denominator'])
-    wrong_answers = set()
-    wrong_answers.add(Fraction(fraction.numerator, fraction.denominator))
-    wrong_answers.add(Fraction(fraction.numerator, fraction.denominator * 2))
+    # Extract the original fraction from the expression
+    fraction = Fraction(expression['numerator'], expression['denominator'])
     
-    # Slightly modified fractions that are actually different
-    wrong_answers.add(Fraction(fraction.numerator + 1, fraction.denominator))
+    # Create a set for wrong answers (as Fraction objects)
+    wrong_answers_set = set()
+    
+    # The correct answer as a Fraction object (to compare with wrong answers for uniqueness)
+    correct_answer_frac = Fraction(correct_answer.numerator, correct_answer.denominator)
+    
+    # 1. Not shortening at all (original fraction)
+    if fraction != correct_answer_frac:
+        wrong_answers_set.add(fraction)
+    
+    # 2. Multiplying both numbers by 2 (equivalent but unsimplified)
+    doubled_fraction = Fraction(fraction.numerator * 2, fraction.denominator * 2)
+    if doubled_fraction != correct_answer_frac:
+        wrong_answers_set.add(doubled_fraction)
+    
+    # 3. Slightly modified fractions that are actually different
+    modified_numerator = Fraction(fraction.numerator + 1, fraction.denominator)
+    if modified_numerator != correct_answer_frac:
+        wrong_answers_set.add(modified_numerator)
+    
     if fraction.denominator > 1:
-        wrong_answers.add(Fraction(fraction.numerator, fraction.denominator - 1))
+        modified_denominator = Fraction(fraction.numerator, fraction.denominator - 1)
+        if modified_denominator != correct_answer_frac:
+            wrong_answers_set.add(modified_denominator)
     else:
-        wrong_answers.add(Fraction(fraction.numerator, fraction.denominator + 1))
-    if len(wrong_answers) < 4:
-        wrong_answers.add(Fraction(1, 1))
-    wrong_answers = [
-        f"\\frac{{{answer.numerator}}}{{{answer.denominator}}}" for answer in wrong_answers]
-
-    # Add the correct answer and shuffle
-    all_answers = wrong_answers[:4]
+        modified_denominator = Fraction(fraction.numerator, fraction.denominator + 1)
+        if modified_denominator != correct_answer_frac:
+            wrong_answers_set.add(modified_denominator)
+    
+    # 4. Add additional wrong answers if needed
+    additional_wrong = [
+        Fraction(1, 1),
+        Fraction(1, 2),
+        Fraction(2, 3),
+        Fraction(3, 4),
+        Fraction(2, 1),
+        Fraction(3, 2)
+    ]
+    
+    # If we need more wrong answers, add some from the additional list
+    index = 0
+    while len(wrong_answers_set) < 3 and index < len(additional_wrong):
+        if additional_wrong[index] != correct_answer_frac and additional_wrong[index] not in wrong_answers_set:
+            wrong_answers_set.add(additional_wrong[index])
+        index += 1
+    
+    # If we still need more, generate some random fractions
+    while len(wrong_answers_set) < 3:
+        numerator = random.randint(1, 10)
+        denominator = random.randint(1, 10)
+        random_fraction = Fraction(numerator, denominator)
+        if random_fraction != correct_answer_frac and random_fraction not in wrong_answers_set:
+            wrong_answers_set.add(random_fraction)
+    
+    # Convert wrong answers to LaTeX
+    wrong_answers_latex = [f"\\frac{{{ans.numerator}}}{{{ans.denominator}}}" for ans in wrong_answers_set]
+    
+    # Convert correct answer to LaTeX
+    correct_answer_latex = f"\\frac{{{correct_answer.numerator}}}{{{correct_answer.denominator}}}"
+    
+    # Combine correct answer with up to 3 wrong answers
+    all_answers = [correct_answer_latex] + wrong_answers_latex[:3]
+    
+    # Ensure we have exactly 4 answers
+    while len(all_answers) < 4:
+        numerator = random.randint(1, 10)
+        denominator = random.randint(1, 10)
+        new_latex = f"\\frac{{{numerator}}}{{{denominator}}}"
+        if new_latex not in all_answers:
+            all_answers.append(new_latex)
+    
+    # Shuffle the answers
     random.shuffle(all_answers)
-
-    return all_answers
+    
+    return all_answers[:4]  # Return exactly 4 answers
 
 def generate_x_equation_choices(expression):
     """
@@ -354,7 +410,10 @@ def generate_mean_choices(sequence):
     """
     mean = sequence["mean"]
     sequence = sequence["sequence"]
-    wrong_answers = set([mean])
+    # Create a set for wrong answers only (don't include the correct mean)
+    wrong_answers = set()
+    
+    # Add median-like values as wrong answers (common mistake)
     sorted_seq = sorted(sequence)
     middle_idx = len(sorted_seq) // 2
     if len(sorted_seq) % 2 == 0:
@@ -363,14 +422,31 @@ def generate_mean_choices(sequence):
     else:
         wrong_answers.add(sorted_seq[middle_idx-1])
         wrong_answers.add(sorted_seq[middle_idx+1])
-    if len(wrong_answers) < 4:
-        wrong_answers.add(mean - 1)
-        wrong_answers.add(mean + 1)
-        wrong_answers.add(mean - 2)
-        wrong_answers.add(mean + 2)
-    answers = list(wrong_answers)[:4]
+    
+    # Add slightly different values as wrong answers
+    wrong_answers.add(mean - 1)
+    wrong_answers.add(mean + 1)
+    wrong_answers.add(mean - 2)
+    wrong_answers.add(mean + 2)
+    
+    # Remove the correct answer if it accidentally got added to wrong_answers
+    if mean in wrong_answers:
+        wrong_answers.remove(mean)
+    
+    # Take up to 3 wrong answers
+    final_wrong_answers = list(wrong_answers)[:3]
+    
+    # Combine with the correct answer and shuffle
+    answers = [str(mean)] + [str(ans) for ans in final_wrong_answers]
     random.shuffle(answers)
-    return answers
+    
+    # Ensure we have exactly 4 answers (should be guaranteed by the logic above)
+    while len(answers) < 4:
+        new_wrong = mean + (len(answers) + 3)
+        if str(new_wrong) not in answers:
+            answers.append(str(new_wrong))
+    
+    return answers[:4]  # Return exactly 4 answers
 
 def generate_median_choices(sequence):
     """

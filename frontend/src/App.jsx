@@ -20,6 +20,7 @@ import { CategoryStats } from './pages/CategoryStats';
 import { DatabaseProvider } from './contexts/DatabaseContext';
 import Customization from './pages/Customization';
 import NotFound from './pages/NotFound';
+import TriangleTest from './pages/TriangleTest';
 
 function App() {
   const isLoggedIn = authStore((state) => state.isLoggedIn);
@@ -94,6 +95,7 @@ function App() {
                     </ProtectedRoute>
                   } />
                   <Route path="/vilka-vi-ar" element={<WhoAreWe />} />
+                  <Route path="/triangle-test" element={<TriangleTest />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </main>

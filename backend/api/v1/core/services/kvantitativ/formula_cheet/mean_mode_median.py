@@ -3,7 +3,7 @@ from api.v1.core.services.equation_generator import generate_sequence_mean, gene
 from api.v1.core.services.wrong_answer_generator import generate_mean_choices, generate_median_choices, generate_mode_choices
 
 
-def mean_even(difficulty: int = 1, n = 6):
+def mean_even(difficulty: int = 1, n = 4):
     """
     Generates a sequence and returns mean of the sequence
     Args:

@@ -254,7 +254,7 @@ def fraction_operations_order(max_numerator: int = 2, max_denominator: int = 2):
     }
 
 
-def generate_sequence_mean(even_n, max: int = 20, min: int = -20, n: int = 3, negative_allowed: bool = False, integers_only: bool = True, mean: float = None, median: float = None, mode: float = None):
+def generate_sequence_mean(even_n, max: int = 10, min: int = -10, n: int = 3, negative_allowed: bool = False, integers_only: bool = True, mean: float = None, median: float = None, mode: float = None):
     """Generates a sequence of integers and returns mean of the sequence
 
     Args:
@@ -269,6 +269,9 @@ def generate_sequence_mean(even_n, max: int = 20, min: int = -20, n: int = 3, ne
     sequence = []
     if not negative_allowed and min < 0:
         min = n
+    if negative_allowed:
+        min = -10
+        max = 0
     mean = rd.randint(min, max)
     sum_of_sequence = mean * n
     if even_n:

@@ -10,7 +10,8 @@ import {
   ChartBarIcon, 
   AcademicCapIcon,
   XMarkIcon,
-  PlayIcon
+  PlayIcon,
+  PencilSquareIcon
 } from '@heroicons/react/24/outline';
 
 function MainMenu() {
@@ -69,6 +70,12 @@ function MainMenu() {
               className="w-full bg-indigo-600 text-white px-4 py-3 md:px-6 md:py-4 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 text-base md:text-lg"
               text="Anpassa din upplevelse"
               icon={<Cog6ToothIcon className="w-5 h-5 md:w-6 md:h-6" />}
+            />
+            <MenuButton
+              onClick={() => navigate('/triangle-test')}
+              className="w-full bg-purple-600 text-white px-4 py-3 md:px-6 md:py-4 rounded-lg hover:bg-purple-700 transition-colors flex items-center justify-center gap-2 text-base md:text-lg"
+              text="Triangel Test"
+              icon={<PencilSquareIcon className="w-5 h-5 md:w-6 md:h-6" />}
             />
           </div>
 
