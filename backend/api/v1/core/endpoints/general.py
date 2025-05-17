@@ -97,7 +97,6 @@ def get_user_history(db: Session = Depends(get_db), current_user: User = Depends
     Returns:
         List[UserHistoryOut]: A list of the user's question history
     """
-    print("hello")
     try:
         user_history = (
             db.query(UserHistory)
@@ -105,7 +104,6 @@ def get_user_history(db: Session = Depends(get_db), current_user: User = Depends
             .order_by(UserHistory.timestamp.desc())  # Changed from created_at to timestamp
             .all()
         )
-        print(user_history)
         if not user_history:
             return []
         

@@ -326,6 +326,17 @@ const FocusPractice = ({ moment, onClose }) => {
     // For debugging in console
     console.log("FocusPractice - Checking if question is linear equation:", questionObj);
     
+    // IMPORTANT: Specifically exclude addition and subtraction equations
+    if (questionObj.moment) {
+      if (questionObj.moment.includes('addition') || 
+          questionObj.moment.includes('subtraction') ||
+          questionObj.moment.includes('ekvationslösning_addition') ||
+          questionObj.moment.includes('ekvationslösning_subtraktion')) {
+        console.log("FocusPractice - Identified as non-linear equation (addition/subtraction)");
+        return false;
+      }
+    }
+    
     // Most reliable: Check for graph_data field first
     if (questionObj?.graph_data) {
       console.log("FocusPractice - Found graph_data, identified as linear equation");
@@ -348,10 +359,27 @@ const FocusPractice = ({ moment, onClose }) => {
       return true;
     }
     
+    // Check for specific x-equation moments that should NOT use the graph component
+    if (questionObj.moment && (
+        questionObj.moment.includes('x_equation_addition') ||
+        questionObj.moment.includes('x_equation_subtraction'))) {
+      console.log("FocusPractice - Explicitly excluding x-equation addition/subtraction from graph component");
+      return false;
+    }
+    
     // If it's a question object from the server
     if (typeof questionObj === 'object' && questionObj.question) {
       // If it's just a string question, use regex to determine
       const questionText = questionObj.question;
+      
+      // Check for addition/subtraction equation patterns to exclude
+      if (questionText.includes('x -') || questionText.includes('x +')) {
+        if (questionText.match(/x\s*[+-]\s*\d+\s*=/) || 
+            questionText.match(/x\s*=.*[+-]/)) {
+          console.log("FocusPractice - Excluding addition/subtraction equation from graph rendering");
+          return false;
+        }
+      }
       
       // More comprehensive regex patterns to handle different equation formats
       // For find-x type questions
@@ -369,6 +397,7 @@ const FocusPractice = ({ moment, onClose }) => {
       return result;
     }
     
+    console.log("FocusPractice - Not identified as linear equation");
     return false;
   };
 

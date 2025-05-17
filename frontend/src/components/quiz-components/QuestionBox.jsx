@@ -74,6 +74,12 @@ const QuestionBox = ({ latexString }) => {
       .replace(/([a-zA-Z]{6})/g, '$1\u200B');
   };
 
+  // Check if content contains stacked fractions that need special handling
+  const hasStackedFractions = (str) => {
+    if (!str || typeof str !== 'string') return false;
+    return str.includes('\\frac{\\frac');
+  };
+
   useEffect(() => {
     isMounted.current = true;
     // Ensure cleanup runs on unmount
@@ -98,6 +104,11 @@ const QuestionBox = ({ latexString }) => {
 
       if (!isMounted.current || !containerRef.current || !contentRef.current) {
         return; // Abort if not mounted or refs not ready
+      }
+
+      // Start with a smaller size for complex stacked fractions
+      if (hasStackedFractions(latexString) && sizeIndex === 1) {
+        sizeIndex = 2; // Start with text-2xl for complex fractions
       }
 
       if (sizeIndex >= fontSizes.length) {
@@ -170,13 +181,16 @@ const QuestionBox = ({ latexString }) => {
   const processedLatexString = shouldRenderAsLaTeX 
     ? processLatexString(latexString) 
     : processPlainText(latexString);
+    
+  // Determine additional styles for stacked fractions
+  const hasComplexFractions = hasStackedFractions(latexString);
 
   return (
     <div
       ref={containerRef}
-      className="p-4 rounded-lg w-full text-center bg-sky-200" // Removed overflow hidden
+      className="p-4 rounded-lg w-full text-center bg-sky-200"
       style={{
-        minHeight: '80px', // Reduced min height
+        minHeight: hasComplexFractions ? '120px' : '80px', // Increase height for complex fractions
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center'
@@ -193,9 +207,9 @@ const QuestionBox = ({ latexString }) => {
           overflowWrap: 'break-word', // Additional property for older browsers
           whiteSpace: 'pre-wrap', // Allow wrapping on whitespace
           wordWrap: 'break-word', // Legacy property for older browsers
-          lineHeight: '1.3', // Tighter line height
+          lineHeight: hasComplexFractions ? '1.6' : '1.3', // Increase line height for complex fractions
           verticalAlign: 'middle', // Helps alignment
-          padding: '0.5rem', // Add padding for better spacing
+          padding: hasComplexFractions ? '1rem' : '0.5rem', // More padding for complex fractions
           hyphens: 'auto' // Enable hyphenation for better text breaks
         }}
       >

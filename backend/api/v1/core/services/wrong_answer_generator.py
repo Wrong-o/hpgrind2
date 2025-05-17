@@ -123,7 +123,10 @@ def generate_math_choices(expression, correct_answer, decimals=0):
         else:
             i += 2
 
-    wrong3 = float(tokens[0]) if tokens else correct_answer * 0.85
+    try:
+        wrong3 = float(tokens[0]) if tokens else correct_answer * 0.85
+    except (ValueError, TypeError):
+        wrong3 = correct_answer * 0.85
     wrong_answers.append(round(wrong3, decimals))
 
     # Generate additional wrong answers if needed
@@ -236,29 +239,27 @@ def generate_fraction_shortening_choices(expression, correct_answer, decimals=0)
     """ 
     fraction = Fraction(expression['numerator'],
                      expression['denominator'])
-    wrong_answers = []
-    
-    
-    # Multiplied by 2 (unsimplified)
-    wrong_answers.append(Fraction(fraction.numerator * 2, fraction.denominator * 2))
+    wrong_answers = set()
+    wrong_answers.add(Fraction(fraction.numerator, fraction.denominator))
+    wrong_answers.add(Fraction(fraction.numerator, fraction.denominator * 2))
     
     # Slightly modified fractions that are actually different
-    wrong_answers.append(Fraction(fraction.numerator + 1, fraction.denominator))
+    wrong_answers.add(Fraction(fraction.numerator + 1, fraction.denominator))
     if fraction.denominator > 1:
-        wrong_answers.append(Fraction(fraction.numerator, fraction.denominator - 1))
+        wrong_answers.add(Fraction(fraction.numerator, fraction.denominator - 1))
     else:
-        wrong_answers.append(Fraction(fraction.numerator, fraction.denominator + 1))
-    
-    # Ensure all wrong answers are unique and convert to LaTeX fraction form
-    wrong_answers = list(set(wrong_answers))
+        wrong_answers.add(Fraction(fraction.numerator, fraction.denominator + 1))
+    if len(wrong_answers) < 4:
+        wrong_answers.add(Fraction(1, 0))
+    # Convert all wrong answers to LaTeX fraction form
     wrong_answers = [
         f"\\frac{{{answer.numerator}}}{{{answer.denominator}}}" for answer in wrong_answers]
 
-    # Add the correct answer in LaTeX fraction form and shuffle
-    all_answers = [correct_answer] + wrong_answers[:3]
+    # Add the correct answer and shuffle
+    all_answers = wrong_answers[:4]
     random.shuffle(all_answers)
 
-    return all_answers 
+    return all_answers
 
 def generate_x_equation_choices(expression):
     """
@@ -276,12 +277,16 @@ def generate_x_equation_choices(expression):
         wrong_answers.add(expression["int1"] - expression["int2"])
         wrong_answers.add(expression["int2"] - expression["int1"])
         wrong_answers.add(expression["result"] * -1)
+        if len(wrong_answers) < 3:
+            wrong_answers.add(1)
         all_answers = [correct_answer] + list(wrong_answers)[:3]
 
     elif expression["operator"] == "-":
         wrong_answers.add(expression["int1"] + expression["int2"])
         wrong_answers.add(expression["int2"] + expression["int1"])
         wrong_answers.add(expression["result"] * -1)
+        if len(wrong_answers) < 3:
+            wrong_answers.add(1)
         all_answers = [correct_answer] + list(wrong_answers)[:3]
         
     elif expression["operator"] == "*":

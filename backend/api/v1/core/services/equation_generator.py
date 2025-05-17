@@ -1,5 +1,29 @@
 import random as rd
 import math
+from fractions import Fraction
+
+
+def format_fraction_latex(fraction):
+    """
+    Format a fraction as LaTeX with the minus sign outside the fraction for negative values.
+    
+    Args:
+        fraction: A Fraction object or string containing a LaTeX fraction
+        
+    Returns:
+        str: LaTeX representation with minus sign outside fraction if negative
+    """
+    # If the fraction is already a string, return it
+    if isinstance(fraction, str):
+        return fraction
+        
+    # Handle the negative sign placement for Fraction objects
+    if fraction.numerator < 0:
+        return f"-\\frac{{{abs(fraction.numerator)}}}{{{fraction.denominator}}}"
+    elif fraction.numerator == 0:
+        return "\\frac{0}{1}"
+    else:
+        return f"\\frac{{{fraction.numerator}}}{{{fraction.denominator}}}"
 
 
 def fraction_whole_number(negative_allowed: bool = False):
@@ -214,7 +238,13 @@ def fraction_operations_order(max_numerator: int = 2, max_denominator: int = 2):
                 new_denominator = str(fraction["denominator"])
                 pass
 
-    latex_fraction = f"\\frac{{{new_numerator}}}{{{new_denominator}}}"
+    # Format LaTeX with minus sign outside fraction for negative values
+    if new_numerator.startswith('-'):
+        new_numerator = new_numerator[1:]  # Remove minus sign
+        latex_fraction = f"-\\frac{{{new_numerator}}}{{{new_denominator}}}"
+    else:
+        latex_fraction = f"\\frac{{{new_numerator}}}{{{new_denominator}}}"
+
     return {
         "numerator": fraction["numerator"],
         "denominator": fraction["denominator"],

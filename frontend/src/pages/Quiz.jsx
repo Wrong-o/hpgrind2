@@ -18,6 +18,17 @@ const isLinearEquation = (questionObj) => {
   // For debugging in console
   console.log("Checking if question is linear equation:", questionObj);
   
+  // IMPORTANT: Specifically exclude addition and subtraction equations
+  if (questionObj.moment) {
+    if (questionObj.moment.includes('addition') || 
+        questionObj.moment.includes('subtraction') ||
+        questionObj.moment.includes('ekvationslösning_addition') ||
+        questionObj.moment.includes('ekvationslösning_subtraktion')) {
+      console.log("Identified as non-linear equation (addition/subtraction)");
+      return false;
+    }
+  }
+  
   // Most reliable: Check for graph_data field first
   if (questionObj?.graph_data) {
     console.log("Found graph_data, identified as linear equation");
@@ -41,8 +52,25 @@ const isLinearEquation = (questionObj) => {
     return true;
   }
   
+  // Check for specific x-equation moments that should NOT use the graph component
+  if (questionObj.moment && (
+      questionObj.moment.includes('x_equation_addition') ||
+      questionObj.moment.includes('x_equation_subtraction'))) {
+    console.log("Explicitly excluding x-equation addition/subtraction from graph component");
+    return false;
+  }
+  
   // If it's just a string question, use regex to determine
   if (typeof questionObj === 'string') {
+    // Check for addition/subtraction equation patterns to exclude
+    if (questionObj.includes('x -') || questionObj.includes('x +')) {
+      if (questionObj.match(/x\s*[+-]\s*\d+\s*=/) || 
+          questionObj.match(/x\s*=.*[+-]/)) {
+        console.log("Excluding addition/subtraction equation from graph rendering");
+        return false;
+      }
+    }
+    
     // More comprehensive regex patterns to handle different equation formats
     // For find-x type questions: pattern like "2x + 3 = 5" or "-x - 2 = 10"
     const findXRegex = /^-?\d*x\s*[+-]\s*\d+\s*=\s*-?\d+$/;
@@ -61,6 +89,16 @@ const isLinearEquation = (questionObj) => {
   
   // If it's a question object from the server
   if (typeof questionObj === 'object' && questionObj.question) {
+    // Check for addition/subtraction equation patterns to exclude
+    const questionText = questionObj.question;
+    if (questionText.includes('x -') || questionText.includes('x +')) {
+      if (questionText.match(/x\s*[+-]\s*\d+\s*=/) || 
+          questionText.match(/x\s*=.*[+-]/)) {
+        console.log("Excluding addition/subtraction equation from graph rendering");
+        return false;
+      }
+    }
+    
     // Check with multiple regex patterns
     const findXRegex = /^-?\d*x\s*[+-]\s*\d+\s*=\s*-?\d+$/;
     const findXRelaxedRegex = /-?\d*x\s*[+-]\s*\d+\s*=\s*-?\d+/;
