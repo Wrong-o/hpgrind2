@@ -100,7 +100,9 @@ const TriangleQuestion = ({ questionText, triangleData }) => {
   const [triangleInfo, setTriangleInfo] = useState({
     sides: [0, 0, 0],
     angles: [0, 0, 0],
-    type: 'Unknown'
+    type: 'Unknown',
+    // Store vertex to angle mapping
+    vertexAngles: {}
   });
 
   // Calculate distance between two points
@@ -239,64 +241,111 @@ const TriangleQuestion = ({ questionText, triangleData }) => {
       calculateDistance(triangleData.points[0], triangleData.points[1])
     ];
     
-    // Determine triangle type - do this before calculating angles
-    // so we can adjust angles based on type
+    // Determine triangle type
     const type = triangleData.type || determineTriangleType(sides, []);
     
-    // Calculate angles
-    let angles = [
-      calculateAngle(triangleData.points[1], triangleData.points[0], triangleData.points[2]),
-      calculateAngle(triangleData.points[0], triangleData.points[1], triangleData.points[2]),
-      calculateAngle(triangleData.points[0], triangleData.points[2], triangleData.points[1])
-    ];
+    // Get vertex labels
+    const vertexLabels = {
+      0: triangleData.labels ? triangleData.labels.point0 : 'A',
+      1: triangleData.labels ? triangleData.labels.point1 : 'B',
+      2: triangleData.labels ? triangleData.labels.point2 : 'C'
+    };
     
-    // Special handling for right-angled triangles
-    if (type === 'right-angled') {
-      // Find which angle is closest to 90 degrees
-      let rightAngleIndex = 0;
-      let minDiff = Math.abs(angles[0] - 90);
+    // Get angles - use angles from backend if available, otherwise calculate them
+    let angles;
+    // Map from vertex index to angle value
+    let vertexAngles = {};
+    
+    if (triangleData.angles) {
+      // Use the angles provided by the backend
+      console.log("Using angles from backend:", triangleData.angles);
       
-      for (let i = 1; i < 3; i++) {
-        const diff = Math.abs(angles[i] - 90);
-        if (diff < minDiff) {
-          minDiff = diff;
-          rightAngleIndex = i;
-        }
-      }
+      // In the triangle_sum_of_angles function, angles array is [angle_A, angle_B, angle_C]
+      // and these correspond directly to the vertices labeled A, B, C
       
-      // Set the right angle to exactly 90 degrees
-      angles[rightAngleIndex] = 90;
+      // Create a mapping from vertex labels to angles
+      // In the backend, angle_A corresponds to vertex A (index 0)
+      vertexAngles[0] = triangleData.angles[0]; // Angle at vertex A
+      vertexAngles[1] = triangleData.angles[1]; // Angle at vertex B
+      vertexAngles[2] = triangleData.angles[2]; // Angle at vertex C
       
-      // Calculate the other two angles to ensure they sum to 90
-      const remainingSum = angles[(rightAngleIndex + 1) % 3] + angles[(rightAngleIndex + 2) % 3];
-      const scaleFactor = 90 / remainingSum;
+      console.log("Vertex angles mapping:", vertexAngles);
       
-      angles[(rightAngleIndex + 1) % 3] = Math.round(angles[(rightAngleIndex + 1) % 3] * scaleFactor);
-      angles[(rightAngleIndex + 2) % 3] = 90 - angles[(rightAngleIndex + 1) % 3];
+      // Set angles array to match the order of vertices in the drawing
+      angles = [
+        vertexAngles[0],  // Angle at vertex A
+        vertexAngles[1],  // Angle at vertex B
+        vertexAngles[2]   // Angle at vertex C
+      ];
     } else {
-      // For non-right triangles, normalize angles to sum to 180 degrees
-      const angleSum = angles.reduce((sum, angle) => sum + angle, 0);
-      if (Math.abs(angleSum - 180) > 0.1) {
-        // Scale all angles proportionally to sum to 180
-        const scaleFactor = 180 / angleSum;
-        for (let i = 0; i < 3; i++) {
-          angles[i] = Math.round(angles[i] * scaleFactor);
+      // Calculate angles from coordinates
+      console.log("Calculating angles in frontend");
+      angles = [
+        calculateAngle(triangleData.points[1], triangleData.points[0], triangleData.points[2]),
+        calculateAngle(triangleData.points[0], triangleData.points[1], triangleData.points[2]),
+        calculateAngle(triangleData.points[0], triangleData.points[2], triangleData.points[1])
+      ];
+      
+      // Store the calculated angles in the vertexAngles map
+      vertexAngles[0] = angles[0];
+      vertexAngles[1] = angles[1];
+      vertexAngles[2] = angles[2];
+      
+      // Special handling for right-angled triangles and normalization
+      if (type === 'right-angled') {
+        // Find which angle is closest to 90 degrees
+        let rightAngleIndex = 0;
+        let minDiff = Math.abs(angles[0] - 90);
+        
+        for (let i = 1; i < 3; i++) {
+          const diff = Math.abs(angles[i] - 90);
+          if (diff < minDiff) {
+            minDiff = diff;
+            rightAngleIndex = i;
+          }
         }
         
-        // Ensure exactly 180 by adjusting the largest angle if needed
-        const correctedSum = angles.reduce((sum, angle) => sum + angle, 0);
-        if (correctedSum !== 180) {
-          const largestAngleIndex = angles.indexOf(Math.max(...angles));
-          angles[largestAngleIndex] += (180 - correctedSum);
+        // Set the right angle to exactly 90 degrees
+        angles[rightAngleIndex] = 90;
+        
+        // Calculate the other two angles to ensure they sum to 90
+        const remainingSum = angles[(rightAngleIndex + 1) % 3] + angles[(rightAngleIndex + 2) % 3];
+        const scaleFactor = 90 / remainingSum;
+        
+        angles[(rightAngleIndex + 1) % 3] = Math.round(angles[(rightAngleIndex + 1) % 3] * scaleFactor);
+        angles[(rightAngleIndex + 2) % 3] = 90 - angles[(rightAngleIndex + 1) % 3];
+      } else {
+        // For non-right triangles, normalize angles to sum to 180 degrees
+        const angleSum = angles.reduce((sum, angle) => sum + angle, 0);
+        if (Math.abs(angleSum - 180) > 0.1) {
+          // Scale all angles proportionally to sum to 180
+          const scaleFactor = 180 / angleSum;
+          for (let i = 0; i < 3; i++) {
+            angles[i] = Math.round(angles[i] * scaleFactor);
+          }
+          
+          // Ensure exactly 180 by adjusting the largest angle if needed
+          const correctedSum = angles.reduce((sum, angle) => sum + angle, 0);
+          if (correctedSum !== 180) {
+            const largestAngleIndex = angles.indexOf(Math.max(...angles));
+            angles[largestAngleIndex] += (180 - correctedSum);
+          }
         }
       }
     }
     
-    // Update triangle info state
+    // Verify angles sum to 180 degrees
+    const sumOfAngles = angles.reduce((sum, angle) => sum + angle, 0);
+    console.log("Sum of angles:", sumOfAngles, "Should be 180");
+    console.log("Final angles:", angles);
+    console.log("Vertex to angle mapping:", vertexAngles);
+    
+    // Update triangle info state with the vertex angle mapping
     setTriangleInfo({
       sides: sides.map(s => Number(s.toFixed(2))),
       angles: angles.map(a => Number(a.toFixed(0))),
-      type
+      type,
+      vertexAngles
     });
     
     // Draw points
@@ -396,8 +445,11 @@ const TriangleQuestion = ({ questionText, triangleData }) => {
       // Draw arc
       ctx.beginPath();
       
+      // Angle at this vertex
+      const angleAtVertex = vertexAngles[i];
+      
       // For right angle, draw a square instead of an arc
-      if (angles[i] === 90) {
+      if (angleAtVertex === 90) {
         // Calculate points for small square to represent right angle
         const sqSize = 10;
         const mid1x = v1x / v1Len * sqSize + vertex[0];
@@ -428,8 +480,10 @@ const TriangleQuestion = ({ questionText, triangleData }) => {
         bisectorAngle += Math.PI;
       }
       
-      // Make sure we're displaying the correct angles that sum to 180
-      const angleDisplay = triangleInfo.angles[i];
+      // Use the angle from our vertex angle mapping
+      const angleDisplay = angleAtVertex;
+      const vertexLabel = vertexLabels[i];
+      console.log(`Drawing angle at vertex ${vertexLabel}: ${angleDisplay}°`);
       
       const labelRadius = arcRadius * 1.5;
       const labelX = vertex[0] + Math.cos(bisectorAngle) * labelRadius;
@@ -513,12 +567,19 @@ const TriangleQuestion = ({ questionText, triangleData }) => {
             }).join(', ')}
           </div>
           <div>
-            <span className="font-semibold">Angles:</span> {triangleInfo.angles.map((a, i) => {
-              const vertexLabel = triangleData.labels ? 
-                triangleData.labels[`point${i}`] : 
-                String.fromCharCode(65 + i); // Default to A, B, C
-              return ` ${vertexLabel}=${a}°`;
-            }).join(', ')}
+            <span className="font-semibold">Angles:</span> {Object.entries(triangleInfo.vertexAngles).length > 0 ? 
+              Object.entries(triangleInfo.vertexAngles).map(([vertexIndex, angle]) => {
+                const vertexLabel = triangleData.labels ? 
+                  triangleData.labels[`point${vertexIndex}`] : 
+                  String.fromCharCode(65 + parseInt(vertexIndex)); // Default to A, B, C
+                return ` ${vertexLabel}=${angle}°`;
+              }).join(', ') : 
+              triangleInfo.angles.map((a, i) => {
+                const vertexLabel = triangleData.labels ? 
+                  triangleData.labels[`point${i}`] : 
+                  String.fromCharCode(65 + i); // Default to A, B, C
+                return ` ${vertexLabel}=${a}°`;
+              }).join(', ')}
           </div>
         </div>
       </div>
@@ -538,7 +599,9 @@ TriangleQuestion.propTypes = {
       side1: PropTypes.string,
       side2: PropTypes.string
     }),
-    type: PropTypes.string
+    type: PropTypes.string,
+    angles: PropTypes.arrayOf(PropTypes.number),
+    missing_angle_vertex: PropTypes.string
   }).isRequired
 };
 

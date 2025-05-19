@@ -8,6 +8,7 @@ import { useSound } from '../contexts/SoundContext';
 import { useDatabase } from '../contexts/DatabaseContext';
 import authStore from '../store/authStore';
 import LinearEquationQuestion from './quiz-components/LinearEquationQuestion';
+import TriangleQuestion from './quiz-components/TriangleQuestion';
 
 const FocusPractice = ({ moment, onClose }) => {
   const { refreshUserData } = useDatabase();
@@ -49,6 +50,8 @@ const FocusPractice = ({ moment, onClose }) => {
     try {
       setLoading(true);
       
+      console.log(`FocusPractice - Starting fetchQuestions for moment: ${moment}`);
+      
       // Number of questions to fetch
       const questionCount = 3;
       
@@ -63,8 +66,13 @@ const FocusPractice = ({ moment, onClose }) => {
         count: questionCount
       };
       
+      console.log(`FocusPractice - Request body: ${JSON.stringify(requestBody)}`);
+      
       // Single API call to fetch multiple questions - batch endpoint is faster!
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/v1/question_generator/batch`, {
+      const apiUrl = `${import.meta.env.VITE_API_URL}/api/v1/question_generator/batch`;
+      console.log(`FocusPractice - API URL: ${apiUrl}`);
+      
+      const response = await fetch(apiUrl, {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -74,8 +82,10 @@ const FocusPractice = ({ moment, onClose }) => {
       
       if (!response.ok) {
         const errorText = await response.text();
+        console.error(`FocusPractice - HTTP error: ${response.status}, Details: ${errorText}`);
         throw new Error(`HTTP error! Status: ${response.status}. Details: ${errorText}`);
       }
+      
       
       // Parse all questions at once
       const questionsData = await response.json();
@@ -87,6 +97,26 @@ const FocusPractice = ({ moment, onClose }) => {
       const formattedQuestions = questionsData.map((data, i) => {
         console.log(`FocusPractice - Processing question ${i}:`, data);
         
+        // Normalize triangle question data - handle different key formats
+        if (data.moment && (data.moment.includes('trianglar') || data.moment.includes('triangle'))) {
+          // Ensure question text is properly set
+          if (data.question_text && !data.question) {
+            data.question = data.question_text;
+            console.log(`FocusPractice - Mapped question_text to question for triangle question`);
+          }
+          
+          // Ensure answers are properly set
+          if (!data.answers && data.wrong_answers) {
+            const correctAnswer = data.correct_answer || "";
+            // Remove the degree symbol if present
+            const cleanCorrectAnswer = correctAnswer.replace('°', '');
+            const cleanWrongAnswers = data.wrong_answers.map(ans => ans.replace('°', ''));
+            
+            data.answers = [cleanCorrectAnswer, ...cleanWrongAnswers];
+            console.log(`FocusPractice - Reconstructed answers array:`, data.answers);
+          }
+        }
+        
         // Check if this is a linear equation by examining the data
         const isLinear = data.graph_data || 
                         data.category === "Linear Equations" ||
@@ -97,6 +127,29 @@ const FocusPractice = ({ moment, onClose }) => {
         
         if (isLinear) {
           console.log(`FocusPractice - Question ${i} identified as linear equation`);
+        }
+        
+        // Check if this is a triangle question
+        const isTriangle = data.triangle_data || 
+                          data.category === "Triangles" ||
+                          (data.moment && (
+                            data.moment.includes('triangle') ||
+                            data.moment.includes('trianglar')
+                          ));
+        
+        if (isTriangle) {
+          console.log(`FocusPractice - Question ${i} identified as triangle question:`, {
+            hasTriangleData: !!data.triangle_data,
+            category: data.category,
+            moment: data.moment,
+            questionText: data.question_text || data.question
+          });
+          
+          if (data.triangle_data) {
+            console.log(`FocusPractice - Triangle data:`, data.triangle_data);
+          } else {
+            console.error(`FocusPractice - Missing triangle_data for triangle question!`);
+          }
         }
         
         // Process graph_data if it exists or needs to be generated
@@ -153,7 +206,11 @@ const FocusPractice = ({ moment, onClose }) => {
           difficulty: data.difficulty,
           moment: data.moment || moment, // Use provided moment as fallback
           // Include graph_data if it exists or we created it
-          ...(graphData && { graph_data: graphData })
+          ...(graphData && { graph_data: graphData }),
+          // Include triangle_data if it exists
+          ...(data.triangle_data && { triangle_data: data.triangle_data }),
+          // Include missing angle vertex if it exists (for triangle questions)
+          ...(data.missing_angle_vertex && { missing_angle_vertex: data.missing_angle_vertex })
         };
       });
       
@@ -215,6 +272,13 @@ const FocusPractice = ({ moment, onClose }) => {
       setAnsweredSubtraction(prev => prev + 1);
       if (isAnswerCorrect) {
         setCorrectSubtraction(prev => prev + 1);
+        playCorrectSound();
+      } else {
+        playWrongSound();
+      }
+    } else {
+      // For all other question types (including triangles and linear equations)
+      if (isAnswerCorrect) {
         playCorrectSound();
       } else {
         playWrongSound();
@@ -401,6 +465,49 @@ const FocusPractice = ({ moment, onClose }) => {
     return false;
   };
 
+  // Helper function to determine if a question is a triangle question
+  const isTriangleQuestion = (questionObj) => {
+    if (!questionObj) return false;
+    
+    // For debugging in console
+    console.log("FocusPractice - Checking if question is triangle question:", questionObj);
+    
+    // Check for triangle_data field first - most reliable indicator
+    if (questionObj?.triangle_data) {
+      console.log("FocusPractice - Found triangle_data, identified as triangle question");
+      return true;
+    }
+    
+    // Check the moment name to identify triangle questions
+    if (questionObj.moment) {
+      if (questionObj.moment.includes('triangle') || 
+          questionObj.moment.includes('trianglar')) {
+        console.log("FocusPractice - Identified as triangle question by moment:", questionObj.moment);
+        return true;
+      }
+    }
+    
+    // Check category
+    if (questionObj.category === "Triangles") {
+      console.log("FocusPractice - Identified as triangle question by category");
+      return true;
+    }
+    
+    // Check for missing angle pattern in question text
+    if (typeof questionObj === 'object' && questionObj.question) {
+      const questionText = questionObj.question;
+      if (questionText.includes('missing angle') || 
+          questionText.includes('angle in the triangle') ||
+          questionText.includes('triangle where the other angles')) {
+        console.log("FocusPractice - Identified as triangle question by text pattern");
+        return true;
+      }
+    }
+    
+    console.log("FocusPractice - Not identified as triangle question");
+    return false;
+  };
+
   if (quizCompleted) {
     return (
       <div className="absolute inset-0 z-50 bg-white p-8">
@@ -490,7 +597,12 @@ const FocusPractice = ({ moment, onClose }) => {
           <div className="flex-1 min-w-[500px]">
             {/* Question Box */}
             <div className="bg-white rounded-lg p-6 shadow-sm mb-6">
-              {isLinearEquation(currentQuestion) ? (
+              {isTriangleQuestion(currentQuestion) ? (
+                <TriangleQuestion 
+                  questionText={currentQuestion.question}
+                  triangleData={currentQuestion.triangle_data}
+                />
+              ) : isLinearEquation(currentQuestion) ? (
                 <LinearEquationQuestion 
                   latexString={currentQuestion.question}
                   momentType={currentQuestion.moment || ''}

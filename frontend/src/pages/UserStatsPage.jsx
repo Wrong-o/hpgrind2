@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import authStore from '../store/authStore';
 import LoadingScreen from '../components/LoadingScreen';
+import RowSteps from '../components/Stepper';
 
 const UserStatsPage = () => {
     const token = authStore((state) => state.token);
@@ -241,6 +242,34 @@ const UserStatsPage = () => {
     return (
         <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white p-8">
             <div className="max-w-4xl mx-auto space-y-8">
+                {/* Stepper Component */}
+                <div className="w-full flex justify-center mb-8">
+                    <RowSteps
+                        defaultStep={2}
+                        steps={[
+                            {
+                                title: "Skapa konto",
+                            },
+                            {
+                                title: "Kalibrera grunderna",
+                            },
+                            {
+                                title: "Nå grön nivå på grunderna",
+                            },
+                            {
+                                title: "Genomgå full kalibrering på delmoment",
+                            },
+                            {
+                                title: "Nå minst gul på samtliga delmoment",
+                            },
+                            
+                        ]}
+                        /* This disables user interaction with the stepper */
+                        className="pointer-events-none"
+                        onStepChange={() => {}}
+                    />
+                </div>
+                
                 <div className="flex justify-between items-center">
                     <h1 className="text-4xl font-bold text-gray-900">
                         Användarstatistik

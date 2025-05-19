@@ -10,6 +10,7 @@ import { ChevronDoubleRightIcon, ChevronRightIcon } from '@heroicons/react/24/ou
 import { useSound } from '../contexts/SoundContext';
 import { useDatabase } from '../contexts/DatabaseContext';
 import LinearEquationQuestion from '../components/quiz-components/LinearEquationQuestion';
+import TriangleQuestion from '../components/quiz-components/TriangleQuestion';
 
 // Helper function to determine if a question is a linear equation
 const isLinearEquation = (questionObj) => {
@@ -116,6 +117,49 @@ const isLinearEquation = (questionObj) => {
   return false;
 };
 
+// Helper function to determine if a question is a triangle question
+const isTriangleQuestion = (questionObj) => {
+  if (!questionObj) return false;
+  
+  // For debugging in console
+  console.log("Checking if question is triangle question:", questionObj);
+  
+  // Check for triangle_data field first - most reliable indicator
+  if (questionObj?.triangle_data) {
+    console.log("Found triangle_data, identified as triangle question");
+    return true;
+  }
+  
+  // Check the moment name to identify triangle questions
+  if (questionObj.moment) {
+    if (questionObj.moment.includes('triangle') || 
+        questionObj.moment.includes('trianglar')) {
+      console.log("Identified as triangle question by moment:", questionObj.moment);
+      return true;
+    }
+  }
+  
+  // Check category
+  if (questionObj.category === "Triangles") {
+    console.log("Identified as triangle question by category");
+    return true;
+  }
+  
+  // Check for missing angle pattern in question text
+  if (typeof questionObj === 'object' && questionObj.question) {
+    const questionText = questionObj.question;
+    if (questionText.includes('missing angle') || 
+        questionText.includes('angle in the triangle') ||
+        questionText.includes('triangle where the other angles')) {
+      console.log("Identified as triangle question by text pattern");
+      return true;
+    }
+  }
+  
+  console.log("Not identified as triangle question");
+  return false;
+};
+
 const Quiz = () => {
   const { refreshUserData } = useDatabase();
   const [selectedAnswer, setSelectedAnswer] = useState(null);
@@ -152,23 +196,23 @@ const Quiz = () => {
       const questionCount = 5;
 
       // List of available moments with equal probabilities
-      // Add linear equation moments to ensure they're included in the mix
+      // Add linear equation and triangle moments to ensure they're included in the mix
       const moments = [
         {
           moment: "basics_fraktioner_dividera",
-          probability: 0.2
+          probability: 0.15
         },
         {
           moment: "basics_fraktioner_multiplicera",
-          probability: 0.2
+          probability: 0.15
         },
         {
           moment: "basics_fraktioner_addera",
-          probability: 0.2
+          probability: 0.15
         },
         {
           moment: "basics_fraktioner_subtrahera",
-          probability: 0.2
+          probability: 0.15
         },
         {
           moment: "ekvationer_linjer_ekvation_x",
@@ -176,6 +220,14 @@ const Quiz = () => {
         },
         {
           moment: "ekvationer_linjer_ekvation_y",
+          probability: 0.1
+        },
+        {
+          moment: "trianglar_vinkelsumma",
+          probability: 0.1
+        },
+        {
+          moment: "trianglar_pythagoras",
           probability: 0.1
         }
       ];
@@ -265,7 +317,11 @@ const Quiz = () => {
           moment: data.moment || "",
           difficulty: data.difficulty || 2, // Store difficulty, default to 2 if not provided
           // Pass through graph_data if it exists or we created it
-          ...(graphData && { graph_data: graphData })
+          ...(graphData && { graph_data: graphData }),
+          // Pass through triangle_data if it exists
+          ...(data.triangle_data && { triangle_data: data.triangle_data }),
+          // Pass through missing angle vertex if it exists (for triangle questions)
+          ...(data.missing_angle_vertex && { missing_angle_vertex: data.missing_angle_vertex })
         };
       });
       
@@ -469,7 +525,12 @@ const Quiz = () => {
           <div className="flex-1 min-w-[500px]">
             {/* Question Box */}
             <div className="bg-white rounded-lg p-6 shadow-sm mb-6">
-              {isLinearEquation(currentQuestion) ? (
+              {isTriangleQuestion(currentQuestion) ? (
+                <TriangleQuestion 
+                  questionText={currentQuestion.question}
+                  triangleData={currentQuestion.triangle_data}
+                />
+              ) : isLinearEquation(currentQuestion) ? (
                 <LinearEquationQuestion 
                   latexString={currentQuestion.question}
                   momentType={currentQuestion.moment || ''}

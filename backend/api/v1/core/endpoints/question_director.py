@@ -119,6 +119,34 @@ async def generate_question(moment: str, difficulty: int = 1):
     try:
         logger.info(f"Generating question for moment: {moment}, difficulty: {difficulty}")
         loop = asyncio.get_running_loop()
+        
+        # Extra error handling for triangle questions
+        if "trianglar" in moment:
+            logger.info(f"Triangle question detected: {moment}")
+            try:
+                question_function = moment_functions.get(moment)
+                if question_function is None:
+                    logger.error(f"Triangle function not found for moment: {moment}")
+                    raise ValueError(f"Function not found for moment: {moment}")
+                
+                logger.info(f"Calling triangle question function: {question_function.__name__}")
+                
+                # Direct call for debugging
+                question_data = question_function(difficulty=difficulty)
+                
+                logger.info(f"Triangle question generated successfully with keys: {list(question_data.keys())}")
+                if "triangle_data" not in question_data:
+                    logger.warning(f"Triangle question missing triangle_data key: {question_data}")
+                
+                # Return the data
+                question_data["moment"] = moment
+                question_data["difficulty"] = difficulty
+                return question_data
+            except Exception as e:
+                logger.exception(f"Error generating triangle question: {str(e)}")
+                raise
+        
+        # Standard execution path for non-triangle questions
         question_data = await loop.run_in_executor(
             None, lambda: moment_functions[moment](difficulty=difficulty)
         )

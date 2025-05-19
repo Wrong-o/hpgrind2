@@ -350,7 +350,7 @@ def generate_fraction_shortening_choices(expression, correct_answer, decimals=0)
     
     # Shuffle the answers
     random.shuffle(all_answers)
-    
+
     return all_answers[:4]  # Return exactly 4 answers
 
 def generate_x_equation_choices(expression):
