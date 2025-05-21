@@ -55,6 +55,11 @@ const Updates = () => {
   // Updates are manually maintained here
   const updates = [
     {
+      date: '2025-05-21',
+      title: 'Meme-funktionen är nu live! Gå till "anpassa din upplevelse" för att testa!',
+      description: 'Du kan nu ställa frågor till AI-chatten och få hjälp med att lösa dina matteproblem.',
+      type: 'new'
+    },    {
       date: '2024-04-28',
       title: 'AI-chatten är nu live!',
       description: 'Du kan nu ställa frågor till AI-chatten och få hjälp med att lösa dina matteproblem.',

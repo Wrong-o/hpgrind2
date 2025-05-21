@@ -22,7 +22,7 @@ const FocusPractice = ({ moment, onClose }) => {
   const [quizCompleted, setQuizCompleted] = useState(false);
   const [results, setResults] = useState([]);
   const startTimeRef = useRef(Date.now());
-  const { isMuted } = useSound();
+  const { isMuted, playSound } = useSound();
   const [answeredMultiplication, setAnsweredMultiplication] = useState(0);
   const [answeredDivision, setAnsweredDivision] = useState(0);
   const [answeredAddition, setAnsweredAddition] = useState(0);
@@ -248,40 +248,40 @@ const FocusPractice = ({ moment, onClose }) => {
       setAnsweredMultiplication(prev => prev + 1);
       if (isAnswerCorrect) {
         setCorrectMultiplication(prev => prev + 1);
-        playCorrectSound();
+        playSound('correct', 0.3);
       } else {
-        playWrongSound();
+        playSound('wrong', 0.3);
       }
     } else if (question.moment.includes('dividera')) {
       setAnsweredDivision(prev => prev + 1);
       if (isAnswerCorrect) {
         setCorrectDivision(prev => prev + 1);
-        playCorrectSound();
+        playSound('correct', 0.3);
       } else {
-        playWrongSound();
+        playSound('wrong', 0.3);
       }
     } else if (question.moment.includes('addera')) {
       setAnsweredAddition(prev => prev + 1);
       if (isAnswerCorrect) {
         setCorrectAddition(prev => prev + 1);
-        playCorrectSound();
+        playSound('correct', 0.3);
       } else {
-        playWrongSound();
+        playSound('wrong', 0.3);
       }
     } else if (question.moment.includes('subtrahera')) {
       setAnsweredSubtraction(prev => prev + 1);
       if (isAnswerCorrect) {
         setCorrectSubtraction(prev => prev + 1);
-        playCorrectSound();
+        playSound('correct', 0.3);
       } else {
-        playWrongSound();
+        playSound('wrong', 0.3);
       }
     } else {
       // For all other question types (including triangles and linear equations)
       if (isAnswerCorrect) {
-        playCorrectSound();
+        playSound('correct', 0.3);
       } else {
-        playWrongSound();
+        playSound('wrong', 0.3);
       }
     }
 
@@ -338,24 +338,18 @@ const FocusPractice = ({ moment, onClose }) => {
 
   const playSkipSound = useCallback(() => {
     if (isMuted) return;
-    const audio = new Audio('/sounds/quiz_skip.wav');
-    audio.volume = 0.3;
-    audio.play().catch(err => console.log('Audio playback failed:', err));
-  }, [isMuted]);
+    playSound('skip', 0.3);
+  }, [isMuted, playSound]);
 
   const playCorrectSound = useCallback(() => {
     if (isMuted) return;
-    const audio = new Audio('/sounds/quiz_correct.wav');
-    audio.volume = 0.3;
-    audio.play().catch(err => console.log('Audio playback failed:', err));
-  }, [isMuted]);
+    playSound('correct', 0.3);
+  }, [isMuted, playSound]);
 
   const playWrongSound = useCallback(() => {
     if (isMuted) return;
-    const audio = new Audio('/sounds/quiz_wrong.wav');
-    audio.volume = 0.3;
-    audio.play().catch(err => console.log('Audio playback failed:', err));
-  }, [isMuted]);
+    playSound('wrong', 0.3);
+  }, [isMuted, playSound]);
   const handleSkip = () => {
     playSkipSound();
     setSkipped(true);

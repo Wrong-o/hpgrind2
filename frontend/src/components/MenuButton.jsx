@@ -10,14 +10,12 @@ const MenuButton = ({
   textSize = "text-lg",
   icon = null
 }) => {
-  const { isMuted } = useSound();
+  const { isMuted, playSound } = useSound();
   
   const playHoverSound = useCallback(() => {
     if (isMuted) return;
-    const audio = new Audio('/sounds/hover.wav');
-    audio.volume = 0.2;
-    audio.play().catch(err => console.log('Audio playback failed:', err));
-  }, [isMuted]);
+    playSound('hover', 0.2);
+  }, [isMuted, playSound]);
 
   // Base classes that will always be applied
   const baseClasses = "transition-colors p-4 md:p-6 rounded-lg cursor-pointer border shadow-md flex items-center justify-center min-h-[100px] w-full";

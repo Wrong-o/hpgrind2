@@ -11,17 +11,15 @@ const AnswerButton = ({
   onClick = () => {},
   textSize = "text-lg"
 }) => {
-  const { isMuted } = useSound();
+  const { isMuted, playSound } = useSound();
   const [dynamicTextSize, setDynamicTextSize] = useState(textSize);
   const containerRef = useRef(null);
   const contentRef = useRef(null);
   
   const playHoverSound = useCallback(() => {
     if (isMuted) return;
-    const audio = new Audio('/sounds/hover.wav');
-    audio.volume = 0.2;
-    audio.play().catch(err => console.log('Audio playback failed:', err));
-  }, [isMuted]);
+    playSound('hover', 0.2);
+  }, [isMuted, playSound]);
 
   useEffect(() => {
     const adjustTextSize = () => {

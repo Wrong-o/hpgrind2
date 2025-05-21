@@ -173,7 +173,11 @@ const Quiz = () => {
   const [results, setResults] = useState([]);
   const fetchedRef = useRef(false);
   const startTimeRef = useRef(Date.now());
-  const { isMuted } = useSound();
+  const { isMuted, playSound } = useSound();
+  
+  // Sound effects from the selected sound pack will be played
+  // for correct answers, wrong answers, and skipped questions
+  // Available sound packs: standard, meme, and premium packs
   
   useEffect(() => {
     // Only run if not already fetched - prevents duplicate calls in StrictMode
@@ -415,24 +419,18 @@ const Quiz = () => {
 
   const playSkipSound = useCallback(() => {
     if (isMuted) return;
-    const audio = new Audio('/sounds/quiz_skip.wav');
-    audio.volume = 0.3;
-    audio.play().catch(err => console.log('Audio playback failed:', err));
-  }, [isMuted]);
+    playSound('skip', 0.3);
+  }, [isMuted, playSound]);
 
   const playCorrectSound = useCallback(() => {
     if (isMuted) return;
-    const audio = new Audio('/sounds/quiz_correct.wav');
-    audio.volume = 0.3;
-    audio.play().catch(err => console.log('Audio playback failed:', err));
-  }, [isMuted]);
+    playSound('correct', 0.3);
+  }, [isMuted, playSound]);
 
   const playWrongSound = useCallback(() => {
     if (isMuted) return;
-    const audio = new Audio('/sounds/quiz_wrong.wav');
-    audio.volume = 0.3;
-    audio.play().catch(err => console.log('Audio playback failed:', err));
-  }, [isMuted]);
+    playSound('wrong', 0.3);
+  }, [isMuted, playSound]);
   const handleSkip = () => {
     playSkipSound();
     setSkipped(true);

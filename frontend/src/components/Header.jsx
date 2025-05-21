@@ -2,14 +2,17 @@ import React, { useEffect, useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import Logo from '../assets/favicon.svg?react';
 import authStore from '../store/authStore';
+import { useTheme } from '../contexts/ThemeContext';
 import SmallButton from './SmallButton';
 import { UserCircleIcon } from '@heroicons/react/24/outline';
+
 const Header = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const isLoggedIn = authStore((state) => state.isLoggedIn);
   const logout = authStore((state) => state.logout);
   const initializeAuth = authStore((state) => state.initializeAuth);
+  const { themeData, getThemeClasses } = useTheme();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   useEffect(() => {
@@ -93,6 +96,10 @@ const Header = () => {
     setIsSidebarOpen(!isSidebarOpen);
   };
 
+  // Header background gradient based on theme
+  const headerBgClass = `bg-gradient-to-r from-${themeData.primary}-600 to-${themeData.secondary}-700`;
+  const sidebarBgClass = `bg-gradient-to-b from-${themeData.primary}-600 to-${themeData.secondary}-800`;
+
   // Navigation items based on login status
   const navItems = !isLoggedIn ? (
     <>
@@ -100,21 +107,21 @@ const Header = () => {
         <SmallButton
           text="Testa demo"
           onClick={handleDemoClick}
-          className="w-full md:w-auto bg-teal-600 hover:bg-gray-800 text-white hover:text-white"
+          className={`w-full md:w-auto ${getThemeClasses('secondaryButton')} text-white hover:text-white`}
         />
       </li>
       <li className="mb-2 md:mb-0">
         <SmallButton
           text="Hur fungerar HPGrind"
           onClick={handleHowItWorksClick}
-          className="w-full md:w-auto bg-teal-600 hover:bg-gray-800 text-white hover:text-white"
+          className={`w-full md:w-auto ${getThemeClasses('secondaryButton')} text-white hover:text-white`}
         />
       </li>
       <li className="mb-2 md:mb-0">
         <SmallButton
           text="Logga in"
           onClick={() => navigate('/login')}
-          className="w-full md:w-auto bg-purple-600 hover:bg-gray-800 text-white hover:text-white border border-white animate-pulse shadow-[0_0_150px_rgba(255,0,0,0.2)]"
+          className={`w-full md:w-auto ${getThemeClasses('accentButton')} text-white hover:text-white border border-white animate-pulse shadow-[0_0_150px_rgba(255,0,0,0.2)]`}
         />
       </li>
     </>
@@ -124,7 +131,7 @@ const Header = () => {
         <SmallButton
           text="Huvudmeny"
           onClick={handleMainMenuClick}
-          className="w-full md:w-auto bg-white-500 hover:bg-gray-800 text-white hover:text-white"
+          className={`w-full md:w-auto ${getThemeClasses('primaryButton')} text-white hover:text-white`}
         />
       </li>
       <li className="mb-2 md:mb-0">
@@ -148,7 +155,7 @@ const Header = () => {
   return (
     <>
       {/* Main header always visible */}
-      <header className="bg-gradient-to-r from-blue-600 to-blue-800 text-white py-4 px-6 shadow-md sticky top-0 z-50">
+      <header className={`${headerBgClass} text-white py-4 px-6 shadow-md sticky top-0 z-50`}>
         <div className="container mx-auto flex justify-between items-center">
           <div className="flex items-center">
             <Link to="/" className="flex items-center">
@@ -166,7 +173,7 @@ const Header = () => {
           <SmallButton
             onClick={toggleSidebar}
             text="Meny"
-            className="md:hidden p-2 rounded-lg hover:bg-blue-500 focus:outline-none"
+            className={`md:hidden p-2 rounded-lg hover:bg-${themeData.primary}-500 focus:outline-none`}
             aria-label="Toggle menu"
             icon={
               <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -182,7 +189,7 @@ const Header = () => {
         onClick={toggleSidebar}>
       </div>
       
-      <div className={`fixed top-0 right-0 w-64 h-full bg-gradient-to-b from-blue-600 to-blue-800 shadow-lg z-50 transform transition-transform duration-300 ease-in-out md:hidden ${isSidebarOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+      <div className={`fixed top-0 right-0 w-64 h-full ${sidebarBgClass} shadow-lg z-50 transform transition-transform duration-300 ease-in-out md:hidden ${isSidebarOpen ? 'translate-x-0' : 'translate-x-full'}`}>
         <div className="p-5">
           <div className="flex justify-between items-center mb-6">
             <Link to="/" className="flex items-center" onClick={() => setIsSidebarOpen(false)}>
@@ -190,7 +197,7 @@ const Header = () => {
             </Link>
             <button 
               onClick={toggleSidebar}
-              className="p-2 rounded-lg hover:bg-blue-500 focus:outline-none"
+              className={`p-2 rounded-lg hover:bg-${themeData.primary}-500 focus:outline-none`}
               aria-label="Close menu"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">

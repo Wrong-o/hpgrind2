@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDatabase } from '../contexts/DatabaseContext';
+import { useTheme } from '../contexts/ThemeContext';
 import FocusPractice from '../components/FocusPractice';
 import MenuButton from '../components/MenuButton';
 import SmallButton from '../components/SmallButton';
@@ -16,6 +17,7 @@ import {
 
 function MainMenu() {
   const { categoryStats, isLoading, error, ProgressColors } = useDatabase();
+  const { getThemeClasses, themeData } = useTheme();
   const navigate = useNavigate();
   const [selectedPracticeNode, setSelectedPracticeNode] = useState(null);
 
@@ -40,14 +42,14 @@ function MainMenu() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white flex items-center justify-center">
+      <div className={`min-h-screen ${getThemeClasses('background')} flex items-center justify-center`}>
         <p className="text-gray-600">Laddar...</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
+    <div className={`min-h-screen ${getThemeClasses('background')}`}>
       <div className="container mx-auto px-4 py-6">
         <div className="flex flex-col lg:flex-row gap-6">
           {/* Left Column - Menu Buttons */}
@@ -55,19 +57,19 @@ function MainMenu() {
             <h2 className="text-2xl md:text-3xl font-bold mb-4 text-gray-800 border-b-2 border-blue-500 pb-2 inline-block">Meny</h2>
             <MenuButton
               onClick={() => handleGrindQuizStart()}
-              className="w-full bg-blue-600 text-white px-4 py-3 md:px-6 md:py-4 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 text-base md:text-lg"
+              className={`w-full ${getThemeClasses('primaryButton')} px-4 py-3 md:px-6 md:py-4 rounded-lg transition-colors flex items-center justify-center gap-2 text-base md:text-lg`}
               text="Kalibrering: Träna brett för att få bättre rekommendationer"
               icon={<AcademicCapIcon className="w-5 h-5 md:w-6 md:h-6" />}
             />
             <MenuButton
               onClick={() => navigate('/category-stats')}
-              className="w-full bg-teal-600 text-white px-4 py-3 md:px-6 md:py-4 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 text-base md:text-lg"
+              className={`w-full ${getThemeClasses('secondaryButton')} px-4 py-3 md:px-6 md:py-4 rounded-lg transition-colors flex items-center justify-center gap-2 text-base md:text-lg`}
               text="Momentträd: Se dina moment"
               icon={<ChartBarIcon className="w-5 h-5 md:w-6 md:h-6" />}
             />
             <MenuButton
               onClick={() => navigate('/customize-experience')}
-              className="w-full bg-indigo-600 text-white px-4 py-3 md:px-6 md:py-4 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 text-base md:text-lg"
+              className={`w-full ${getThemeClasses('accentButton')} px-4 py-3 md:px-6 md:py-4 rounded-lg transition-colors flex items-center justify-center gap-2 text-base md:text-lg`}
               text="Anpassa din upplevelse"
               icon={<Cog6ToothIcon className="w-5 h-5 md:w-6 md:h-6" />}
             />

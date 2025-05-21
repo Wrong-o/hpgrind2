@@ -2,67 +2,92 @@ import React, { useState } from 'react';
 import { VideoPlayer } from '../VideoPlayer';
 import { Calculator } from './Calculator';
 import DrawingPad from './DrawingPad';
-import SmallButton from '../SmallButton';
 import AIChatWindow from './AIChatWindow';
 import { PlayCircleIcon, CalculatorIcon, PencilIcon, ChatBubbleLeftIcon } from '@heroicons/react/24/outline';
+import { useTheme } from '../../contexts/ThemeContext';
 
 const QuizAssistant = ({ VideoName, Question }) => {
-    const [videoShowing, setVideoShowing] = useState(false);
-    const [calculatorShowing, setCalculatorShowing] = useState(false);
-    const [drawingPadShowing, setDrawingPadShowing] = useState(false);
-    const [chatShowing, setChatShowing] = useState(false);
+    // Replace multiple state variables with a single activeHelp state
+    const [activeHelp, setActiveHelp] = useState(null); // 'video', 'calculator', 'drawing', 'chat', or null
+    const { getThemeClasses, themeData } = useTheme();
 
-    const handleVideoToggle = () => {
-        setVideoShowing(!videoShowing);
+    // Single toggle function to handle all help types
+    const toggleHelp = (helpType) => {
+        if (activeHelp === helpType) {
+            // If clicking the active help, turn it off
+            setActiveHelp(null);
+        } else {
+            // Otherwise, switch to the clicked help
+            setActiveHelp(helpType);
+        }
     };
 
-    const handleCalculatorToggle = () => {
-        setCalculatorShowing(!calculatorShowing);
-    };
+    // Helper function to check if a help type is active
+    const isActive = (helpType) => activeHelp === helpType;
 
-    const handleDrawingPadToggle = () => {
-        setDrawingPadShowing(!drawingPadShowing);
-    };
-
-    const handleChatToggle = () => {
-        setChatShowing(!chatShowing);
+    // Get active button class based on current theme
+    const getActiveButtonClass = () => {
+        return `bg-${themeData.primary}-500 text-white`;
     };
 
     return (
         <div className="relative">
-            {/* Buttons stacked vertically */}
-            <div className="flex flex-col gap-2">
-                <SmallButton
-                    text={videoShowing ? "Stäng video" : "Video exempel"}
-                    onClick={handleVideoToggle}
-                    icon={<PlayCircleIcon className="w-5 h-5" />}
-                    className={videoShowing ? "bg-green-600 hover:bg-green-700" : ""}
-                />
-                <SmallButton
-                    text={calculatorShowing ? "Stäng kalkylator" : "Kalkylator"}
-                    onClick={handleCalculatorToggle}
-                    icon={<CalculatorIcon className="w-5 h-5" />}
-                    className={calculatorShowing ? "bg-green-600 hover:bg-green-700" : ""}
-                />
-                <SmallButton
-                    text={drawingPadShowing ? "Stäng ritning" : "Rita"}
-                    onClick={handleDrawingPadToggle}
-                    icon={<PencilIcon className="w-5 h-5" />}
-                    className={drawingPadShowing ? "bg-green-600 hover:bg-green-700" : ""}
-                />
-                <SmallButton
-                    text={chatShowing ? "Stäng AI chat" : "AI chat"}
-                    onClick={handleChatToggle}
-                    icon={<ChatBubbleLeftIcon className="w-5 h-5" />}
-                    className={chatShowing ? "bg-green-600 hover:bg-green-700" : ""}
-                />
+            {/* Single bar with 4 icons */}
+            <div className={`${getThemeClasses('card')} rounded-lg shadow-md p-2 flex justify-between gap-2`}>
+                <button 
+                    onClick={() => toggleHelp('video')}
+                    className={`p-2 rounded-full flex items-center justify-center transition-colors ${
+                        isActive('video') 
+                            ? getActiveButtonClass()
+                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    }`}
+                    title="Video exempel"
+                >
+                    <PlayCircleIcon className="w-6 h-6" />
+                </button>
+
+                <button 
+                    onClick={() => toggleHelp('calculator')}
+                    className={`p-2 rounded-full flex items-center justify-center transition-colors ${
+                        isActive('calculator') 
+                            ? getActiveButtonClass()
+                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    }`}
+                    title="Kalkylator"
+                >
+                    <CalculatorIcon className="w-6 h-6" />
+                </button>
+
+                <button 
+                    onClick={() => toggleHelp('drawing')}
+                    className={`p-2 rounded-full flex items-center justify-center transition-colors ${
+                        isActive('drawing') 
+                            ? getActiveButtonClass()
+                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    }`}
+                    title="Rita"
+                >
+                    <PencilIcon className="w-6 h-6" />
+                </button>
+
+                <button 
+                    onClick={() => toggleHelp('chat')}
+                    className={`p-2 rounded-full flex items-center justify-center transition-colors ${
+                        isActive('chat') 
+                            ? getActiveButtonClass()
+                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    }`}
+                    title="AI chat"
+                >
+                    <ChatBubbleLeftIcon className="w-6 h-6" />
+                </button>
             </div>
 
-            {/* Components stacked vertically */}
-            <div className="absolute top-28 right-0 flex flex-col gap-4">
-                {/* Video player container - top */}
-                {videoShowing && VideoName && (
-                    <div className="w-[400px] rounded-lg overflow-hidden shadow-lg mt-4">
+            {/* Component display area */}
+            <div className="absolute top-16 right-0 flex flex-col gap-4">
+                {/* Video player */}
+                {isActive('video') && VideoName && (
+                    <div className={`w-[400px] rounded-lg overflow-hidden shadow-lg mt-4 ${getThemeClasses('card')}`}>
                         <VideoPlayer
                             autoPlay={true}
                             loop={true}
@@ -74,25 +99,25 @@ const QuizAssistant = ({ VideoName, Question }) => {
                     </div>
                 )}
 
-                {/* Calculator container - middle */}
-                {calculatorShowing && (
-                    <div className="w-[300px] rounded-lg overflow-hidden shadow-lg mt-4">
+                {/* Calculator */}
+                {isActive('calculator') && (
+                    <div className={`w-[300px] rounded-lg overflow-hidden shadow-lg mt-4 ${getThemeClasses('card')}`}>
                         <Calculator />
                     </div>
                 )}
 
-                {/* Drawing Pad container */}
-                {drawingPadShowing && (
+                {/* Drawing Pad */}
+                {isActive('drawing') && (
                     <div 
-                        className="rounded-lg overflow-hidden shadow-lg mt-4"
+                        className={`rounded-lg overflow-hidden shadow-lg mt-4 ${getThemeClasses('card')}`}
                         style={{ width: '400px', height: '400px' }}
                     >
                         <DrawingPad />
                     </div>
                 )}
 
-                {/* AI Chat Window container */}
-                {chatShowing && (
+                {/* AI Chat Window */}
+                {isActive('chat') && (
                     <div className="mt-4">
                         <AIChatWindow Question={Question} />
                     </div>
